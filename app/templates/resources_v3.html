@@ -1,0 +1,100 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'ملفات القسم' if ar else 'Department downloads' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_desc %}{{ 'ملاحظات المقررات والخطط والسياسات والنماذج التي يحتاجها طلبة قسم علوم الحاسوب.' if ar else 'Course notes, syllabi, policies and forms for Computer Science students.' }}{% endblock %}
+
+{% block content %}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="tool-i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="tool-i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-.9.7-1.5 1.2-1.5 2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 17h.01" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+</svg>
+<div class="wrap">
+    <nav class="project-crumb" aria-label="{{ 'مسار التصفح' if ar else 'Breadcrumb' }}">
+        <a href="{{ url_for('campus_weekly') }}">{{ 'القسم' if ar else 'The department' }}</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ 'ملفات القسم' if ar else 'Downloads' }}</span>
+    </nav>
+
+    <header class="downloads-hero">
+        <span class="eyebrow">{{ 'رفّ القسم' if ar else 'The department shelf' }}</span>
+        <h1>{{ 'Downloads for students.' if not ar else 'ملفات للطلبة.' }}</h1>
+        <p>{{ 'Course notes, syllabi, policies, forms and workshop material in one place. Every file is uploaded by the department and opens directly — no account needed.' if not ar else 'ملاحظات المقررات والخطط والسياسات والنماذج ومواد الورش في مكان واحد. كل ملف يرفعه القسم ويفتح مباشرة — دون حاجة إلى حساب.' }}</p>
+        <div class="tools-meta">
+            <span><b>{{ total }}</b> {{ 'ملف' if ar else ('file' if total == 1 else 'files') }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <span>{{ 'آخر تحديث' if ar else 'Last updated' }} {{ date }}</span>
+        </div>
+    </header>
+
+    <form class="downloads-toolbar" action="{{ url_for('campus_downloads') }}" method="GET">
+        <div class="downloads-search">
+            <svg class="icon" aria-hidden="true"><use href="#tool-i-search"></use></svg>
+            <label class="visually-hidden" for="download-q">{{ 'ابحث في الملفات' if ar else 'Search files' }}</label>
+            <input id="download-q" type="search" name="q" value="{{ q }}"
+                placeholder="{{ 'ابحث باسم الملف أو المقرر…' if ar else 'Search by file, course or topic…' }}">
+            {% if category != 'all' %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+            <button class="btn btn-primary" type="submit">{{ 'بحث' if ar else 'Search' }}</button>
+        </div>
+    </form>
+
+    <div class="downloads-chips">
+        <a class="downloads-chip {{ 'is-active' if category == 'all' else '' }}"
+            href="{{ url_for('campus_downloads', category='all', q=q or None) }}">
+            {{ 'الكل' if ar else 'All' }} <b>{{ counts['all'] }}</b>
+        </a>
+        {% for key, en, ar_label in categories %}
+        {% if counts[key] %}
+        <a class="downloads-chip {{ 'is-active' if category == key else '' }}"
+            href="{{ url_for('campus_downloads', category=key, q=q or None) }}">
+            {{ ar_label if ar else en }} <b>{{ counts[key] }}</b>
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if resources %}
+    <div class="downloads-grid">
+        {% for item in resources %}
+        <article class="download-card">
+            <div class="download-top">
+                <span class="file-type is-{{ item.file_type }}">{{ item.file_type|upper or 'FILE' }}</span>
+                <span class="download-category">{{ item.category_ar if ar else item.category_en }}</span>
+            </div>
+            <h2>{{ (item.title_ar or item.title) if ar else item.title }}</h2>
+            {% if item.description or item.description_ar %}
+            <p class="download-desc">{{ (item.description_ar or item.description) if ar else item.description }}</p>
+            {% endif %}
+            <div class="download-meta">
+                {% if item.course or item.course_ar %}
+                <span class="download-course">{{ (item.course_ar or item.course) if ar else item.course }}</span>
+                {% endif %}
+                <span>{{ item.size_label }}</span>
+                <span>{{ item.uploaded_at }}</span>
+            </div>
+            <div class="download-foot">
+                <span>{{ item.download_count }} {{ 'تحميل' if ar else 'downloads' }}</span>
+                <a class="btn btn-primary" href="{{ url_for('download_department_resource', resource_id=item.id) }}">
+                    {{ 'تحميل الملف' if ar else 'Download file' }} ↓
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="tools-empty">
+        <h2>{{ 'No files match these filters' if not ar else 'لا توجد ملفات تطابق هذه الفلاتر' }}</h2>
+        <p>{{ 'Try a broader search or clear the filters.' if not ar else 'جرّب بحثًا أوسع أو امسح الفلاتر.' }}</p>
+        <a class="btn btn-primary" href="{{ url_for('campus_downloads') }}">{{ 'All files' if not ar else 'كل الملفات' }}</a>
+    </div>
+    {% endif %}
+
+    <aside class="tools-note">
+        <svg class="icon" aria-hidden="true"><use href="#tool-i-help"></use></svg>
+        <div>
+            <b>{{ 'A note on files' if not ar else 'ملاحظة عن الملفات' }}</b>
+            <p>{{ 'These are department documents shared for study. If a file is outdated, ask the department office or your lecturer for the current version. Files are served as downloads; their original formatting is unchanged.' if not ar else 'هذه مستندات القسم للمذاكرة. إذا كان ملف قديمًا، اطلب من مكتب القسم أو محاضرك النسخة الحالية. تُقدَّم الملفات للتحميل دون تغيير تنسيقها الأصلي.' }}</p>
+        </div>
+    </aside>
+</div>
+{% endblock %}

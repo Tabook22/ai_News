@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ settings.magazine_title if settings else 'Nasser AI News' }} · {{ {'settings_page': A('settings'), 'subscribers_page': A('subscribers'), 'search_page': A('find_news'), 'archive_page': A('archive'), 'newsroom': A('newsroom'), 'dashboard': A('world'), 'department_admin': A('department'), 'reels_list': A('reels'), 'tools_list': A('ai_tools'), 'qr_page': A('qr'), 'template_picker': A('look'), 'add_news': A('new_story'), 'edit_news': A('new_story'), 'add_project_idea': 'New project idea', 'edit_project_idea': 'Edit project idea', 'digest_preview': 'Weekly digest'}.get(request.endpoint, 'Control room' if not admin_ar else 'غرفة التحكم') }}</title>
+    <title>{{ settings.magazine_title if settings else 'Nasser AI News' }} · {{ {'settings_page': A('settings'), 'subscribers_page': A('subscribers'), 'search_page': A('find_news'), 'archive_page': A('archive'), 'newsroom': A('newsroom'), 'dashboard': A('world'), 'department_admin': A('department'), 'reels_list': A('reels'), 'tools_list': A('ai_tools'), 'qr_page': A('qr'), 'template_picker': A('look'), 'add_news': A('new_story'), 'edit_news': A('new_story'), 'add_project_idea': 'New project idea', 'edit_project_idea': 'Edit project idea', 'resources_admin': 'Downloads', 'add_department_resource': 'Upload a file', 'edit_department_resource': 'Edit download', 'digest_preview': 'Weekly digest'}.get(request.endpoint, 'Control room' if not admin_ar else 'غرفة التحكم') }}</title>
     <link rel="icon" type="image/svg+xml"
         href="{{ settings.logo_path if settings and settings.logo_path else url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -182,6 +182,11 @@
                         class="{{ 'is-active' if request.endpoint == 'photo_archive_admin' else '' }}">
                         <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
                         {{ A('ph_nav') }}
+                    </a>
+                    <a href="{{ url_for('resources_admin') }}"
+                        class="{{ 'is-active' if request.endpoint in ['resources_admin', 'add_department_resource', 'edit_department_resource'] else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg>
+                        {{ t('Downloads', 'ملفات القسم') }}
                     </a>
                     <a href="{{ url_for('archive_page', desk='world') }}"
                         class="{{ 'is-active' if request.endpoint == 'archive_page' else '' }}">

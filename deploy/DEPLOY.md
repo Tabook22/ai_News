@@ -80,7 +80,7 @@ Fill in:
 Then:
 
 ```bash
-mkdir -p data app/instance app/static/uploads/images app/static/uploads/docs
+mkdir -p data app/instance app/static/uploads/images app/static/uploads/docs app/static/uploads/resources
 chmod 600 .env
 sudo chown -R www-data:www-data /var/www/ainews
 sudo chown www-data:www-data .env

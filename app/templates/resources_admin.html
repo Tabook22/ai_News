@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block page_title %}Downloads{% endblock %}
+
+{% block content %}
+<div class="res-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Department · downloads', 'القسم · الملفات') }}</p>
+            <h1>{{ t('Department downloads', 'ملفات القسم') }}</h1>
+            <p class="editor-dek">{{ t('Course notes, syllabi, policies, forms and workshop material. Upload a file and it appears on the public department page.', 'ملاحظات المقررات والخطط والسياسات والنماذج ومواد الورش. ارفع ملفًا ليظهر في صفحة القسم العامة.') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('department_admin') }}">{{ t('Back to department', 'العودة إلى القسم') }}</a>
+            <a class="btn btn-primary" href="{{ url_for('add_department_resource') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ t('Upload a file', 'رفع ملف') }}
+            </a>
+        </div>
+    </div>
+
+    <div class="res-stats">
+        <div class="res-stat is-teal"><b>{{ counts.all }}</b><span>{{ t('File', 'ملف') if counts.all == 1 else t('Files', 'ملفات') }}</span></div>
+        {% for key, en, ar in categories %}
+        {% if counts[key] %}
+        <div class="res-stat"><b>{{ counts[key] }}</b><span>{{ ar if admin_ar else en }}</span></div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if resources %}
+    <div class="res-list">
+        {% for item in resources %}
+        <article class="res-row">
+            <span class="file-type is-{{ item.file_type }}">{{ item.file_type|upper or 'FILE' }}</span>
+            <div class="res-main">
+                <b>{{ (item.title_ar or item.title) if admin_ar else item.title }}</b>
+                <small>
+                    {{ item.category_ar if admin_ar else item.category_en }}
+                    {% if item.course %} · {{ item.course }}{% endif %}
+                    · {{ item.size_label }}
+                </small>
+            </div>
+            <span class="res-downloads">{{ item.download_count }} ↓</span>
+            <span class="res-status {{ 'is-live' if item.is_published else 'is-hidden' }}">
+                {{ t('Published', 'منشور') if item.is_published else t('Hidden', 'مخفي') }}
+            </span>
+            <div class="res-actions">
+                <a href="{{ url_for('download_department_resource', resource_id=item.id) }}">{{ t('Open', 'فتح') }}</a>
+                <a href="{{ url_for('edit_department_resource', resource_id=item.id) }}">{{ t('Edit', 'تعديل') }}</a>
+                <form method="POST" action="{{ url_for('delete_department_resource', resource_id=item.id) }}"
+                    onsubmit="return confirm('{{ t('Remove this file?', 'إزالة هذا الملف؟') }}');">
+                    <button type="submit" class="is-danger">{{ t('Delete', 'حذف') }}</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="dept-empty-state">
+        <span class="dept-empty-icon"><svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg></span>
+        <h3>{{ t('No downloads yet', 'لا توجد ملفات بعد') }}</h3>
+        <p>{{ t('Upload the first course note, syllabus or policy so students have one place to find it.', 'ارفع أول ملاحظة أو خطة أو سياسة ليجد الطلبة مكانًا واحدًا لها.') }}</p>
+        <a class="btn btn-primary" href="{{ url_for('add_department_resource') }}">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+            {{ t('Upload the first file', 'ارفع الملف الأول') }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

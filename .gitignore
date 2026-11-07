@@ -43,3 +43,6 @@ Thumbs.db
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# uploaded department resources (notes, policies, forms)
+app/static/uploads/resources/

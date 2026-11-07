@@ -4206,3 +4206,38 @@ body[data-endpoint="settings_page"] .admin-content { padding-bottom: 110px; }
     .project-form-grid { grid-template-columns: 1fr; }
     .project-form-grid .dept-compose-side { position: static; }
 }
+
+/* department downloads admin */
+.res-page { max-width: 1200px; margin: 0 auto; }
+.res-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.res-stat { padding: 8px 12px; background: #fff; border: 1px solid var(--a-line); border-radius: 8px; }
+.res-stat b { font-size: 1rem; color: var(--a-ink); }
+.res-stat span { margin-inline-start: 5px; font-size: .68rem; color: var(--a-muted); }
+.res-stat.is-teal { border-inline-start: 3px solid #0f766e; }
+.res-list { display: grid; gap: 7px; }
+.res-row { display: grid; grid-template-columns: 48px minmax(0,1fr) 70px 72px auto; gap: 10px; align-items: center; padding: 10px 12px; background: #fff; border: 1px solid var(--a-line); border-radius: 9px; }
+.res-row .file-type { min-width: 42px; }
+.res-main { min-width: 0; }
+.res-main b { display: block; font-size: .8rem; color: var(--a-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res-main small { display: block; margin-top: 2px; font-size: .66rem; color: var(--a-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res-downloads { font-size: .68rem; color: var(--a-muted); font-variant-numeric: tabular-nums; }
+.res-status { font-size: .62rem; font-weight: 700; padding: 2px 6px; border-radius: 999px; justify-self: start; }
+.res-status.is-live { background: #ecfdf3; color: #067647; }
+.res-status.is-hidden { background: #f2f4f7; color: #475467; }
+.res-actions { display: flex; gap: 5px; align-items: center; }
+.res-actions a, .res-actions button { padding: 3px 7px; border: 1px solid var(--a-line); border-radius: 5px; background: #fff; font-size: .64rem; color: #475467; cursor: pointer; }
+.res-actions a:hover, .res-actions button:hover { border-color: var(--a-primary); color: var(--a-primary-dark); }
+.res-actions .is-danger { color: #b42318; }
+@media (max-width: 860px) {
+  .res-row { grid-template-columns: 42px minmax(0,1fr) auto; }
+  .res-downloads, .res-status { display: none; }
+  .res-actions { grid-column: 2 / -1; justify-content: flex-end; }
+}
+
+.dept-stat.is-blue { --stat: #1d4ed8; }
+
+.dept-stat.is-blue { --stat: #1d4ed8; }
+
+@media (min-width: 1021px) {
+    .dept-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}

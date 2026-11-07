@@ -455,3 +455,29 @@ switches correctly.
 
 Screenshots: `design-review/shots/admin/watch_page.png`, `watch_mobile.png`,
 `watch_ar.png`.
+
+---
+
+## 15. Department downloads (added 8 November)
+
+A department file shelf for course notes, syllabi, policies, forms and workshop material.
+
+**Public.** `/campus/downloads` — search, category chips (notes, syllabus, policies, exams,
+workshops, other), file-type badges (PDF, DOCX, PPTX, XLSX, TXT, ZIP), course, size, date,
+download count, and a direct download. The department page gets a numbered **Downloads**
+section with the latest six files, plus links in the masthead and footer.
+
+**Admin.** `/department/resources` lists every file with category, course, size, download
+count and published state; upload/edit/delete are separate simple routes. The department
+hub has a **Downloads** stat and shortcut. Allowed types are PDF, Word, PowerPoint, Excel,
+text and ZIP; files are served as attachments with a sanitized stored name, and the original
+name is preserved for the download.
+
+**Data.** `DepartmentResource` model (auto-created by `db.create_all`); files live in
+`app/static/uploads/resources/` (ignored by Git). `RESOURCE_CATEGORIES` holds the labels.
+Upload, download, edit and delete were tested end-to-end; a temporary test file was removed.
+
+Checked: `/campus/downloads` renders and filters, the download endpoint returns the file,
+the admin list/form work, and the department page shows the section only when files exist.
+
+Screenshots: `design-review/shots/vps/downloads_public.png`, `downloads_admin.png`.

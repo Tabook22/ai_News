@@ -25,6 +25,10 @@
             <span class="dot" aria-hidden="true"></span>
             <a href="{{ url_for('campus_projects') }}">{{ 'مشاريع مقترحة' if ar else 'Recommended projects' }}</a>
             {% endif %}
+            {% if resource_total %}
+            <span class="dot" aria-hidden="true"></span>
+            <a href="{{ url_for('campus_downloads') }}">{{ 'ملفات القسم' if ar else 'Downloads' }}</a>
+            {% endif %}
         </div>
     </div>
 
@@ -180,6 +184,26 @@
                 <b>{{ (idea.title_ar or idea.title_en) if ar else idea.title_en }}</b>
                 <span class="project-mini-summary">{{ (idea.summary_ar or idea.summary_en) if ar else idea.summary_en }}</span>
                 <span class="project-mini-ref">{{ 'المرجع' if ar else 'Reference' }}: {{ idea.reference_title }} ↗</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if resources %}
+    <section class="section" aria-labelledby="downloads-title">
+        <header class="section-head">
+            <span class="num" aria-hidden="true">05</span>
+            <h2 id="downloads-title">{{ 'ملفات القسم' if ar else 'Downloads' }}</h2>
+            <p>{{ 'ملاحظات المقررات والخطط والسياسات والنماذج — ملفات يرفعها القسم للطلبة.' if ar else 'Course notes, syllabi, policies and forms — files the department shares with students.' }}</p>
+            <a class="more" href="{{ url_for('campus_downloads') }}">{{ 'كل الملفات' if ar else 'All files' }} ({{ resource_total }}) →</a>
+        </header>
+        <div class="download-strip">
+            {% for item in resources %}
+            <a class="download-mini" href="{{ url_for('download_department_resource', resource_id=item.id) }}">
+                <span class="file-type is-{{ item.file_type }}">{{ item.file_type|upper or 'FILE' }}</span>
+                <b>{{ (item.title_ar or item.title) if ar else item.title }}</b>
+                <span class="download-mini-meta">{{ (item.course_ar or item.course) if ar else item.course }} · {{ item.size_label }}</span>
             </a>
             {% endfor %}
         </div>

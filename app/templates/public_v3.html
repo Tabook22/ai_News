@@ -205,6 +205,7 @@
                     <ul>
                         <li><a href="{{ url_for('magazine_view') }}">{{ 'العدد' if lang_pref == 'ar' else 'The issue' }}</a></li>
                         <li><a href="{{ url_for('campus_weekly') }}">{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</a></li>
+                        <li><a href="{{ url_for('campus_downloads') }}">{{ 'ملفات القسم' if lang_pref == 'ar' else 'Downloads' }}</a></li>
                         {% if reels_count %}<li><a href="{{ url_for('watch_page') }}">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a></li>{% endif %}
                         {% if tools_count %}<li><a href="{{ url_for('tools_directory') }}">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a></li>{% endif %}
                         <li><a href="{{ url_for('find_stories') }}">{{ 'كل القصص' if lang_pref == 'ar' else 'All stories' }}</a></li>

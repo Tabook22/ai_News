@@ -114,6 +114,7 @@ app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB limit
 # Ensure upload dirs exist
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'images'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'docs'), exist_ok=True)
+os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'resources'), exist_ok=True)
 
 print(f">>> SERVER STARTUP: CONFIG UPDATED V6 - Max Upload: {app.config['MAX_CONTENT_LENGTH']} <<<") 
 
@@ -434,6 +435,15 @@ TOOL_CATEGORIES = [
 ]
 TOOL_CATEGORY_LABELS = dict(TOOL_CATEGORIES)
 
+RESOURCE_CATEGORIES = [
+    ('notes', 'Course notes', 'ملاحظات المقرر'),
+    ('syllabus', 'Syllabus', 'خطة المقرر'),
+    ('policies', 'Policies & forms', 'السياسات والنماذج'),
+    ('exams', 'Exams & revision', 'الاختبارات والمراجعة'),
+    ('workshops', 'Workshop materials', 'مواد الورش'),
+    ('other', 'Other', 'أخرى'),
+]
+
 PROJECT_TRACKS = {
     'final_year': ('Final-year project', 'مشروع التخرج'),
     'research': ('Research idea', 'فكرة بحثية'),
@@ -644,6 +654,70 @@ class ProjectIdea(db.Model):
             'featured': bool(self.featured),
             'sort_order': self.sort_order or 0,
             'is_published': bool(self.is_published),
+        }
+
+
+def _size_label(size):
+    try:
+        size = int(size or 0)
+    except (TypeError, ValueError):
+        size = 0
+    if size < 1024:
+        return f"{size} B"
+    if size < 1024 * 1024:
+        return f"{size / 1024:.0f} KB"
+    return f"{size / (1024 * 1024):.1f} MB"
+
+
+class DepartmentResource(db.Model):
+    """A course note, policy, form or workshop file for department students."""
+    __tablename__ = 'department_resources'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    title_ar = db.Column(db.String(200), default='')
+    description = db.Column(db.Text, default='')
+    description_ar = db.Column(db.Text, default='')
+    course = db.Column(db.String(120), default='')
+    course_ar = db.Column(db.String(120), default='')
+    category = db.Column(db.String(30), default='notes')
+    file_name = db.Column(db.String(300), nullable=False)
+    original_name = db.Column(db.String(300), default='')
+    file_size = db.Column(db.Integer, default=0)
+    file_type = db.Column(db.String(20), default='')
+    download_count = db.Column(db.Integer, default=0)
+    is_published = db.Column(db.Boolean, default=True)
+    featured = db.Column(db.Boolean, default=False)
+    sort_order = db.Column(db.Integer, default=0)
+    uploaded_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
+
+    @property
+    def size_label(self):
+        return _size_label(self.file_size)
+
+    def to_dict(self):
+        cat = dict((key, (en, ar)) for key, en, ar in RESOURCE_CATEGORIES).get(
+            self.category, ('Other', 'أخرى'))
+        ext = (self.file_type or self.original_name.rsplit('.', 1)[-1] if self.original_name else '').lower()
+        return {
+            'id': self.id,
+            'title': self.title,
+            'title_ar': self.title_ar,
+            'description': self.description,
+            'description_ar': self.description_ar,
+            'course': self.course,
+            'course_ar': self.course_ar,
+            'category': self.category or 'other',
+            'category_en': cat[0],
+            'category_ar': cat[1],
+            'original_name': self.original_name,
+            'file_size': self.file_size or 0,
+            'size_label': _size_label(self.file_size),
+            'file_type': ext,
+            'download_count': self.download_count or 0,
+            'is_published': bool(self.is_published),
+            'featured': bool(self.featured),
+            'sort_order': self.sort_order or 0,
+            'uploaded_at': self.uploaded_at.strftime('%Y-%m-%d') if self.uploaded_at else '',
         }
 
 
@@ -4707,6 +4781,10 @@ def campus_weekly():
         featured_projects=[i.to_dict() for i in ProjectIdea.query.filter_by(
             is_published=True, featured=True).order_by(ProjectIdea.sort_order.asc()).limit(3).all()],
         project_total=ProjectIdea.query.filter_by(is_published=True).count(),
+        resources=[r.to_dict() for r in DepartmentResource.query.filter_by(is_published=True)
+                   .order_by(DepartmentResource.featured.desc(), DepartmentResource.sort_order.asc(),
+                             DepartmentResource.uploaded_at.desc()).limit(6).all()],
+        resource_total=DepartmentResource.query.filter_by(is_published=True).count(),
         settings=MagazineSettings.get_settings(),
     )
 
@@ -4753,6 +4831,162 @@ def campus_projects():
                            date=datetime.datetime.now().strftime("%Y-%m-%d"))
 
 
+RESOURCE_EXTENSIONS = {'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'zip'}
+
+
+@app.route('/campus/downloads')
+def campus_downloads():
+    """The department's public file shelf: notes, syllabi, policies and forms."""
+    q = (request.args.get('q') or '').strip()
+    category = request.args.get('category', 'all')
+
+    query = DepartmentResource.query.filter_by(is_published=True)
+    if category != 'all':
+        query = query.filter_by(category=category)
+    if q:
+        like = f'%{q}%'
+        query = query.filter(db.or_(
+            DepartmentResource.title.ilike(like), DepartmentResource.title_ar.ilike(like),
+            DepartmentResource.description.ilike(like), DepartmentResource.description_ar.ilike(like),
+            DepartmentResource.course.ilike(like), DepartmentResource.course_ar.ilike(like),
+        ))
+    resources = query.order_by(DepartmentResource.featured.desc(),
+                               DepartmentResource.sort_order.asc(),
+                               DepartmentResource.uploaded_at.desc()).all()
+    counts = {'all': DepartmentResource.query.filter_by(is_published=True).count()}
+    for key, _en, _ar in RESOURCE_CATEGORIES:
+        counts[key] = DepartmentResource.query.filter_by(category=key, is_published=True).count()
+
+    return render_template('resources_v3.html', resources=[r.to_dict() for r in resources],
+                           categories=RESOURCE_CATEGORIES, counts=counts,
+                           q=q, category=category, total=counts['all'],
+                           settings=MagazineSettings.get_settings(),
+                           date=datetime.datetime.now().strftime('%Y-%m-%d'))
+
+
+@app.route('/campus/downloads/<int:resource_id>/file')
+def download_department_resource(resource_id):
+    from flask import send_from_directory
+    resource = DepartmentResource.query.get_or_404(resource_id)
+    if not resource.is_published:
+        abort(404)
+    folder = os.path.join(app.config['UPLOAD_FOLDER'], 'resources')
+    path = os.path.join(folder, resource.file_name)
+    if not os.path.isfile(path):
+        abort(404)
+    resource.download_count = (resource.download_count or 0) + 1
+    db.session.commit()
+    return send_from_directory(folder, resource.file_name, as_attachment=True,
+                               download_name=resource.original_name or resource.file_name)
+
+
+def _save_resource_file(file):
+    if not file or not file.filename:
+        return None
+    if not allowed_file(file.filename, RESOURCE_EXTENSIONS):
+        return None
+    original = file.filename[:300]
+    cleaned = secure_filename(file.filename) or ('resource.' + file.filename.rsplit('.', 1)[-1].lower())
+    stored = f"resource_{uuid.uuid4().hex}_{cleaned}"
+    folder = os.path.join(app.config['UPLOAD_FOLDER'], 'resources')
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, stored)
+    file.save(path)
+    ext = stored.rsplit('.', 1)[-1].lower() if '.' in stored else ''
+    return stored, original, os.path.getsize(path), ext
+
+
+def _apply_resource_form(resource, new_file):
+    resource.title = (request.form.get('title') or '').strip()[:200]
+    resource.title_ar = (request.form.get('title_ar') or '').strip()[:200]
+    resource.description = (request.form.get('description') or '').strip()
+    resource.description_ar = (request.form.get('description_ar') or '').strip()
+    resource.course = (request.form.get('course') or '').strip()[:120]
+    resource.course_ar = (request.form.get('course_ar') or '').strip()[:120]
+    resource.category = request.form.get('category', 'notes')
+    resource.is_published = bool(request.form.get('is_published'))
+    resource.featured = bool(request.form.get('featured'))
+    try:
+        resource.sort_order = int(request.form.get('sort_order') or 0)
+    except ValueError:
+        resource.sort_order = 0
+    if new_file:
+        resource.file_name, resource.original_name, resource.file_size, resource.file_type = new_file
+
+
+@app.route('/department/resources')
+@login_required
+def resources_admin():
+    resources = (DepartmentResource.query
+                 .order_by(DepartmentResource.featured.desc(),
+                           DepartmentResource.sort_order.asc(),
+                           DepartmentResource.uploaded_at.desc()).all())
+    counts = {'all': len(resources)}
+    for key, _en, _ar in RESOURCE_CATEGORIES:
+        counts[key] = sum(1 for r in resources if r.category == key)
+    return render_template('resources_admin.html', resources=[r.to_dict() for r in resources],
+                           categories=RESOURCE_CATEGORIES, counts=counts)
+
+
+@app.route('/department/resources/new', methods=['GET', 'POST'])
+@login_required
+def add_department_resource():
+    if request.method == 'POST':
+        new_file = _save_resource_file(request.files.get('file'))
+        if not new_file:
+            flash('Choose a PDF, Word, PowerPoint, Excel, text or ZIP file.', 'error')
+            return redirect(request.url)
+        title = (request.form.get('title') or '').strip()
+        if not title:
+            flash('A title is required.', 'error')
+            return redirect(request.url)
+        resource = DepartmentResource(title=title, file_name=new_file[0])
+        _apply_resource_form(resource, new_file)
+        db.session.add(resource)
+        db.session.commit()
+        flash('File added to the department downloads.', 'success')
+        return redirect(url_for('resources_admin'))
+    return render_template('resource_form.html', resource=None, categories=RESOURCE_CATEGORIES)
+
+
+@app.route('/department/resources/<int:resource_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_department_resource(resource_id):
+    resource = DepartmentResource.query.get_or_404(resource_id)
+    if request.method == 'POST':
+        new_file = _save_resource_file(request.files.get('file'))
+        old_file = resource.file_name
+        _apply_resource_form(resource, new_file)
+        if not resource.title:
+            flash('A title is required.', 'error')
+            return redirect(request.url)
+        db.session.commit()
+        if new_file and old_file:
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], 'resources', old_file))
+            except OSError:
+                pass
+        flash('Download updated.', 'success')
+        return redirect(url_for('resources_admin'))
+    return render_template('resource_form.html', resource=resource, categories=RESOURCE_CATEGORIES)
+
+
+@app.route('/department/resources/<int:resource_id>/delete', methods=['POST'])
+@login_required
+def delete_department_resource(resource_id):
+    resource = DepartmentResource.query.get_or_404(resource_id)
+    old_file = resource.file_name
+    db.session.delete(resource)
+    db.session.commit()
+    if old_file:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], 'resources', old_file))
+        except OSError:
+            pass
+    flash('Download removed.', 'success')
+    return redirect(url_for('resources_admin'))
+
+
 def _department_desk():
     return url_for('department_admin')
 
@@ -4783,6 +5017,7 @@ def department_admin():
         'photos': sum(len(a.photos) for a in albums),
         'albums': len(albums),
         'projects': len(projects),
+        'resources': DepartmentResource.query.count(),
         'research': sum(1 for p in projects if (p.track or 'final_year') == 'research'),
         'competitions': sum(1 for p in projects if (p.track or 'final_year') == 'competition'),
     }

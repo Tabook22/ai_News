@@ -42,6 +42,10 @@
             <b>{{ stats.projects }}</b>
             <span>{{ stats.research }} {{ t('research', 'بحثية') }} · {{ stats.competitions }} {{ t('competitions', 'مسابقات') }}</span>
         </div>
+        <a class="dept-stat is-blue" href="{{ url_for('resources_admin') }}">
+            <b>{{ stats.resources }}</b>
+            <span>{{ t('Downloads', 'ملفات') }}</span>
+        </a>
     </div>
 
     <div class="dept-tabs" role="tablist" aria-label="{{ t('Department sections', 'أقسام القسم') }}">
@@ -191,6 +195,10 @@
                             <a href="{{ url_for('photo_archive_admin') }}">
                                 <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
                                 <span><b>{{ t('Add photos', 'أضف صورًا') }}</b><small>{{ stats.photos }} {{ t('photos in the archive', 'صورة في الأرشيف') }}</small></span>
+                            </a>
+                            <a href="{{ url_for('resources_admin') }}">
+                                <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg>
+                                <span><b>{{ t('Downloads', 'ملفات القسم') }}</b><small>{{ stats.resources }} {{ t('files for students', 'ملفًا للطلبة') }}</small></span>
                             </a>
                             <a href="{{ url_for('add_project_idea') }}">
                                 <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
