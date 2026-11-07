@@ -6,7 +6,7 @@
 > path or subdomain first, or choose a different path for the magazine. Do not overwrite it
 > without a backup and the owner’s confirmation.
 
-This is the Hostinger VPS deployment. The app is served by **Gunicorn on 127.0.0.1:8000** and
+This is the Hostinger VPS deployment. The app is served by **Gunicorn on 127.0.0.1:8022** and
 published by **Nginx under `/ainews/`**. Nginx strips the prefix before proxying and sends
 `X-Forwarded-Prefix: /ainews`; Flask's `ProxyFix` adds it back to `url_for()`, static files
 and redirects.
@@ -14,7 +14,7 @@ and redirects.
 ```
 Browser → https://nasserdiary.com/ainews/
         → Nginx (443) location /ainews/
-        → proxy_pass http://127.0.0.1:8000/
+        → proxy_pass http://127.0.0.1:8022/
         → Gunicorn → Flask
 ```
 
@@ -23,7 +23,7 @@ Browser → https://nasserdiary.com/ainews/
 - SSH access to `76.13.243.173` (root or a sudo user).
 - DNS: `nasserdiary.com` and `www` A records pointing to `76.13.243.173`.
 - The GitHub repository containing this code.
-- Ports 80 and 443 open; port 8000 must stay private.
+- Ports 80 and 443 open; port 8022 must stay private.
 
 ## 1. DNS and firewall
 
@@ -114,7 +114,7 @@ sudo systemctl status ainews --no-pager
 Test locally on the VPS:
 
 ```bash
-curl -I http://127.0.0.1:8000/login
+curl -I http://127.0.0.1:8022/login
 ```
 
 You should get `200 OK` (or a redirect). Logs:
@@ -156,7 +156,7 @@ sudo systemctl reload nginx
 The snippet contains:
 
 - `location = /ainews` → permanent redirect to `/ainews/`;
-- `location /ainews/` → proxy to `127.0.0.1:8000/`;
+- `location /ainews/` → proxy to `127.0.0.1:8022/`;
 - `X-Forwarded-Prefix: /ainews`;
 - 512 MB upload limit and 120 s timeouts.
 
@@ -226,7 +226,7 @@ sudo cp /var/www/ainews/data/ainews.db /var/www/ainews/data/ainews-$(date +%F).d
 |---|---|
 | 404 at `/ainews/` | Location has trailing slash? Exact redirect present? |
 | CSS/JS 404 | `X-Forwarded-Prefix: /ainews` passed; `ProxyFix` enabled; HTML contains `/ainews/static` |
-| 502 Bad Gateway | `sudo systemctl status ainews`; Gunicorn on 127.0.0.1:8000 |
+| 502 Bad Gateway | `sudo systemctl status ainews`; Gunicorn on 127.0.0.1:8022 |
 | Login loop | `SECRET_KEY` stable; `SESSION_COOKIE_PATH=/ainews`; HTTPS cookie |
 | 413 upload | `client_max_body_size 512M` in Nginx |
 | Long AI request 504 | `proxy_read_timeout 120s`; Gunicorn `--timeout 120` |
@@ -236,6 +236,6 @@ sudo cp /var/www/ainews/data/ainews.db /var/www/ainews/data/ainews-$(date +%F).d
 
 - Never commit `.env`.
 - Keep Gunicorn bound to `127.0.0.1`, not `0.0.0.0`.
-- Do not expose port 8000 in the firewall.
+- Do not expose port 8022 in the firewall.
 - Use a strong admin password and rotate API keys if `.env` was ever pushed.
 - Keep the VPS and Python packages updated.
