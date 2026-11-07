@@ -5021,8 +5021,12 @@ def department_admin():
         'research': sum(1 for p in projects if (p.track or 'final_year') == 'research'),
         'competitions': sum(1 for p in projects if (p.track or 'final_year') == 'competition'),
     }
+    resources = (DepartmentResource.query
+                 .order_by(DepartmentResource.featured.desc(), DepartmentResource.sort_order.asc(),
+                           DepartmentResource.uploaded_at.desc()).limit(12).all())
     return render_template('department.html', groups=groups, stats=stats,
-                           albums=albums[:4], projects=[p.to_dict() for p in projects])
+                           albums=albums[:4], projects=[p.to_dict() for p in projects],
+                           resources=[r.to_dict() for r in resources])
 
 
 def _apply_project_form(idea):

@@ -4241,3 +4241,9 @@ body[data-endpoint="settings_page"] .admin-content { padding-bottom: 110px; }
 @media (min-width: 1021px) {
     .dept-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
+
+.dept-panel-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
