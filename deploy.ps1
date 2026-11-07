@@ -25,7 +25,7 @@ Write-Host "3/4  Pushing to GitHub..." -ForegroundColor Cyan
 git push origin main
 
 Write-Host "4/4  Updating the VPS and restarting the service..." -ForegroundColor Cyan
-ssh root@76.13.243.173 "cd /var/www/ainews && sudo -u www-data git pull --ff-only && sudo systemctl restart ainews && sleep 1 && systemctl is-active ainews"
+ssh root@76.13.243.173 "cd /var/www/ainews && sudo -u www-data git pull --ff-only && sudo mkdir -p /var/www/ainews/app/static/uploads/images /var/www/ainews/app/static/uploads/docs /var/www/ainews/app/static/uploads/resources /var/www/ainews/data && sudo chown -R www-data:www-data /var/www/ainews/app/static/uploads /var/www/ainews/data && sudo systemctl restart ainews && sleep 1 && systemctl is-active ainews"
 
 Write-Host ""
 Write-Host "Live: https://nasserdiary.com/ainews/" -ForegroundColor Green
