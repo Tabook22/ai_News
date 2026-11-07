@@ -1754,6 +1754,11 @@ def _record_failed_login(ip):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     next_url = _safe_next(request.values.get('next'), '')
+    # Nginx strips /ainews/ before proxying; restore the mount prefix on a
+    # relative next URL so login lands inside the magazine admin.
+    root = (request.script_root or '').rstrip('/')
+    if root and next_url.startswith('/') and next_url != root and not next_url.startswith(root + '/'):
+        next_url = root + next_url
 
     if request.method == 'POST':
         ip = request.remote_addr or 'unknown'
