@@ -3352,8 +3352,10 @@ def select_template():
 @login_required
 def qr_page():
     settings = MagazineSettings.get_settings()
-    target_url = request.args.get('target', url_for('subscribe', source='qr', _external=True))
-    return render_template('qr_code.html', settings=settings, target_url=target_url)
+    magazine_url = url_for('magazine_view', _external=True)
+    subscribe_url = url_for('subscribe', source='qr', _external=True)
+    return render_template('qr_code.html', settings=settings,
+                           magazine_url=magazine_url, subscribe_url=subscribe_url)
 
 @app.route('/qr.png')
 @login_required
