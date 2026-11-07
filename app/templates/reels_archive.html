@@ -1,0 +1,169 @@
+{% extends "layout.html" %}
+{% import "_platform_icons.html" as icons %}
+
+{% block content %}
+<style>
+    .reel-archive-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .reel-archive-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: var(--bg-hover);
+    }
+
+    .reel-archive-thumb-placeholder {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        background: var(--bg-hover);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .reel-archive-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .reel-archive-title {
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .reel-archive-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .reel-archive-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .reel-restore-select {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        width: auto;
+        border-radius: 6px;
+    }
+</style>
+
+<div class="dashboard-header">
+    <div>
+        <h1>🗄️ Reel Archive</h1>
+        <p class="subtitle">Retired "Worth Watching" reels, kept for reference — organized by when they were added.
+            None of these show on the magazine or the Watch page.</p>
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('reels_list') }}" class="btn btn-secondary">← Back to Reels</a>
+    </div>
+</div>
+
+{% if archive_data %}
+<div class="archive-tree">
+    {% for year_group in archive_data %}
+    <details class="year-block" open style="margin-bottom: 2rem;">
+        <summary class="year-header card"
+            style="display: flex; justify-content: space-between; padding: 1rem 1.5rem; cursor: pointer; align-items: center; background: linear-gradient(to right, var(--bg-hover), var(--bg-card)); list-style: none;">
+            <span style="font-size: 1.5rem; font-weight: 800; color: var(--accent-primary);">{{ year_group.year
+                }}</span>
+            <span class="badge sidebar">{{ year_group.count }} Reels</span>
+        </summary>
+
+        <div class="months-container" style="padding: 1rem;">
+            {% for month in year_group.months %}
+            <details class="month-block" open
+                style="margin-bottom: 1rem; padding-left: 1rem; border-left: 2px solid var(--border-color);">
+                <summary class="month-header"
+                    style="color: var(--text-muted); font-weight: 600; cursor: pointer; margin-bottom: 1rem; padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    📂 {{ month.name }} <span style="font-size: 0.8rem; opacity: 0.7;">({{ month.count }})</span>
+                </summary>
+
+                <div class="posts-list" style="display: grid; gap: 0.75rem;">
+                    {% for reel in month.posts %}
+                    <div class="card reel-archive-row" data-id="{{ reel.id }}"
+                        style="flex-direction: row; border-left: 4px solid var(--text-muted);">
+                        {% if reel.thumbnail %}
+                        <img src="{{ reel.thumbnail }}" class="reel-archive-thumb">
+                        {% else %}
+                        <div class="reel-archive-thumb-placeholder">🎬</div>
+                        {% endif %}
+
+                        <div class="reel-archive-info">
+                            <div class="reel-archive-title">{{ reel.title }}</div>
+                            <div class="reel-archive-meta" style="display: flex; align-items: center; gap: 0.4rem;">
+                                {{ icons.platform_badge(reel.platform, 16) }}
+                                {% if reel.creator_handle %}@{{ reel.creator_handle }}{% elif reel.creator_name %}{{ reel.creator_name }}{% endif %}
+                                &bull; {{ reel.platform | replace('_', ' ') | title }}
+                                &bull; Added {{ reel.created_at }}
+                            </div>
+                        </div>
+
+                        <div class="reel-archive-actions">
+                            <a href="{{ reel.source_url }}" target="_blank" rel="noopener" class="btn-icon"
+                                title="Open source">↗</a>
+                            <select class="reel-restore-select" onchange="restoreReel({{ reel.id }}, this.value)">
+                                <option value="" selected disabled>↩️ Restore to…</option>
+                                <option value="published">✅ Published</option>
+                                <option value="draft">📝 Draft</option>
+                            </select>
+                            <a href="{{ url_for('edit_reel', reel_id=reel.id) }}" class="btn-icon" title="Edit">✏️</a>
+                            <form method="POST" action="{{ url_for('delete_reel', reel_id=reel.id) }}"
+                                onsubmit="return confirm('Delete this archived reel permanently?');">
+                                <button type="submit" class="btn-icon danger" title="Delete permanently">🗑️</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </details>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state"
+    style="text-align: center; padding: 4rem; border: 2px dashed var(--border-color); border-radius: 12px; color: var(--text-muted);">
+    <h3>📭 Nothing archived yet</h3>
+    <p>Reels you archive from the <a href="{{ url_for('reels_list') }}"
+            style="color: var(--accent-primary);">Reels</a> page will show up here, organized by year and month.</p>
+</div>
+{% endif %}
+
+<script>
+    function restoreReel(id, status) {
+        if (!status) return;
+        fetch(`/api/reels/set_status/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: status })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to restore.');
+                }
+            })
+            .catch(() => alert('Network error.'));
+    }
+</script>
+{% endblock %}

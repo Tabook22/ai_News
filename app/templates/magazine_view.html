@@ -1,0 +1,329 @@
+{% extends "public.html" %}
+{% import "_platform_icons.html" as icons %}
+
+{% block content %}
+{% set title_top = (settings.section_title_top_ar or 'الخبر الرئيسي') if lang_pref == 'ar' else (settings.section_title_top or 'Top Story') %}
+{% set title_latest = (settings.section_title_latest_ar or 'آخر الأخبار') if lang_pref == 'ar' else (settings.section_title_latest or 'Latest News') %}
+{% set title_trending = (settings.section_title_trending_ar or 'الأكثر تداولاً') if lang_pref == 'ar' else (settings.section_title_trending or 'Trending / Updates') %}
+{% set title_archives = (settings.section_title_archives_ar or 'الأرشيف') if lang_pref == 'ar' else (settings.section_title_archives or 'Archives') %}
+{% set title_ads = (settings.section_title_ads_ar or 'إعلان') if lang_pref == 'ar' else (settings.section_title_ads or 'Sponsored') %}
+{% set title_most_viewed = 'الأكثر مشاهدة' if lang_pref == 'ar' else 'Most Viewed' %}
+<style>
+    :root {
+        --gap-lg: 3rem;
+        --gap-md: 1.5rem;
+    }
+
+    /* --- LAYOUT GRID --- */
+    .magazine-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: var(--gap-lg);
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-bottom: 4rem;
+    }
+
+    @media (max-width: 1024px) {
+        .magazine-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* --- SECTION 1: HERO (TOP HIGHLIGHT) --- */
+    .section-hero {
+        margin-bottom: 4rem;
+    }
+
+    .hero-card {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        transition: transform 0.3s ease;
+    }
+
+    .hero-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .hero-visual {
+        position: relative;
+        overflow: hidden;
+        min-height: 400px;
+    }
+
+    .hero-visual img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.7s ease;
+    }
+
+    .hero-card:hover .hero-visual img {
+        transform: scale(1.05);
+    }
+
+    .hero-content {
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+    }
+
+    .hero-label {
+        background: var(--accent-primary);
+        color: #000;
+        text-transform: uppercase;
+        font-weight: 800;
+        font-size: 0.75rem;
+        letter-spacing: 1.5px;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        align-self: flex-start;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 10px rgba(56, 189, 248, 0.4);
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        line-height: 1.1;
+        margin-bottom: 1rem;
+        color: var(--text-main);
+        /* background: linear-gradient(to right, #ffffff, #94a3b8); Removed white gradient */
+        /* -webkit-background-clip: text; */
+        /* -webkit-text-fill-color: transparent; */
+    }
+
+    /* --- SECTION 2: SECONDARY NEWS --- */
+    .section-secondary {
+        margin-top: 2rem;
+    }
+
+    .section-header {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .section-header span {
+        background: var(--bg-card);
+        padding-right: 1rem;
+        margin-bottom: -1.6rem;
+        z-index: 2;
+    }
+
+    .secondary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .secondary-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .secondary-card:hover {
+        border-color: var(--accent-primary);
+        transform: translateY(-3px);
+    }
+
+    .secondary-img {
+        height: 200px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .secondary-content {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .secondary-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .meta-row {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        text-transform: uppercase;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .card-when {
+        margin: 0 0 0.7rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.02em;
+        color: var(--text-muted);
+        text-transform: none;
+    }
+
+    .source-link {
+        color: var(--accent-secondary);
+        text-decoration: none;
+        border-bottom: 1px dotted var(--accent-secondary);
+    }
+
+    .source-link:hover {
+        color: var(--text-main);
+    }
+
+    /* --- SECTION 3: SIDEBAR & ADS --- */
+    .sidebar-section {
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    /* Advertisement Card */
+    .ad-card {
+        background: var(--bg-card);
+        border: 1px dashed var(--accent-secondary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ad-card::before {
+        content: 'SPONSORED';
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: var(--accent-secondary);
+        color: #fff;
+        font-size: 0.6rem;
+        padding: 0.2rem 0.6rem;
+        border-bottom-left-radius: 8px;
+    }
+
+    .ad-image {
+        width: 100%;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        object-fit: cover;
+    }
+
+    .ad-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .sidebar-list-item {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        align-items: flex-start;
+    }
+
+    .sidebar-list-thumb {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    /* Most Viewed */
+    .most-viewed-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .most-viewed-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .mv-rank {
+        font-family: var(--font-serif);
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: var(--accent-primary);
+        min-width: 1.5rem;
+        line-height: 1;
+        opacity: 0.6;
+    }
+
+    .mv-title {
+        display: block;
+        color: var(--text-main);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        line-height: 1.35;
+        margin-bottom: 0.25rem;
+    }
+
+    .mv-title:hover {
+        color: var(--accent-primary);
+    }
+
+    .mv-count {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Filter Message */
+    .filter-banner {
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid var(--accent-primary);
+        color: var(--accent-primary);
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    @media (max-width: 768px) {
+        .hero-card {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-visual {
+            height: 250px;
+            min-height: auto;
+        }
+    }
+</style>
+
+{% include "_issue_front.html" %}
+
+{% endblock %}

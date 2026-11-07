@@ -1,0 +1,161 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-box .num {
+        font-size: 2.2rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .stat-box .label {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.3rem;
+    }
+
+    .subs-table-wrap {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    table.subs-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table.subs-table th {
+        text-align: left;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    table.subs-table td {
+        padding: 0.9rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+    }
+
+    table.subs-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .pill {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        background: var(--bg-hover);
+        color: var(--text-muted);
+    }
+
+    .pill.qr {
+        background: rgba(56, 189, 248, 0.15);
+        color: var(--accent-primary);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+</style>
+
+<div class="dashboard-header">
+    <div>
+        <h1>📬 Subscribers</h1>
+        <p style="color: var(--text-muted); margin: 0;">Everyone who scanned, signed up, and wants their AI briefing.
+        </p>
+    </div>
+    <div style="display:flex; gap: 0.75rem;">
+        <a href="{{ url_for('qr_page') }}" class="btn btn-secondary">📱 Door QR Code</a>
+        <a href="{{ url_for('export_subscribers_csv') }}" class="btn btn-secondary">⬇ Export CSV</a>
+        <a href="{{ url_for('digest_preview') }}" class="btn btn-primary">📧 Send Weekly Digest</a>
+    </div>
+</div>
+
+<div class="stats-row">
+    <div class="stat-box">
+        <div class="num">{{ total }}</div>
+        <div class="label">Active Subscribers</div>
+    </div>
+    <div class="stat-box">
+        <div class="num">{{ since_7d }}</div>
+        <div class="label">New this week</div>
+    </div>
+    <div class="stat-box">
+        <div class="num">{{ since_24h }}</div>
+        <div class="label">New last 24h</div>
+    </div>
+</div>
+
+<div class="subs-table-wrap">
+    {% if subscribers %}
+    <table class="subs-table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Language</th>
+                <th>Source</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in subscribers %}
+            <tr style="{{ 'opacity:0.5;' if not s.is_active else '' }}">
+                <td>{{ s.email }}</td>
+                <td>{{ s.name or '—' }}</td>
+                <td>{{ s.language_pref }}</td>
+                <td><span class="pill {{ 'qr' if s.source == 'qr' else '' }}">{{ s.source }}</span></td>
+                <td>{{ s.created_at.strftime('%b %d, %Y') if s.created_at else '—' }}</td>
+                <td>{{ 'Active' if s.is_active else 'Unsubscribed' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('delete_subscriber', sub_id=s.id) }}"
+                        onsubmit="return confirm('Remove this subscriber?');">
+                        <button type="submit" class="btn-icon danger" title="Remove">🗑️</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <h3>No subscribers yet</h3>
+        <p>Print your <a href="{{ url_for('qr_page') }}">door QR code</a> and share <a
+                href="{{ url_for('subscribe') }}">{{ url_for('subscribe', _external=True) }}</a> to start growing
+            your list.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

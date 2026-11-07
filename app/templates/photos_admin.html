@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>{{ A('ph_title') }}</h1>
+        <p class="subtitle">{{ A('ph_dek') }}</p>
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('department_admin') }}" class="btn btn-secondary">{{ A('ph_back') }}</a>
+        <a href="{{ url_for('campus_photos') }}" class="btn btn-secondary" target="_blank">{{ A('preview') }}</a>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('add_occasion_photos') }}" enctype="multipart/form-data" class="dash-section photo-form">
+    <h2>{{ A('ph_new') }}</h2>
+    <div class="photo-form-grid">
+        <div class="form-group">
+            <label>{{ A('ph_term') }}</label>
+            <select name="term">
+                <option value="fall" {{ 'selected' if this_term == 'fall' else '' }}>{{ A('ph_fall') }}</option>
+                <option value="spring" {{ 'selected' if this_term == 'spring' else '' }}>{{ A('ph_spring') }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_year') }}</label>
+            <input type="number" name="year" min="2000" max="2100" value="{{ this_year }}" required>
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_date') }}</label>
+            <input type="date" name="event_date" value="{{ today }}" required>
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_occasion') }}</label>
+            <input type="text" name="title_ar" maxlength="190" dir="rtl" placeholder="{{ A('ph_occasion_ph') }}">
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_occasion_en') }}</label>
+            <input type="text" name="title" maxlength="190" placeholder="{{ A('ph_occasion_en') }}">
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_note') }}</label>
+            <input type="text" name="note_ar" maxlength="500" dir="rtl" placeholder="{{ A('ph_note') }}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{ A('ph_files') }}</label>
+        <p class="subtitle">{{ A('ph_files_hint') }}</p>
+        <input type="file" name="photos" class="photo-picker" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+        <div class="photo-drafts" data-title-ar="{{ A('ph_photo_title') }}" data-caption-ar="{{ A('ph_photo_caption') }}" data-title="{{ A('ph_photo_title_en') }}" data-caption="{{ A('ph_photo_caption_en') }}"></div>
+    </div>
+    <label class="photo-show">
+        <input type="checkbox" name="show" value="1" checked> {{ A('ph_show') }}
+    </label>
+    <button type="submit" class="btn btn-primary">{{ A('ph_save') }}</button>
+</form>
+
+{% if semesters %}
+{% for semester in semesters %}
+<section class="photo-semester">
+    <h2>{{ semester.label }}</h2>
+    {% for album in semester.albums %}
+    <article class="photo-album" id="album-{{ album.id }}">
+        <header class="photo-album-head">
+            <div>
+                <p class="photo-kicker">{{ album.event_date.isoformat() if album.event_date else '' }} · {{ album.photos|length }} {{ A('ph_count') }}</p>
+                <h3>{{ album.title_ar or album.title }}</h3>
+                {% if album.note_ar or album.note %}<p>{{ album.note_ar or album.note }}</p>{% endif %}
+                {% if not album.is_published %}<p class="photo-hidden">{{ A('ph_hidden') }}</p>{% endif %}
+            </div>
+            <div class="photo-album-actions">
+                <form method="POST" action="{{ url_for('toggle_occasion_album', album_id=album.id) }}">
+                    <button type="submit" class="btn btn-secondary">{{ A('ph_hide') if album.is_published else A('ph_show_album') }}</button>
+                </form>
+                <form method="POST" action="{{ url_for('remove_occasion_album', album_id=album.id) }}" onsubmit="return confirm('{{ A('ph_remove_album_q') }}');">
+                    <button type="submit" class="btn btn-secondary">{{ A('ph_remove_album') }}</button>
+                </form>
+            </div>
+        </header>
+        <div class="photo-admin-grid">
+            {% for photo in album.photos %}
+            <figure>
+                <img src="{{ photo.image }}" alt="">
+                <form method="POST" action="{{ url_for('update_occasion_photo', photo_id=photo.id) }}">
+                    <input type="text" name="title_ar" value="{{ photo.title_ar or '' }}" maxlength="180" dir="rtl" placeholder="{{ A('ph_photo_title') }}">
+                    <textarea name="caption_ar" rows="2" maxlength="400" dir="rtl" placeholder="{{ A('ph_photo_caption') }}">{{ photo.caption_ar or '' }}</textarea>
+                    <input type="text" name="title" value="{{ photo.title or '' }}" maxlength="180" placeholder="{{ A('ph_photo_title_en') }}">
+                    <textarea name="caption" rows="2" maxlength="400" placeholder="{{ A('ph_photo_caption_en') }}">{{ photo.caption or '' }}</textarea>
+                    <button type="submit" class="btn btn-secondary">{{ A('ph_save_photo') }}</button>
+                </form>
+                <form method="POST" action="{{ url_for('remove_occasion_photo', photo_id=photo.id) }}" onsubmit="return confirm('{{ A('ph_remove_photo_q') }}');">
+                    <button type="submit" class="btn btn-secondary">{{ A('ph_remove_photo') }}</button>
+                </form>
+            </figure>
+            {% endfor %}
+        </div>
+        <form method="POST" action="{{ url_for('add_photos_to_album', album_id=album.id) }}" enctype="multipart/form-data" class="photo-more">
+            <label>{{ A('ph_add_more') }}</label>
+            <input type="file" name="photos" class="photo-picker" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+            <div class="photo-drafts" data-title-ar="{{ A('ph_photo_title') }}" data-caption-ar="{{ A('ph_photo_caption') }}" data-title="{{ A('ph_photo_title_en') }}" data-caption="{{ A('ph_photo_caption_en') }}"></div>
+            <button type="submit" class="btn btn-primary">{{ A('ph_add') }}</button>
+        </form>
+    </article>
+    {% endfor %}
+</section>
+{% endfor %}
+{% else %}
+<p class="subtitle">{{ A('ph_empty') }}</p>
+{% endif %}
+
+<script>
+document.querySelectorAll('.photo-picker').forEach(function (picker) {
+    const list = picker.parentElement.querySelector('.photo-drafts');
+    picker.addEventListener('change', function () {
+        list.innerHTML = '';
+        Array.from(picker.files).forEach(function (file) {
+            const box = document.createElement('div');
+            box.className = 'photo-draft';
+            const img = document.createElement('img');
+            img.alt = '';
+            img.src = URL.createObjectURL(file);
+            box.append(img, draftField('photo_title_ar', list.dataset.titleAr, true), draftField('photo_caption_ar', list.dataset.captionAr, true), draftField('photo_title', list.dataset.title, false), draftField('photo_caption', list.dataset.caption, false));
+            list.append(box);
+        });
+    });
+});
+
+function draftField(name, placeholder, arabic) {
+    const isCaption = name.indexOf('caption') !== -1;
+    const input = document.createElement(isCaption ? 'textarea' : 'input');
+    if (input.tagName === 'INPUT') input.type = 'text';
+    else input.rows = 2;
+    input.name = name;
+    input.placeholder = placeholder || '';
+    input.maxLength = isCaption ? 400 : 180;
+    if (arabic) input.dir = 'rtl';
+    return input;
+}
+</script>
+{% endblock %}

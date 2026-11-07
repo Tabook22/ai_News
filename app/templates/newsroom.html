@@ -1,0 +1,324 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block page_title %}{{ A('newsroom') }}{% endblock %}
+
+{% block content %}
+<div class="nr-page">
+    <header class="nr-head">
+        <div>
+            <p class="nr-eyebrow">{{ t('Dhofar University · Computer Science', 'جامعة ظفار · علوم الحاسوب') }}</p>
+            <h1>{{ t('Two desks. One newspaper.', 'قسمان. صحيفة واحدة.') }}</h1>
+            <p class="nr-dek">{{ t('Write, place, and publish each desk on its own — then open the issue your readers see.', 'اكتب كل قسم وانشره ونسّقه على حدة، ثم افتح العدد كما يراه القراء.') }}</p>
+        </div>
+        <div class="nr-head-actions">
+            <a class="btn btn-secondary" href="{{ url_for('search_page') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+                {{ A('find_news') }}
+            </a>
+            <a class="btn btn-primary" href="{{ url_for('add_news') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ A('new_story') }}
+            </a>
+        </div>
+    </header>
+
+    <div class="nr-stats">
+        <a class="nr-stat is-green" href="{{ url_for('dashboard') }}">
+            <span class="nr-stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-newspaper"></use></svg></span>
+            <span class="nr-stat-copy">
+                <b>{{ campus_live + world_live }}</b>
+                <span>{{ t('Published', 'منشور') }}</span>
+                <small>{{ campus_week + world_week }} {{ t('this week', 'هذا الأسبوع') }}</small>
+            </span>
+        </a>
+        <a class="nr-stat is-amber" href="{{ url_for('dashboard') }}">
+            <span class="nr-stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+            <span class="nr-stat-copy">
+                <b>{{ campus_drafts + world_drafts }}</b>
+                <span>{{ t('Drafts', 'مسودات') }}</span>
+                <small>{{ t('waiting to publish', 'بانتظار النشر') }}</small>
+            </span>
+        </a>
+        <a class="nr-stat is-teal" href="{{ url_for('department_admin') }}">
+            <span class="nr-stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-building"></use></svg></span>
+            <span class="nr-stat-copy">
+                <b>{{ campus_live }}</b>
+                <span>{{ t('Department', 'القسم') }}</span>
+                <small>{{ campus_week }} {{ t('this week', 'هذا الأسبوع') }}</small>
+            </span>
+        </a>
+        <a class="nr-stat is-indigo" href="{{ url_for('dashboard') }}">
+            <span class="nr-stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-globe"></use></svg></span>
+            <span class="nr-stat-copy">
+                <b>{{ world_live }}</b>
+                <span>{{ t('The world', 'العالم') }}</span>
+                <small>{{ world_week }} {{ t('this week', 'هذا الأسبوع') }}</small>
+            </span>
+        </a>
+    </div>
+
+    {% if attention %}
+    <section class="nr-attention" aria-labelledby="nr-attention-title">
+        <div class="nr-attention-head">
+            <span class="nr-attention-icon"><svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg></span>
+            <h2 id="nr-attention-title">{{ t('Needs attention', 'يحتاج انتباهًا') }}</h2>
+            <span class="nr-count-badge">{{ attention|length }}</span>
+        </div>
+        <div class="nr-alert-grid">
+            {% for item in attention %}
+            <a class="nr-alert is-{{ item.level }}" href="{{ item.href }}">
+                <span class="nr-alert-dot" aria-hidden="true"></span>
+                <span>{{ item.label }}</span>
+                {% if item.count %}<b>{{ item.count }}</b>{% endif %}
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <div class="nr-desks">
+        <article class="nr-desk is-campus">
+            <header class="nr-desk-head">
+                <span class="nr-desk-icon"><svg class="icon" aria-hidden="true"><use href="#i-building"></use></svg></span>
+                <div>
+                    <p class="nr-desk-label">{{ A('department') }}</p>
+                    <h2>{{ A('dept_name') }}</h2>
+                </div>
+                <span class="nr-live"><b>{{ campus_live }}</b> {{ A('live') }}</span>
+            </header>
+            <p class="nr-desk-dek">{{ A('nr_dept_dek') }}</p>
+
+            <div class="nr-desk-actions">
+                <a class="btn btn-primary" href="{{ url_for('add_news', wing='campus') }}">
+                    <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                    {{ t('New department post', 'منشور قسم جديد') }}
+                </a>
+                <a class="btn btn-secondary" href="{{ url_for('department_admin') }}">{{ t('Manage desk', 'إدارة القسم') }}</a>
+                <a class="nr-text-link" href="{{ url_for('campus_weekly') }}" target="_blank" rel="noopener">
+                    {{ A('preview') }}
+                    <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg>
+                </a>
+            </div>
+
+            <div class="nr-recent">
+                <div class="nr-recent-head">
+                    <h3>{{ t('Just published', 'أحدث المنشور') }}</h3>
+                    <a href="{{ url_for('department_admin') }}">{{ t('All', 'الكل') }}</a>
+                </div>
+                {% for story in campus_recent %}
+                <a class="nr-story" href="{{ url_for('edit_news', item_id=story.id) }}">
+                    <span class="nr-thumb">
+                        {% if story.image %}<img src="{{ story.image }}" alt="" loading="lazy">{% else %}<span>N</span>{% endif %}
+                    </span>
+                    <span class="nr-story-copy">
+                        <b>{{ (story.title_ar or story.title) if admin_ar else story.title }}</b>
+                        <small>{{ (story.kind_ar if admin_ar else story.kind_en) or (story.desk_ar if admin_ar else story.desk_en) }} · {{ story.published_ar if admin_ar else story.published_en }}</small>
+                    </span>
+                    <span class="nr-edit" aria-hidden="true"><svg class="icon"><use href="#i-arrow"></use></svg></span>
+                </a>
+                {% else %}
+                <p class="nr-empty">{{ t('Nothing published from the department yet.', 'لم يُنشر شيء من القسم بعد.') }}</p>
+                {% endfor %}
+            </div>
+
+            <footer class="nr-desk-foot">
+                <span><b>{{ campus_drafts }}</b> {{ t('drafts', 'مسودات') }}</span>
+                <span><b>{{ campus_hidden }}</b> {{ A('hidden') }}</span>
+                <span><b>{{ campus_week }}</b> {{ t('this week', 'هذا الأسبوع') }}</span>
+            </footer>
+        </article>
+
+        <article class="nr-desk is-world">
+            <header class="nr-desk-head">
+                <span class="nr-desk-icon"><svg class="icon" aria-hidden="true"><use href="#i-globe"></use></svg></span>
+                <div>
+                    <p class="nr-desk-label">{{ A('world') }}</p>
+                    <h2>{{ A('nr_world_title') }}</h2>
+                </div>
+                <span class="nr-live"><b>{{ world_live }}</b> {{ A('live') }}</span>
+            </header>
+            <p class="nr-desk-dek">{{ A('nr_world_dek') }}</p>
+
+            <div class="nr-desk-actions">
+                <a class="btn btn-primary" href="{{ url_for('add_news') }}">
+                    <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                    {{ t('New world story', 'خبر عالمي جديد') }}
+                </a>
+                <a class="btn btn-secondary" href="{{ url_for('dashboard') }}">{{ t('Manage desk', 'إدارة القسم') }}</a>
+                <a class="nr-text-link" href="{{ url_for('magazine_view') }}" target="_blank" rel="noopener">
+                    {{ A('issue') }}
+                    <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg>
+                </a>
+            </div>
+
+            <div class="nr-slots">
+                <span class="nr-slot is-cover">{{ A('slot_cover') }} <b>{{ slots.top }}</b></span>
+                <span class="nr-slot is-latest">{{ A('slot_latest') }} <b>{{ slots.second }}</b></span>
+                <span class="nr-slot is-sidebar">{{ A('slot_sidebar') }} <b>{{ slots.sidebar }}</b></span>
+                <span class="nr-slot is-notice">{{ A('slot_notice') }} <b>{{ slots.ads }}</b></span>
+            </div>
+
+            <div class="nr-recent">
+                <div class="nr-recent-head">
+                    <h3>{{ t('Just published', 'أحدث المنشور') }}</h3>
+                    <a href="{{ url_for('dashboard') }}">{{ t('All', 'الكل') }}</a>
+                </div>
+                {% for story in world_recent %}
+                <a class="nr-story" href="{{ url_for('edit_news', item_id=story.id) }}">
+                    <span class="nr-thumb">
+                        {% if story.image %}<img src="{{ story.image }}" alt="" loading="lazy">{% else %}<span>N</span>{% endif %}
+                    </span>
+                    <span class="nr-story-copy">
+                        <b>{{ (story.title_ar or story.title) if admin_ar else story.title }}</b>
+                        <small>{{ (story.desk_ar if admin_ar else story.desk_en) }} · {{ story.published_ar if admin_ar else story.published_en }}</small>
+                    </span>
+                    <span class="nr-edit" aria-hidden="true"><svg class="icon"><use href="#i-arrow"></use></svg></span>
+                </a>
+                {% else %}
+                <p class="nr-empty">{{ t('Nothing published from the world desk yet.', 'لم يُنشر شيء من قسم العالم بعد.') }}</p>
+                {% endfor %}
+            </div>
+
+            <footer class="nr-desk-foot">
+                <span><b>{{ world_drafts }}</b> {{ t('drafts', 'مسودات') }}</span>
+                <span><b>{{ world_hidden }}</b> {{ A('hidden') }}</span>
+                <span><b>{{ reel_count }}</b> {{ A('reels') }}</span>
+                <span><b>{{ tool_count }}</b> {{ A('ai_tools') }}</span>
+            </footer>
+        </article>
+    </div>
+
+    <section class="nr-issue" aria-labelledby="nr-issue-title">
+        <header class="nr-section-head">
+            <div>
+                <p class="nr-eyebrow">{{ t('Preview', 'معاينة') }}</p>
+                <h2 id="nr-issue-title">{{ A('on_issue') }}</h2>
+                <p>{{ A('on_issue_dek') }}</p>
+            </div>
+            <a class="btn btn-secondary" href="{{ url_for('magazine_view') }}" target="_blank" rel="noopener">
+                <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                {{ A('open_issue') }}
+            </a>
+        </header>
+
+        <div class="nr-issue-grid">
+            <div class="nr-issue-card is-campus">
+                <div class="nr-issue-head">
+                    <span class="nr-slot is-campus">{{ A('department') }}</span>
+                    <h3>{{ A('dept_name') }}</h3>
+                    <span class="nr-issue-count">{{ campus_live }}</span>
+                </div>
+                {% if paste_campus %}
+                {% for group in paste_campus %}
+                <p class="nr-group-label">{{ group.label_ar if admin_ar else group.label_en }} <span>{{ group.total }}</span></p>
+                <ul class="nr-issue-list">
+                    {% for story in group.stories %}
+                    <li>
+                        <a href="{{ url_for('edit_news', item_id=story.id) }}">{{ (story.title_ar or story.title) if admin_ar else story.title }}</a>
+                        <a class="nr-issue-edit" href="{{ url_for('edit_news', item_id=story.id) }}" aria-label="{{ t('Edit', 'تعديل') }}">
+                            <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+                {% else %}
+                <p class="nr-empty">{{ A('empty_dept') }}</p>
+                {% endif %}
+                <a class="nr-card-link" href="{{ url_for('department_admin') }}">{{ A('work_dept') }} →</a>
+            </div>
+
+            <div class="nr-issue-card is-world">
+                <div class="nr-issue-head">
+                    <span class="nr-slot is-world">{{ A('world') }}</span>
+                    <h3>{{ A('nr_world_title') }}</h3>
+                    <span class="nr-issue-count">{{ world_live }}</span>
+                </div>
+
+                {% if paste_cover %}
+                <a class="nr-cover" href="{{ url_for('edit_news', item_id=paste_cover.id) }}">
+                    <span class="nr-cover-media">
+                        {% if paste_cover.image %}<img src="{{ paste_cover.image }}" alt="" loading="lazy">{% else %}<span>N</span>{% endif %}
+                    </span>
+                    <span class="nr-cover-copy">
+                        <span class="nr-slot is-cover">{{ A('slot_cover') }}</span>
+                        <b>{{ (paste_cover.title_ar or paste_cover.title) if admin_ar else paste_cover.title }}</b>
+                        <small>{{ paste_cover.source or 'Nasser AI News' }} · {{ paste_cover.reading_minutes }} {{ t('min', 'دقيقة') }}</small>
+                    </span>
+                </a>
+                {% endif %}
+
+                {% for story in paste_world %}
+                <a class="nr-issue-row" href="{{ url_for('edit_news', item_id=story.id) }}">
+                    <span class="nr-slot is-{{ story.slot|lower }}">{{ story.slot }}</span>
+                    <span class="nr-issue-title">{{ (story.title_ar or story.title) if admin_ar else story.title }}</span>
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+                </a>
+                {% endfor %}
+                {% if not paste_cover and not paste_world %}
+                <p class="nr-empty">{{ A('empty_world') }}</p>
+                {% endif %}
+                <a class="nr-card-link" href="{{ url_for('dashboard') }}">{{ A('work_world') }} →</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="nr-quick" aria-labelledby="nr-quick-title">
+        <header class="nr-section-head">
+            <div>
+                <p class="nr-eyebrow">{{ t('Shortcuts', 'اختصارات') }}</p>
+                <h2 id="nr-quick-title">{{ t('Quick actions', 'إجراءات سريعة') }}</h2>
+            </div>
+        </header>
+        <div class="nr-quick-grid">
+            <a class="nr-quick-card is-indigo" href="{{ url_for('add_news') }}">
+                <span class="nr-quick-icon"><svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg></span>
+                <b>{{ A('new_story') }}</b>
+                <small>{{ t('Write or paste a story', 'اكتب أو الصق خبرًا') }}</small>
+            </a>
+            <a class="nr-quick-card is-teal" href="{{ url_for('search_page') }}">
+                <span class="nr-quick-icon"><svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg></span>
+                <b>{{ A('find_news') }}</b>
+                <small>{{ t('Search the wire and import', 'ابحث في الأخبار واستورد') }}</small>
+            </a>
+            <a class="nr-quick-card is-amber" href="{{ url_for('reels_list') }}">
+                <span class="nr-quick-icon"><svg class="icon" aria-hidden="true"><use href="#i-video"></use></svg></span>
+                <b>{{ A('reels') }}</b>
+                <small>{{ reel_count }} {{ t('published', 'منشور') }}</small>
+            </a>
+            <a class="nr-quick-card is-violet" href="{{ url_for('tools_list') }}">
+                <span class="nr-quick-icon"><svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg></span>
+                <b>{{ A('ai_tools') }}</b>
+                <small>{{ tool_count }} {{ t('in the guide', 'في الدليل') }}</small>
+            </a>
+            <a class="nr-quick-card is-green" href="{{ url_for('news_photos_admin') }}">
+                <span class="nr-quick-icon"><svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg></span>
+                <b>{{ A('np_nav') }}</b>
+                <small>{{ t('Curate the photo desk', 'نسّق صور الأخبار') }}</small>
+            </a>
+            <a class="nr-quick-card is-blue" href="{{ url_for('digest_preview') }}">
+                <span class="nr-quick-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg></span>
+                <b>{{ t('Weekly digest', 'الملخص الأسبوعي') }}</b>
+                <small>{{ subscriber_count|default(0) }} {{ A('subscribers') }}</small>
+            </a>
+            <a class="nr-quick-card is-red" href="{{ url_for('qr_page') }}">
+                <span class="nr-quick-icon"><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg></span>
+                <b>{{ A('qr') }}</b>
+                <small>{{ t('Door code and posters', 'رمز الباب والملصقات') }}</small>
+            </a>
+            <a class="nr-quick-card is-slate" href="{{ url_for('settings_page') }}">
+                <span class="nr-quick-icon"><svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg></span>
+                <b>{{ A('settings') }}</b>
+                <small>{{ t('Identity, theme, keys', 'الهوية والسمة والمفاتيح') }}</small>
+            </a>
+        </div>
+    </section>
+
+    <p class="nr-foot">
+        {{ t('The public issue is what readers see.', 'العدد العام هو ما يراه القراء.') }}
+        <a href="{{ url_for('magazine_view') }}" target="_blank" rel="noopener">{{ A('open_issue') }} →</a>
+    </p>
+</div>
+{% endblock %}

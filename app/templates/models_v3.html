@@ -1,0 +1,131 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'أكثر نماذج اللغة تحميلًا' if ar else 'Most-downloaded LLMs' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_desc %}{{ 'لقطة من أكثر نماذج اللغة المفتوحة تحميلًا على Hugging Face، مع روابط بطاقات النماذج والرخص.' if ar else 'A snapshot of the most-downloaded open language models on Hugging Face, with model-card and licence links.' }}{% endblock %}
+
+{% block content %}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="model-i-arrow" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m13 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="model-i-external" viewBox="0 0 24 24"><path d="M14 4h6v6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 4 10 14" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+</svg>
+
+<div class="wrap">
+    <nav class="tools-tabs" aria-label="{{ 'أقسام الدليل' if ar else 'Directory sections' }}">
+        <a href="{{ url_for('tools_directory') }}">{{ 'الدليل' if ar else 'Directory' }}</a>
+        <a href="{{ url_for('tools_ranked') }}">{{ 'الترتيب' if ar else 'Rankings' }}</a>
+        <a class="is-active" href="{{ url_for('models_directory') }}">{{ 'أفضل النماذج' if ar else 'Top models' }}</a>
+    </nav>
+
+    <header class="rank-hero">
+        <span class="eyebrow">{{ 'النماذج المفتوحة' if ar else 'Open models' }}</span>
+        <h1>{{ 'The most-downloaded open LLMs.' if not ar else 'أكثر نماذج اللغة المفتوحة تحميلًا.' }}</h1>
+        <p>{{ 'A snapshot of Hugging Face download counts for text-generation models, ordered by downloads. Downloads show popularity and reuse — they are not a quality score, so each row links to the model card and its licence.' if not ar else 'لقطة لعدد تحميلات نماذج توليد النص على Hugging Face مرتبة تنازليًا. التحميلات تعني الانتشار وإعادة الاستخدام، وليست مقياس جودة، لذلك يربط كل صف ببطاقة النموذج ورخصته.' }}</p>
+        <div class="tools-meta">
+            <span><b>{{ models|length }}</b> {{ 'نموذجًا' if ar else 'models' }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <span>{{ 'بيانات Hugging Face' if ar else 'Hugging Face data' }} · {{ date }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <a href="https://huggingface.co/models?pipeline_tag=text-generation&sort=downloads" target="_blank" rel="noopener noreferrer">
+                {{ 'المصدر المباشر' if ar else 'Live source' }} ↗
+            </a>
+        </div>
+    </header>
+
+    <div class="model-sources">
+        <span>{{ 'المصادر' if ar else 'Sources' }}</span>
+        <a href="https://huggingface.co/models?pipeline_tag=text-generation&sort=downloads" target="_blank" rel="noopener noreferrer">{{ 'Hugging Face API — المصدر الرئيسي' if ar else 'Hugging Face API — primary' }} ↗</a>
+        <a href="https://models.dev" target="_blank" rel="noopener noreferrer">{{ 'models.dev — المواصفات' if ar else 'models.dev — specs' }} ↗</a>
+        <a href="https://llmware-ai.github.io/llmware/components/model_catalog" target="_blank" rel="noopener noreferrer">{{ 'LLMWare — نماذج RAG صغيرة' if ar else 'LLMWare — small RAG models' }} ↗</a>
+    </div>
+
+    {% if models %}
+    <section class="rank-podium model-podium">
+        {% for model in models[:3] %}
+        <a class="rank-card is-{{ loop.index }}" href="{{ model.url }}" target="_blank" rel="noopener noreferrer">
+            <span class="rank-medal">{{ loop.index }}</span>
+            <span class="rank-cat">{{ model.org }}</span>
+            <b>{{ model.name }}</b>
+            <span class="model-downloads">{{ '{:,}'.format(model.downloads) }} <small>{{ 'تحميل' if ar else 'downloads' }}</small></span>
+            <span class="rank-note">{{ model.note_ar if ar else model.note_en }}</span>
+            <span class="rank-source">{{ 'بطاقة النموذج' if ar else 'Model card' }} ↗</span>
+        </a>
+        {% endfor %}
+    </section>
+
+    <section class="rank-list" aria-labelledby="models-list-title">
+        <header class="tools-section-head is-row">
+            <h2 id="models-list-title">{{ 'The full table' if not ar else 'الجدول الكامل' }}</h2>
+            <span class="results-context">{{ 'Downloads · likes' if not ar else 'التحميلات · الإعجابات' }}</span>
+        </header>
+        <div class="model-table-wrap">
+            <table class="model-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{ 'Model' if not ar else 'النموذج' }}</th>
+                        <th>{{ 'Organisation' if not ar else 'الجهة' }}</th>
+                        <th>{{ 'Size' if not ar else 'الحجم' }}</th>
+                        <th>{{ 'Downloads' if not ar else 'التحميلات' }}</th>
+                        <th>{{ 'Likes' if not ar else 'الإعجابات' }}</th>
+                        <th>{{ 'Licence' if not ar else 'الرخصة' }}</th>
+                        <th>{{ 'Refs' if not ar else 'المراجع' }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model in models %}
+                    <tr>
+                        <td class="model-rank">{{ '%02d'|format(loop.index) }}</td>
+                        <td>
+                            <a class="model-name" href="{{ model.url }}" target="_blank" rel="noopener noreferrer">{{ model.name }}</a>
+                        </td>
+                        <td>{{ model.org }}</td>
+                        <td>{{ model.params }}</td>
+                        <td class="model-number">{{ '{:,}'.format(model.downloads) }}</td>
+                        <td class="model-number">{{ '{:,}'.format(model.likes) }}</td>
+                        <td><span class="model-licence">{{ model.licence }}</span></td>
+                        <td class="model-refs">
+                            <a href="{{ model.url }}" target="_blank" rel="noopener noreferrer">HF ↗</a>
+                            <a href="https://models.dev/?search={{ model.name|urlencode }}" target="_blank" rel="noopener noreferrer">specs ↗</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="llmware-section" aria-labelledby="llmware-title">
+        <header class="tools-section-head">
+            <h2 id="llmware-title">{{ 'Small models from LLMWare' if not ar else 'نماذج صغيرة من LLMWare' }}</h2>
+            <p>{{ 'LLMWare focuses on small, specialised models for document work rather than the biggest general model. These are its most-downloaded picks on Hugging Face; the catalogue link is the reference.' if not ar else 'تركز LLMWare على نماذج صغيرة متخصصة للعمل على المستندات لا على أكبر نموذج عام. هذه أكثر اختياراتها تحميلًا على Hugging Face، ورابط الكتالوج هو المرجع.' }}</p>
+        </header>
+        <div class="llmware-grid">
+            {% for pick in llmware_picks %}
+            <a class="llmware-card" href="{{ pick.url }}" target="_blank" rel="noopener noreferrer">
+                <span class="llmware-size">{{ pick.size }}</span>
+                <b>{{ pick.name }}</b>
+                <span class="llmware-use">{{ pick.use_ar if ar else pick.use_en }}</span>
+                <span class="llmware-meta">{{ '{:,}'.format(pick.downloads) }} {{ 'تحميل' if ar else 'downloads' }} · {{ pick.likes }} {{ 'إعجاب' if ar else 'likes' }}</span>
+                <span class="llmware-link">{{ 'بطاقة النموذج' if ar else 'Model card' }} ↗</span>
+            </a>
+            {% endfor %}
+        </div>
+        <a class="nr-card-link" href="https://llmware-ai.github.io/llmware/components/model_catalog" target="_blank" rel="noopener noreferrer">{{ 'The full LLMWare catalogue' if not ar else 'كتالوج LLMWare الكامل' }} →</a>
+    </section>
+
+    <aside class="tools-note">
+        <svg class="icon" aria-hidden="true"><use href="#model-i-external"></use></svg>
+        <div>
+            <b>{{ 'How to read this table' if not ar else 'كيف تقرأ هذا الجدول' }}</b>
+            <p>{{ 'A high download count can mean a model is small, easy to run, bundled in a popular app, or genuinely good. Check the parameter count, the licence and the model card before choosing. For a fair quality comparison, use a benchmark that matches your language and task; for Arabic, check Arabic-specific evaluations rather than English-only leaderboards.' if not ar else 'قد يعني العدد الكبير أن النموذج صغير وسهل التشغيل أو مضمّن في تطبيق شائع أو جيد فعلًا. تحقق من عدد المعاملات والرخصة وبطاقة النموذج قبل الاختيار. للمقارنة العادلة استخدم مقياسًا يناسب لغتك ومهمتك، وللعربية تحقق من التقييمات العربية لا قوائم الإنجليزية فقط.' }}</p>
+        </div>
+    </aside>
+    {% else %}
+    <div class="tools-empty">
+        <h2>{{ 'No models loaded yet' if not ar else 'لا توجد نماذج بعد' }}</h2>
+        <p>{{ 'Run the model seed script to load the Hugging Face snapshot.' if not ar else 'شغّل سكربت النماذج لتحميل لقطة Hugging Face.' }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

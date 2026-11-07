@@ -1,0 +1,810 @@
+{% extends "public.html" %}
+{% import "_platform_icons.html" as icons %}
+
+{% block page_title %}{{ item.title }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+
+{% block meta %}
+{% set article_desc = (item.summary or settings.magazine_title or 'Curated AI news.') | striptags | truncate(160) %}
+{% set article_image = item.image or '' %}
+{% if article_image and article_image.startswith('/static') %}
+{% set article_image = request.url_root.rstrip('/') + article_image %}
+{% endif %}
+<meta name="description" content="{{ article_desc }}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="{{ settings.magazine_title if settings else 'Nasser AI News' }}">
+<meta property="og:title" content="{{ item.title }}">
+<meta property="og:description" content="{{ article_desc }}">
+<meta property="og:url" content="{{ request.url }}">
+{% if article_image %}<meta property="og:image" content="{{ article_image }}">{% endif %}
+<meta name="twitter:card" content="{{ 'summary_large_image' if article_image else 'summary' }}">
+<meta name="twitter:title" content="{{ item.title }}">
+<meta name="twitter:description" content="{{ article_desc }}">
+{% endblock %}
+
+{% block content %}
+{% set title_trending = (settings.section_title_trending_ar or 'الأكثر تداولاً') if lang_pref == 'ar' else (settings.section_title_trending or 'Trending / Updates') %}
+{% set title_archives = (settings.section_title_archives_ar or 'الأرشيف') if lang_pref == 'ar' else (settings.section_title_archives or 'Archives') %}
+{% set title_ads = (settings.section_title_ads_ar or 'إعلان') if lang_pref == 'ar' else (settings.section_title_ads or 'Sponsored') %}
+{% set title_most_viewed = 'الأكثر مشاهدة' if lang_pref == 'ar' else 'Most Viewed' %}
+<div id="reading-progress-bar"
+    style="position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); z-index: 2500; transition: width 0.1s linear;">
+</div>
+<script>
+    (function () {
+        var bar = document.getElementById('reading-progress-bar');
+        function update() {
+            var scrollTop = window.scrollY || document.documentElement.scrollTop;
+            var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            bar.style.width = Math.min(100, Math.max(0, pct)) + '%';
+        }
+        document.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+    })();
+</script>
+<style>
+    /* Reuse consistent Magazine styles */
+    .hero-title {
+        font-size: 2.5rem;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(to right, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Majestic Masthead Design */
+    .majestic-masthead {
+        text-align: center;
+        margin-bottom: 4rem;
+        padding: 2rem 0;
+        font-family: var(--font-serif);
+        position: relative;
+    }
+
+    .masthead-meta-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 4px double var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.8rem 0;
+        margin: 1.5rem 0;
+        font-family: var(--font-en);
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 2px;
+        color: var(--text-muted);
+    }
+
+    .masthead-main-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 2rem 0;
+    }
+
+    .masthead-logo {
+        height: 100px;
+        width: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+    }
+
+    .masthead-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 4.5rem;
+        line-height: 1;
+        font-weight: 900;
+        margin: 0;
+        background: linear-gradient(180deg, var(--text-main) 0%, var(--text-muted) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -2px;
+        text-transform: uppercase;
+    }
+
+    .masthead-curator-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        background: var(--bg-card);
+        padding: 0.5rem 1.2rem;
+        border-radius: 50px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-top: -1.5rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .curator-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--accent-primary);
+    }
+
+    .curator-details {
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .curator-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+    }
+
+    .curator-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-main);
+        font-family: var(--font-en);
+    }
+
+    /* Magazine Layout */
+    .magazine-container {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    @media (max-width: 900px) {
+        .magazine-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* English/Arabic content columns — side by side only when both are shown */
+    .item-content-wrapper {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .item-content-wrapper:has(.col-en):has(.col-ar) {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 900px) {
+        .item-content-wrapper:has(.col-en):has(.col-ar) {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<header class="majestic-masthead">
+    <!-- Top Branding Area -->
+    <div class="masthead-main-area">
+        {% if settings.logo_path %}
+        <img src="{{ settings.logo_path }}" alt="Logo" class="masthead-logo">
+        {% endif %}
+        <h1 class="masthead-title">{{ settings.magazine_title }}</h1>
+    </div>
+
+    <!-- Classic Newspaper Meta Bar -->
+    <div class="masthead-meta-bar">
+        <span>{{ settings.version or 'Vol. 1' }}</span>
+        <span>{{ date }}</span>
+        <span>Premium Edition</span>
+    </div>
+
+    <!-- Curator Pill (Floating) -->
+    <a href="{{ url_for('author_info') }}" class="masthead-curator-pill"
+        style="text-decoration: none; color: inherit; transition: transform 0.2s;"
+        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        {% if settings.author_image %}
+        <img src="{{ settings.author_image }}" class="curator-avatar">
+        {% endif %}
+        <div class="curator-details">
+            <span class="curator-label">Editor-in-Chief</span>
+            <span class="curator-name">{{ settings.author_name }}</span>
+        </div>
+    </a>
+</header>
+
+<div class="magazine-container">
+
+    <!-- MAIN CONTENT SECTION (Single Article) -->
+    <div class="article-detail-view">
+
+        <!-- Navigation Back -->
+        <div style="margin-bottom: 2rem;">
+            {% if item.wing == 'campus' %}
+            <a href="{{ url_for('campus_weekly') }}" class="btn btn-secondary"
+                style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                {{ '→ القسم' if lang_pref == 'ar' else '← The department' }}
+            </a>
+            {% else %}
+            <a href="{{ url_for('magazine_view') }}" class="btn btn-secondary"
+                style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                {{ '→ العدد' if lang_pref == 'ar' else '← The issue' }}
+            </a>
+            {% endif %}
+        </div>
+
+        {% set has_source_link = item.url and not item.url.startswith('manual-') %}
+        {% set is_video_item = item.content_format == 'video' or item.article_type == 'video' or item.source == 'YouTube' or item.video_id or item.campus_kind == 'video' %}
+        {% set direct_youtube = ('https://www.youtube.com/watch?v=' ~ item.video_id) if item.video_id else (item.url if is_video_item else '') %}
+        {% set campus_item = item.wing == 'campus' %}
+        <article class="magazine-item" style="margin-bottom: 4rem; padding-bottom: 4rem;">
+
+            <header style="margin-bottom: 2rem;">
+                <p class="wing-ribbon {% if campus_item %}is-campus{% elif item.wing == 'research' %}is-research{% else %}is-world{% endif %}">
+                    {% if campus_item %}
+                    {{ 'القسم' if lang_pref == 'ar' else 'The department' }}
+                    {% if item.kind_ar or item.kind_en %} · {{ item.kind_ar if lang_pref == 'ar' else item.kind_en }}{% endif %}
+                    {% elif item.wing == 'research' %}
+                    {{ 'المجتمع العلمي' if lang_pref == 'ar' else 'Scientific community' }}
+                    {% else %}
+                    {{ 'العالم' if lang_pref == 'ar' else 'The world' }} · {{ item.desk_ar if lang_pref == 'ar' else item.desk_en }}
+                    {% endif %}
+                </p>
+                {% set effective_mode = 'ar' if lang_pref == 'ar' else ('en' if lang_pref == 'en' else item.headline_display_mode) %}
+                <h2 class="article-headline" style="font-size: 2.5rem; margin-bottom: 1rem; line-height: 1.2;">
+                    {% if effective_mode == 'ar' and (item.title_ar or lang_pref == 'ar') %}
+                    <span dir="rtl" style="font-family: var(--font-ar);">{{ item.title_ar or item.title }}</span>
+                    {% elif effective_mode == 'en' %}
+                    {{ item.title }}
+                    {% else %}
+                    {# Reader chose "Both": Show English, or English + Arabic Sub #}
+                    {{ item.title }}
+                    {% if item.title_ar %}
+                    <div dir="rtl"
+                        style="margin-top: 1rem; font-size: 1.8rem; font-family: var(--font-ar); color: var(--text-muted);">
+                        {{ item.title_ar }}
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </h2>
+                <div class="meta-row" style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+                    <a class="desk-kicker" href="{{ url_for('magazine_view', desk=item.desk) }}">{{ item.desk_ar if lang_pref == 'ar' else item.desk_en }}</a>
+                    &bull;
+                    {% if campus_item and is_video_item and direct_youtube %}
+                    <a href="{{ direct_youtube }}" target="_blank" rel="noopener"
+                        style="color: var(--accent-primary); text-decoration: none; border-bottom: 1px dotted var(--accent-primary);">
+                        {{ item.source or 'YouTube' }} ↗
+                    </a>
+                    {% elif campus_item and has_source_link %}
+                    <a href="{{ item.url }}" target="_blank" rel="noopener"
+                        style="color: var(--accent-primary); text-decoration: none; border-bottom: 1px dotted var(--accent-primary);">
+                        {{ item.source or (item.url | replace('https://','') | replace('http://','') | truncate(30)) }} ↗
+                    </a>
+                    {% elif has_source_link and is_video_item %}
+                    <a href="#" onclick="openVideoModal('{{ item.video_id }}'); return false;"
+                        style="color: var(--accent-primary); text-decoration: none; border-bottom: 1px dotted var(--accent-primary);">
+                        {{ item.source or 'YouTube' }} ↗
+                    </a>
+                    {% elif has_source_link %}
+                    <a href="{{ item.url }}" class="js-open-source" data-url="{{ item.url }}" data-title="{{ item.title }}"
+                        data-image="{{ item.image or '' }}" data-summary="{{ item.summary or '' }}" data-source="{{ item.source or '' }}"
+                        style="color: var(--accent-primary); text-decoration: none; border-bottom: 1px dotted var(--accent-primary);">
+                        {{ item.source or (item.url | replace('https://','') | replace('http://','') | truncate(30)) }} ↗
+                    </a>
+                    {% else %}
+                    <span style="color: var(--accent-primary);">{{ item.source }}</span>
+                    {% endif %}
+                    &bull; <span style="text-transform: none;">{{ item.published_ar if lang_pref == 'ar' else item.published_en }}</span>
+                    {% if reading_time %}
+                    &bull; <span>{{ reading_time }} min {{ 'قراءة' if lang_pref == 'ar' else 'read' }}</span>
+                    {% endif %}
+                    &bull; <span>👁 {{ item.views or 0 }} {{ 'مشاهدة' if lang_pref == 'ar' else 'views' }}</span>
+                </div>
+
+                {% if item.lesson_why or item.lesson_ask %}
+                <section class="classroom" {% if lang_pref == 'ar' %}dir="rtl"{% endif %}>
+                    <p class="classroom-kicker">{{ 'للطالب' if lang_pref == 'ar' else 'For the student' }}</p>
+                    {% set lesson_why = (item.lesson_why_ar or item.lesson_why) if lang_pref == 'ar' else (item.lesson_why or item.lesson_why_ar) %}
+                    {% set lesson_term = (item.lesson_term_ar or item.lesson_term) if lang_pref == 'ar' else (item.lesson_term or item.lesson_term_ar) %}
+                    {% set lesson_gloss = (item.lesson_gloss_ar or item.lesson_gloss) if lang_pref == 'ar' else (item.lesson_gloss or item.lesson_gloss_ar) %}
+                    {% set lesson_ask = (item.lesson_ask_ar or item.lesson_ask) if lang_pref == 'ar' else (item.lesson_ask or item.lesson_ask_ar) %}
+                    {% if lesson_why %}<p class="classroom-why">{{ lesson_why }}</p>{% endif %}
+                    {% if lesson_term %}<p class="classroom-term"><strong>{{ lesson_term }}</strong>{% if lesson_gloss %} — {{ lesson_gloss }}{% endif %}</p>{% endif %}
+                    {% if lesson_ask %}<p class="classroom-ask">{{ lesson_ask }}</p>{% endif %}
+                </section>
+                {% endif %}
+
+                <!-- Share row -->
+                {% set share_url = request.url %}
+                <div class="share-row" style="display: flex; align-items: center; gap: 0.6rem; margin-top: 1.25rem;">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">
+                        {{ 'شارك' if lang_pref == 'ar' else 'Share' }}
+                    </span>
+                    <a href="https://twitter.com/intent/tweet?text={{ item.title | urlencode }}&url={{ share_url | urlencode }}"
+                        target="_blank" rel="noopener" class="btn-icon" title="Share on X / Twitter">𝕏</a>
+                    <a href="https://wa.me/?text={{ (item.title ~ ' ' ~ share_url) | urlencode }}" target="_blank"
+                        rel="noopener" class="btn-icon" title="Share on WhatsApp">💬</a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | urlencode }}"
+                        target="_blank" rel="noopener" class="btn-icon" title="Share on LinkedIn">in</a>
+                    <button type="button" class="btn-icon js-copy-link" data-url="{{ share_url }}"
+                        title="Copy link">🔗</button>
+                    <span class="js-copy-confirm" style="font-size: 0.8rem; color: var(--accent-primary); opacity: 0; transition: opacity 0.2s;">
+                        {{ 'تم النسخ!' if lang_pref == 'ar' else 'Copied!' }}
+                    </span>
+                </div>
+            </header>
+
+            {% if item.image %}
+            <div class="item-visual"
+                style="margin-bottom: 2rem; border-radius: 12px; overflow: hidden; max-height: 600px;">
+                <img src="{{ item.image }}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            {% endif %}
+
+            <style>
+                .article-body img { max-width: 100%; height: auto; }
+            </style>
+
+            <div class="item-content-wrapper">
+
+                <!-- ENGLISH -->
+                {% if lang_pref in ['both', 'en'] %}
+                <div class="content-col col-en">
+                    <!-- 1. ALWAYS SHOW CONTENT -->
+                    <div class="full-content article-body"
+                        style="font-family: var(--font-serif); font-size: 1.15rem; line-height: 1.8;">
+                        {% if item.full_content %}
+                        {{ item.full_content | clean_html }}
+                        {% elif item.summary %}
+                        <p class="lead-summary" style="font-weight: bold; margin-bottom: 2rem;">{{ item.summary }}</p>
+                        {% else %}
+                        <p style="color: var(--text-muted); font-style: italic;">No content available.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 2. IF THERE'S A REAL SOURCE URL: SHOW CTA (website, YouTube, or social media link) -->
+                    {% if has_source_link %}
+                    <div class="external-cta"
+                        style="margin-top: 3rem; background: var(--bg-card); padding: 2rem; border-radius: 12px; border-left: 4px solid var(--accent-primary); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 1.5rem; justify-content: space-between; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <h3
+                                style="margin-top: 0; color: var(--text-main); font-size: 1.25rem; margin-bottom: 0.5rem;">
+                                {% if is_video_item %}Watch the Full Video{% else %}Read the Full Story{% endif %}</h3>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+                                {% if is_video_item %}
+                                This video is curated from <strong>{{ item.source or 'YouTube' }}</strong>. Click below to
+                                watch it in full on the original platform.
+                                {% else %}
+                                This story is curated from <strong>{{ item.source or 'an external source' }}</strong>.
+                                Click below to view the original page and full details.
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% if campus_item and is_video_item and direct_youtube %}
+                        <a href="{{ direct_youtube }}" target="_blank" rel="noopener" class="btn btn-secondary"
+                            style="padding: 0.8rem 1.5rem; white-space: nowrap; font-weight: 600;">
+                            Watch on YouTube ↗
+                        </a>
+                        {% elif campus_item %}
+                        <a href="{{ item.url }}" target="_blank" rel="noopener" class="btn btn-secondary"
+                            style="padding: 0.8rem 1.5rem; white-space: nowrap; font-weight: 600;">
+                            Read the original story ↗
+                        </a>
+                        {% elif is_video_item %}
+                        <a href="#" onclick="openVideoModal('{{ item.video_id }}'); return false;" class="btn btn-secondary"
+                            style="padding: 0.8rem 1.5rem; white-space: nowrap; font-weight: 600;">
+                            Watch on {{ item.source or 'YouTube' }} ↗
+                        </a>
+                        {% else %}
+                        <a href="{{ item.url }}" class="js-open-source btn btn-secondary" data-url="{{ item.url }}" data-title="{{ item.title }}"
+                            data-image="{{ item.image or '' }}" data-summary="{{ item.summary or '' }}" data-source="{{ item.source or '' }}"
+                            style="padding: 0.8rem 1.5rem; white-space: nowrap; font-weight: 600;">
+                            Visit Original Source ↗
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- ARABIC -->
+                {% if lang_pref in ['both', 'ar'] %}
+                <div class="content-col col-ar" dir="rtl">
+                    <h2 class="title-ar" style="font-family: var(--font-ar); margin-bottom: 0.5rem;">{{ item.title_ar
+                        or item.title }}
+                    </h2>
+
+                    <!-- 1. ALWAYS SHOW CONTENT (falls back to the English body if this story predates
+                         auto-translation, rather than showing a blank "no content" message) -->
+                    {% if item.full_content_ar %}
+                    <div class="full-content-ar article-body"
+                        style="font-family: var(--font-ar); margin-top: 1.5rem; line-height: 1.8;">
+                        {{ item.full_content_ar | clean_html }}
+                    </div>
+                    {% elif item.summary_ar %}
+                    <div class="full-content-ar article-body"
+                        style="font-family: var(--font-ar); margin-top: 1.5rem; line-height: 1.8;">
+                        <p class="summary-ar" style="font-weight: bold; font-size: 1.1rem; color: var(--text-main); margin-bottom: 2rem;">
+                            {{ item.summary_ar }}
+                        </p>
+                    </div>
+                    {% else %}
+                    <div style="margin: 1rem 0 1.5rem; padding: 0.8rem 1rem; background: rgba(251, 191, 36, 0.1); border: 1px solid var(--accent-warning); border-radius: 8px; font-size: 0.85rem; color: var(--accent-warning);">
+                        🔄 الترجمة العربية غير متوفرة بعد لهذا الخبر — يُعرض النص الإنجليزي مؤقتاً.
+                    </div>
+                    <div class="full-content-ar article-body" dir="ltr"
+                        style="font-family: var(--font-serif); margin-top: 1.5rem; line-height: 1.8; text-align: left;">
+                        {% if item.full_content %}
+                        {{ item.full_content | clean_html }}
+                        {% elif item.summary %}
+                        <p style="font-weight: bold;">{{ item.summary }}</p>
+                        {% else %}
+                        <p style="color: var(--text-muted); font-style: italic;">لا يوجد محتوى.</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- 2. IF THERE'S A REAL SOURCE URL: SHOW CTA (website, YouTube, or social media link) -->
+                    {% if has_source_link %}
+                    <div class="external-cta"
+                        style="margin-top: 3rem; background: var(--bg-card); padding: 2rem; border-radius: 12px; border-right: 4px solid var(--accent-primary); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 1.5rem; justify-content: space-between; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <h3
+                                style="margin-top: 0; color: var(--text-main); font-family: var(--font-ar); font-size: 1.25rem; margin-bottom: 0.5rem;">
+                                {% if is_video_item %}شاهد الفيديو كاملاً{% else %}اقرأ الخبر كاملاً{% endif %}</h3>
+                            <p
+                                style="margin: 0; color: var(--text-muted); font-family: var(--font-ar); font-size: 0.95rem; line-height: 1.5;">
+                                {% if is_video_item %}
+                                هذا الفيديو من <strong>{{ item.source or 'يوتيوب' }}</strong>. اضغط أدناه لمشاهدته كاملاً على
+                                المنصة الأصلية.
+                                {% else %}
+                                تم جلب هذا الخبر من <strong>{{ item.source or 'مصدر خارجي' }}</strong>.
+                                اضغط على الزر أدناه للاطلاع على المصدر الأصلي والتفاصيل الكاملة.
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% if campus_item and is_video_item and direct_youtube %}
+                        <a href="{{ direct_youtube }}" target="_blank" rel="noopener" class="btn btn-secondary"
+                            style="font-family: var(--font-ar); padding: 0.8rem 1.5rem; white-space: nowrap; font-weight: 600;">
+                            مشاهدة على يوتيوب ↗
+                        </a>
+                        {% elif campus_item %}
+                        <a href="{{ item.url }}" target="_blank" rel="noopener" class="btn btn-secondary"
+                            style="font-family: var(--font-ar); padding: 0.8rem 1.5rem; white-space: nowrap; font-weight: 600;">
+                            اقرأ الخبر الأصلي ↗
+                        </a>
+                        {% elif is_video_item %}
+                        <a href="#" onclick="openVideoModal('{{ item.video_id }}'); return false;" class="btn btn-secondary"
+                            style="font-family: var(--font-ar); padding: 0.8rem 1.5rem; white-space: nowrap; font-weight: 600;">
+                            مشاهدة على {{ item.source or 'يوتيوب' }} ↗
+                        </a>
+                        {% else %}
+                        <a href="{{ item.url }}" class="js-open-source btn btn-secondary" data-url="{{ item.url }}" data-title="{{ item.title }}"
+                            data-image="{{ item.image or '' }}" data-summary="{{ item.summary_ar or item.summary or '' }}" data-source="{{ item.source or '' }}"
+                            style="font-family: var(--font-ar); padding: 0.8rem 1.5rem; white-space: nowrap; font-weight: 600;">
+                            زيارة المصدر الأصلي ↗
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- RELATED ARTICLES -->
+            {% if related %}
+            <div style="clear: both; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                <h3 style="margin-bottom: 1.5rem;">{{ 'اقرأ أيضاً' if lang_pref == 'ar' else 'You Might Also Like' }}</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem;">
+                    {% for r in related %}
+                    <a href="{{ url_for('magazine_detail', item_id=r.id) }}"
+                        style="text-decoration: none; color: inherit; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: var(--bg-card); transition: transform 0.2s, border-color 0.2s;"
+                        onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--accent-primary)';"
+                        onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
+                        {% if r.image %}
+                        <img src="{{ r.image }}" style="width: 100%; height: 130px; object-fit: cover;">
+                        {% endif %}
+                        <div style="padding: 1rem;">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--accent-primary); margin-bottom: 0.4rem;">
+                                {{ r.source or '' }}</div>
+                            <div style="font-weight: 600; font-size: 0.95rem; line-height: 1.35;"
+                                {% if lang_pref=='ar' %}dir="rtl" {% endif %}>
+                                {{ (r.title_ar or r.title) if lang_pref == 'ar' else r.title }}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- COMMENTS & ATTACHMENTS: language-agnostic, always shown once regardless of reading language -->
+            {% if item.article_type == 'manual' or not item.article_type %}
+            <div {% if lang_pref !='ar' %}dir="ltr" {% endif %}>
+
+                {% if item.attachment %}
+                <div class="attachment-box"
+                    style="clear: both; margin-top: 2rem; margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
+                    <div style="font-size: 2rem;">📎</div>
+                    <div>
+                        <h4 style="margin: 0; margin-bottom: 0.2rem; color: var(--text-main);">Attached Document
+                        </h4>
+                        <a href="{{ item.attachment }}" target="_blank" class="btn btn-secondary"
+                            style="font-size: 0.9rem;">Download File ⬇</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="comments-section"
+                    style="clear: both; margin-top: 4rem; padding-top: 2rem; border-top: 1px dashed var(--border-color);">
+                    <h3 style="margin-bottom: 1.5rem;">{{ 'التعليقات' if lang_pref == 'ar' else 'Discussion' }} ({{ item.comments|length }})</h3>
+                    {% if logged_in and item.comments %}
+                    <button type="button" class="btn btn-secondary" id="analyze-comments" data-item="{{ item.id }}" style="margin-bottom: 1rem;">
+                        Analyze comments
+                    </button>
+                    <div id="comment-analysis" hidden style="margin-bottom: 1.25rem; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card);"></div>
+                    {% endif %}
+
+                    <div class="comments-list" style="margin-bottom: 2rem;">
+                        {% for comment in item.comments %}
+                        <div class="comment"
+                            style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-hover); border-radius: 8px;">
+                            <div style="font-weight: bold; color: var(--accent-primary); margin-bottom: 0.2rem;">
+                                {{ comment.author }}
+                                <span
+                                    style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">&bull;
+                                    {{ comment.timestamp }}</span>
+                            </div>
+                            <div style="color: var(--text-main); font-size: 1rem; line-height: 1.6;">{{ comment.content }}</div>
+                        </div>
+                        {% else %}
+                        <p style="color: var(--text-muted); font-style: italic;">{{ 'لا توجد تعليقات بعد. كن أول من يعلق!' if lang_pref == 'ar' else 'No comments yet. Be the first!' }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <form action="{{ url_for('add_comment', item_id=item.id) }}" method="POST"
+                        style="background: var(--bg-card); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h4 style="margin-top: 0;">{{ 'أضف تعليقاً' if lang_pref == 'ar' else 'Leave a Comment' }}</h4>
+                        <input type="text" name="author" placeholder="{{ 'اسمك (اختياري)' if lang_pref == 'ar' else 'Your Name (Optional)' }}"
+                            {% if lang_pref=='ar' %}dir="rtl" {% endif %} style="margin-bottom: 1rem;">
+                        <textarea name="content" rows="3" placeholder="{{ 'شارك برأيك...' if lang_pref == 'ar' else 'Join the discussion...' }}" required
+                            {% if lang_pref=='ar' %}dir="rtl" {% endif %} style="margin-bottom: 1rem;"></textarea>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">{{ 'نشر التعليق' if lang_pref == 'ar' else 'Post Comment' }}</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </article>
+    </div>
+
+    <!-- Sidebar (Right) - Reuse Structure -->
+    <aside class="magazine-sidebar" style="position: sticky; top: 2rem; height: fit-content;">
+
+        <!-- ADS SECTION -->
+        {% if ads %}
+        <div style="margin-bottom: 3rem;">
+            <h4
+                style="text-transform: uppercase; color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 1rem;">
+                {{ title_ads }}</h4>
+            {% for item in ads %}
+            <div class="ad-card"
+                style="background: var(--bg-card); border: 1px dashed var(--accent-secondary); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; position: relative; overflow: hidden;">
+                <div
+                    style="position: absolute; top: 0; right: 0; background: var(--accent-secondary); color: #fff; font-size: 0.6rem; padding: 0.2rem 0.6rem; border-bottom-left-radius: 8px;">
+                    {{ title_ads | upper }}</div>
+                {% if item.image %}
+                <img src="{{ item.image }}"
+                    style="width: 100%; border-radius: 8px; margin-bottom: 1rem; object-fit: cover;">
+                {% endif %}
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">{{ item.title }}
+                </h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">{{ item.summary }}</p>
+                <a href="{{ item.url }}" target="_blank" class="btn btn-secondary"
+                    style="width: 100%; justify-content: center; font-size: 0.8rem;">
+                    {{ 'المزيد ↗' if lang_pref == 'ar' else 'Learn More ↗' }}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- SIDEBAR LIST SECTION -->
+        {% if sidebar %}
+        <div class="sidebar-widget">
+            <h3 style="border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
+                {{ title_trending }}
+            </h3>
+            {% for item in sidebar %}
+            <div class="sidebar-list-item"
+                style="display: flex; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); align-items: flex-start;">
+                {% if item.image %}
+                <img src="{{ item.image }}"
+                    style="width: 80px; height: 80px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">
+                {% endif %}
+                <div>
+                    <div
+                        style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 0.3rem;">
+                        {{ item.source }}
+                    </div>
+                    <a href="{{ url_for('magazine_detail', item_id=item.id) }}"
+                        style="text-decoration: none; color: var(--text-main); font-weight: 600; line-height: 1.3; font-size: 0.95rem; display: block;"
+                        {% if lang_pref=='ar' %}dir="rtl" {% endif %}>
+                        {{ (item.title_ar or item.title) if lang_pref == 'ar' else item.title }}
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- MOST VIEWED WIDGET -->
+        {% if most_viewed %}
+        <div class="sidebar-widget most-viewed-widget">
+            <h3 style="border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
+                🔥 {{ title_most_viewed }}
+            </h3>
+            {% for mv_item in most_viewed %}
+            <div class="most-viewed-item">
+                <span class="mv-rank">{{ loop.index }}</span>
+                <div>
+                    <a href="{{ url_for('magazine_detail', item_id=mv_item.id) }}" class="mv-title"
+                        {% if lang_pref=='ar' %}dir="rtl" {% endif %}>
+                        {{ (mv_item.title_ar or mv_item.title) if lang_pref == 'ar' else mv_item.title }}
+                    </a>
+                    <div class="mv-count">{{ mv_item.views or 0 }} {{ 'مشاهدة' if lang_pref == 'ar' else 'views' }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- WORTH WATCHING (Curated Reels) -->
+        {% if settings.reels_enabled and reels %}
+        {% set title_reels = (settings.section_title_reels_ar or 'يستحق المشاهدة') if lang_pref == 'ar' else (settings.section_title_reels or 'Worth Watching') %}
+        <div class="sidebar-widget">
+            <h3 style="border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
+                🎬 {{ title_reels }}
+            </h3>
+            {% for reel in reels %}
+            <div class="sidebar-list-item">
+                {% if reel.thumbnail %}<img src="{{ reel.thumbnail }}" class="sidebar-list-thumb">{% endif %}
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.3rem;">
+                        {{ icons.platform_badge(reel.platform, 18) }}
+                        {% if reel.creator_handle %}@{{ reel.creator_handle }}{% else %}{{ reel.platform | replace('_', ' ') | title }}{% endif %}
+                    </div>
+                    <a href="{{ reel.source_url }}" target="_blank" rel="noopener"
+                        style="text-decoration: none; color: var(--text-main); font-weight: 600; line-height: 1.3; font-size: 0.95rem; display: block;"
+                        {% if lang_pref=='ar' %}dir="rtl" {% endif %}>
+                        {{ (reel.title_ar or reel.title) if lang_pref == 'ar' else reel.title }} ↗
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+            <a href="{{ url_for('watch_page') }}" class="btn btn-secondary"
+                style="width: 100%; justify-content: center; margin-top: 1rem;">{{ 'عرض الكل' if lang_pref == 'ar' else 'View All' }}</a>
+        </div>
+        {% endif %}
+
+        <!-- Archive Widget -->
+        <div class="sidebar-widget">
+            <div class="widget-header"
+                style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">📂 {{ title_archives }}</h3>
+                <a href="{{ url_for('magazine_view') }}"
+                    style="font-size: 0.8rem; color: var(--accent-primary); text-decoration: none;">{{ 'عرض الكل' if lang_pref == 'ar' else 'View All' }}</a>
+            </div>
+
+            <div class="archive-tree">
+                {% for year_group in archive_data %}
+                <div class="archive-year-group" style="margin-bottom: 1.5rem;">
+                    <h4
+                        style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 0.5rem; border-left: 3px solid var(--accent-primary); padding-left: 0.5rem;">
+                        {{ year_group.year }}
+                    </h4>
+
+                    <div class="archive-month-list" style="padding-left: 1rem;">
+                        {% for month in year_group.months %}
+                        <div style="margin-bottom: 1rem;">
+                            <div
+                                style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.3rem; margin-top: 0.5rem;">
+                                {{ month.name }}
+                            </div>
+                            <ul
+                                style="list-style: none; padding: 0; margin: 0; border-left: 1px solid var(--border-color);">
+                                {% for item in month.posts %}
+                                <li style="margin-bottom: 6px; padding-left: 0.8rem; position: relative;">
+                                    <a href="{{ url_for('magazine_detail', item_id=item.id) }}"
+                                        class="archive-item-link"
+                                        style="font-size: 0.9rem; color: var(--text-muted); display: block; line-height: 1.4; text-decoration: none; transition: color 0.2s;"
+                                        {% if lang_pref=='ar' %}dir="rtl" {% endif %}>
+                                        {{ (item.title_ar or item.title) if lang_pref == 'ar' else item.title }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic; padding: 1rem;">Archive is
+                    empty.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- About Widget -->
+        <div class="sidebar-widget">
+            <h3
+                style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem; color: var(--text-main);">
+                {{ 'بيانات النشر' if lang_pref == 'ar' else 'Imprint' }}</h3>
+            <p style="color: var(--text-muted); line-height: 1.6; font-size: 0.9rem;" {% if lang_pref=='ar' %}dir="rtl" {% endif %}>
+                {{ settings.magazine_title }}<br>
+                {% set imprint_name = (settings.author_name_ar or settings.author_name) if lang_pref == 'ar' else settings.author_name %}
+                <span style="opacity: 0.7;">{% if lang_pref == 'ar' %}بواسطة {{ imprint_name }}{% else %}Curated by {{ imprint_name }}{% endif %}</span>
+            </p>
+        </div>
+    </aside>
+
+</div>
+
+<script>
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.js-copy-link');
+        if (!btn) return;
+        const url = btn.dataset.url;
+        const confirmEl = btn.parentElement.querySelector('.js-copy-confirm');
+        const showConfirm = () => {
+            if (!confirmEl) return;
+            confirmEl.style.opacity = '1';
+            setTimeout(() => { confirmEl.style.opacity = '0'; }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(showConfirm).catch(() => {
+                window.prompt('Copy this link:', url);
+            });
+        } else {
+            window.prompt('Copy this link:', url);
+        }
+    });
+    try {
+        localStorage.setItem('nan_continue', JSON.stringify({
+            url: {{ request.path | tojson }},
+            title: {{ ((item.title_ar or item.title) if lang_pref == 'ar' else item.title) | tojson }}
+        }));
+    } catch (e) {}
+
+    const analyzeBtn = document.getElementById('analyze-comments');
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', () => {
+            const box = document.getElementById('comment-analysis');
+            analyzeBtn.disabled = true;
+            box.hidden = false;
+            box.textContent = 'Reading the comments…';
+            fetch('/api/comments/analyze/' + analyzeBtn.dataset.item, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    analyzeBtn.disabled = false;
+                    if (data.status !== 'success') {
+                        box.textContent = data.message || 'Could not analyze the comments.';
+                        return;
+                    }
+                    const analysis = data.analysis || {};
+                    const esc = (value) => String(value).replace(/[&<>"]/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+                    const opinions = (analysis.opinions || []).map(item => '<li>' + esc(item) + '</li>').join('');
+                    const themes = (analysis.themes || []).map(item => '<li>' + esc(item) + '</li>').join('');
+                    box.innerHTML = '<strong>Sentiment: ' + esc(analysis.sentiment || '') + '</strong><p>' +
+                        esc(analysis.summary || '') + '</p>' +
+                        (opinions ? '<p>Opinions</p><ul>' + opinions + '</ul>' : '') +
+                        (themes ? '<p>Themes</p><ul>' + themes + '</ul>' : '');
+                })
+                .catch(() => {
+                    analyzeBtn.disabled = false;
+                    box.textContent = 'Network error.';
+                });
+        });
+    }
+</script>
+
+{% endblock %}

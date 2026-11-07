@@ -1,0 +1,94 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+{% macro cat_name(label) %}{{ label.split(' ', 1)[1] if ' ' in label else label }}{% endmacro %}
+{% set cat_ar = {'chatbot': 'المحادثة', 'coding': 'البرمجة', 'image': 'الصور', 'video': 'الفيديو', 'video_edit': 'المونتاج', 'writing': 'الكتابة', 'research': 'البحث', 'presentations': 'العروض', 'productivity': 'الإنتاجية', 'voice': 'الصوت', 'design': 'التصميم', 'education': 'التعلّم', 'agents': 'الوكلاء', 'platforms': 'المنصات', 'other': 'أخرى'} %}
+
+{% block page_title %}{{ 'ترتيب أدوات الذكاء الاصطناعي' if ar else 'AI Tools Ranking' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_desc %}{{ 'ترتيب تحريري لأفضل أدوات الذكاء الاصطناعي للطلبة، مع المرجع لكل تقييم.' if ar else 'An editor-ranked list of the best AI tools for students, with a reference for every score.' }}{% endblock %}
+
+{% block content %}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="rank-i-arrow" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m13 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="rank-i-external" viewBox="0 0 24 24"><path d="M14 4h6v6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 4 10 14" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+</svg>
+
+<div class="wrap">
+    <nav class="tools-tabs" aria-label="{{ 'أقسام الدليل' if ar else 'Directory sections' }}">
+        <a href="{{ url_for('tools_directory') }}">{{ 'الدليل' if ar else 'Directory' }}</a>
+        <a class="is-active" href="{{ url_for('tools_ranked') }}">{{ 'الترتيب' if ar else 'Rankings' }}</a>
+        <a href="{{ url_for('models_directory') }}">{{ 'أفضل النماذج' if ar else 'Top models' }}</a>
+    </nav>
+
+    <header class="rank-hero">
+        <span class="eyebrow">{{ 'الترتيب التحريري' if ar else 'The ranking' }}</span>
+        <h1>{{ 'The Nasser AI ranking.' if not ar else 'ترتيب ناصر للذكاء الاصطناعي.' }}</h1>
+        <p>{{ 'An editor score out of 5 for the tools a Computer Science student can actually use. It is not a scraped star average: we weigh usefulness, official documentation, free access, Arabic support and public review coverage, and link a reference for each score.' if not ar else 'درجة تحريرية من 5 للأدوات التي يستطيع طالب علوم الحاسوب استخدامها فعلًا. ليست متوسط نجوم مسحوبًا، بل نوازن الفائدة والتوثيق الرسمي والوصول المجاني ودعم العربية وتغطية المراجعات العامة، ونضع مرجعًا لكل درجة.' }}</p>
+        <div class="tools-meta">
+            <span><b>{{ tools|length }}</b> {{ 'أداة مُقيَّمة' if ar else 'rated tools' }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <span>{{ 'آخر تحقق' if ar else 'Last checked' }} {{ date }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <a href="{{ url_for('tools_directory') }}">{{ 'كل الأدوات' if ar else 'Browse all tools' }} →</a>
+        </div>
+    </header>
+
+    {% if tools %}
+    <section class="rank-podium" aria-label="{{ 'أفضل ثلاث' if ar else 'Top three' }}">
+        {% for tool in tools[:3] %}
+        <a class="rank-card is-{{ loop.index }} tool-cat-{{ tool.category }}" href="{{ url_for('tool_detail', tool_id=tool.id) }}">
+            <span class="rank-medal">{{ loop.index }}</span>
+            <span class="tool-logo is-large">{{ tool.name[:1] }}</span>
+            <b>{{ (tool.name_ar or tool.name) if ar else tool.name }}</b>
+            <span class="rank-cat">{{ cat_ar.get(tool.category, tool.category) if ar else cat_name(tool.category_label) }}</span>
+            <span class="rank-score"><b>{{ '%.1f'|format(tool.rating) }}</b><small>/ 5</small></span>
+            <span class="rank-note">{{ tool.rating_note }}</span>
+            <span class="rank-source">
+                {{ 'المرجع' if ar else 'Reference' }} ↗
+            </span>
+        </a>
+        {% endfor %}
+    </section>
+
+    <section class="rank-list" aria-labelledby="rank-list-title">
+        <header class="tools-section-head is-row">
+            <h2 id="rank-list-title">{{ 'The full order' if not ar else 'الترتيب الكامل' }}</h2>
+            <span class="results-context">{{ 'Score out of 5' if not ar else 'الدرجة من 5' }}</span>
+        </header>
+        <ol>
+            {% for tool in tools %}
+            <li class="rank-row tool-cat-{{ tool.category }}">
+                <span class="rank-number">{{ '%02d'|format(loop.index) }}</span>
+                <span class="tool-logo">{{ tool.name[:1] }}</span>
+                <div class="rank-row-copy">
+                    <b>{{ (tool.name_ar or tool.name) if ar else tool.name }}</b>
+                    <small>{{ cat_ar.get(tool.category, tool.category) if ar else cat_name(tool.category_label) }}{% if tool.best_for %} · {{ tool.best_for }}{% endif %}</small>
+                </div>
+                <span class="rank-bar"><span style="width: {{ (tool.rating / 5 * 100)|round|int }}%"></span></span>
+                <span class="rank-score is-small">{{ '%.1f'|format(tool.rating) }}</span>
+                <a class="rank-ref" href="{{ tool.rating_source or tool.official_url }}" target="_blank" rel="noopener noreferrer">
+                    {{ 'المرجع' if ar else 'Reference' }}
+                    <svg class="icon" aria-hidden="true"><use href="#rank-i-external"></use></svg>
+                </a>
+                <a class="rank-go" href="{{ url_for('tool_detail', tool_id=tool.id) }}" aria-label="{{ 'التفاصيل' if ar else 'Details' }}">
+                    <svg class="icon" aria-hidden="true"><use href="#rank-i-arrow"></use></svg>
+                </a>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <aside class="tools-note">
+        <svg class="icon" aria-hidden="true"><use href="#rank-i-arrow"></use></svg>
+        <div>
+            <b>{{ 'What the score means' if not ar else 'ماذا تعني الدرجة' }}</b>
+            <p>{{ 'A 4.8 is not a promise that the tool is perfect; it means it is unusually strong for a student, well documented, and accessible. A 4.0 means useful with a clear limitation. We re-check the list and links on the date above.' if not ar else 'الدرجة 4.8 ليست وعدًا بأن الأداة مثالية، بل تعني أنها قوية بشكل استثنائي للطالب وموثقة جيدًا وسهلة الوصول. و4.0 تعني مفيدة مع قيد واضح. نعيد التحقق من القائمة والروابط في التاريخ أعلاه.' }}</p>
+        </div>
+    </aside>
+    {% else %}
+    <div class="tools-empty">
+        <h2>{{ 'No rated tools yet' if not ar else 'لا توجد أدوات مُقيَّمة بعد' }}</h2>
+        <p>{{ 'Add a rating in the directory to start the ranking.' if not ar else 'أضف تقييمًا في الدليل لبدء الترتيب.' }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

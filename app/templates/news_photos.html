@@ -1,0 +1,101 @@
+{% extends "public.html" %}
+
+{% block page_title %}{{ 'صور الأخبار' if lang_pref == 'ar' else 'News photos' }} — {{ settings.magazine_title }}{% endblock %}
+
+{% block content %}
+{% set ar = lang_pref == 'ar' %}
+<div class="issue photo-page">
+    <header class="issue-mast">
+        <p class="issue-university">{{ 'جامعة ظفار · قسم علوم الحاسوب' if ar else 'Dhofar University · Computer Science' }}</p>
+        <h1 class="issue-name" style="font-size: clamp(2.2rem, 5vw, 3.6rem);">{{ 'صور الأخبار' if ar else 'News photos' }}</h1>
+        <p class="issue-dek" {% if ar %}dir="rtl"{% endif %}>
+            {{ 'من أرشيف الأخبار: كل صورة بعنوانها، ونبذة قصيرة، والخبر، ورابط المصدر. مرتبة بالتاريخ وبالموضوع.' if ar else 'From the news archive: each picture keeps its headline, a short line, the story, and the source link. Filed by date and by topic.' }}
+        </p>
+    </header>
+
+    {% if desks %}
+    <nav class="desk-nav photo-topics" aria-label="{{ 'المواضيع' if ar else 'Topics' }}">
+        <a class="desk-chip {{ 'active' if not topic else '' }}" href="{{ url_for('news_photos') }}">{{ 'الكل' if ar else 'All' }}</a>
+        {% for desk in desks %}
+        <a class="desk-chip {{ 'active' if topic == desk.key else '' }}" href="{{ url_for('news_photos', topic=desk.key) }}">
+            {{ desk.ar if ar else desk.en }}
+            <span>{{ desk.count }}</span>
+        </a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if months %}
+    {% for month in months %}
+    <section class="issue-anchor" id="month-{{ month.key }}">
+        <div class="issue-section-head">
+            <div>
+                <h2>{{ month.label }}</h2>
+            </div>
+        </div>
+        <div class="photo-grid news-photo-grid">
+            {% for frame in month.frames %}
+            {% set title = (frame.title_ar or frame.title) if ar else (frame.title or frame.title_ar) %}
+            {% set caption = (frame.caption_ar or frame.caption) if ar else (frame.caption or frame.caption_ar) %}
+            {% set topic_label = frame.topic_ar if ar else frame.topic_en %}
+            <figure {% if ar %}dir="rtl"{% endif %}>
+                <button type="button" class="photo-open" aria-label="{{ title }}" data-src="{{ frame.image }}" data-title="{{ title }}" data-caption="{{ caption }}" data-topic="{{ topic_label }}" data-story="{{ frame.story_url }}" data-source="{{ frame.source_url }}">
+                    <img src="{{ frame.image }}" alt="">
+                </button>
+            </figure>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+    {% else %}
+    <section class="folio folio-campus" style="margin-top: 1.5rem;">
+        <p class="folio-empty" {% if ar %}dir="rtl"{% endif %}>{% if topic %}{{ 'لا صور في هذا الموضوع بعد.' if ar else 'No pictures in this topic yet.' }}{% else %}{{ 'لا صور إخبارية بعد.' if ar else 'No news pictures yet.' }}{% endif %}</p>
+    </section>
+    {% endif %}
+</div>
+
+<dialog id="photo-box" class="photo-box">
+    <button type="button" class="photo-box-close" aria-label="{{ 'إغلاق' if ar else 'Close' }}">×</button>
+    <img alt="">
+    <em class="photo-box-topic"></em>
+    <h3></h3>
+    <p></p>
+    <span class="news-photo-links">
+        <a class="photo-box-story" href="#">{{ 'الخبر' if ar else 'The story' }}</a>
+        <a class="photo-box-source" href="#" target="_blank" rel="noopener">{{ 'المصدر' if ar else 'Source' }}</a>
+    </span>
+</dialog>
+<script>
+(function () {
+    const box = document.getElementById('photo-box');
+    if (!box) return;
+    const img = box.querySelector('img');
+    const topic = box.querySelector('.photo-box-topic');
+    const title = box.querySelector('h3');
+    const caption = box.querySelector('p');
+    const story = box.querySelector('.photo-box-story');
+    const source = box.querySelector('.photo-box-source');
+    document.querySelectorAll('.photo-open').forEach(function (button) {
+        button.addEventListener('click', function () {
+            img.src = button.dataset.src || '';
+            img.alt = button.dataset.title || '';
+            topic.textContent = button.dataset.topic || '';
+            title.textContent = button.dataset.title || '';
+            caption.textContent = button.dataset.caption || '';
+            topic.hidden = !topic.textContent;
+            title.hidden = !title.textContent;
+            caption.hidden = !caption.textContent;
+            story.hidden = !button.dataset.story;
+            story.href = button.dataset.story || '#';
+            source.hidden = !button.dataset.source;
+            source.href = button.dataset.source || '#';
+            box.showModal();
+        });
+    });
+    box.querySelector('.photo-box-close').addEventListener('click', function () { box.close(); });
+    box.addEventListener('click', function (event) {
+        if (event.target === box) box.close();
+    });
+})();
+</script>
+{% endblock %}

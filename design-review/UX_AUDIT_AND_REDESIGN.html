@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Nasser AI News — UX/UI Audit &amp; Audience Growth Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+@page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+* { box-sizing: border-box; }
+body { margin: 0; color: #1b1d22; background: #fff;
+  font-family: "Source Serif 4", Georgia, serif; font-size: 10.2pt; line-height: 1.62; }
+.cover { min-height: 250mm; display: flex; flex-direction: column; justify-content: space-between;
+  padding: 6mm 0 0; page-break-after: always; }
+.cover .kicker { font-family: Inter, sans-serif; font-size: 8.5pt; letter-spacing: .18em; text-transform: uppercase; color: #0b4f6c; }
+.cover h1 { font-family: "Playfair Display", Georgia, serif; font-size: 34pt; line-height: 1.03; margin: 14mm 0 6mm; letter-spacing: -.02em; }
+.cover .sub { font-size: 13pt; color: #444; max-width: 125mm; line-height: 1.5; }
+.cover img { width: 100%; margin-top: 12mm; border-radius: 2mm; }
+.cover .meta { font-family: Inter, sans-serif; font-size: 8.5pt; color: #666; border-top: 1px solid #d8d3c6; padding-top: 4mm; margin-top: 8mm; }
+h1, h2, h3, h4 { font-family: "Playfair Display", Georgia, serif; color: #14161a; line-height: 1.15; page-break-after: avoid; }
+h2 { font-size: 20pt; margin: 12mm 0 3mm; border-top: 2px solid #14161a; padding-top: 4mm; }
+h3 { font-size: 13.5pt; margin: 7mm 0 2mm; }
+h4 { font-size: 11pt; margin: 5mm 0 1.5mm; }
+p { margin: 0 0 3.2mm; }
+a { color: #0b4f6c; text-decoration: none; }
+ul, ol { margin: 0 0 3.5mm; padding-inline-start: 5mm; }
+li { margin-bottom: 1.4mm; }
+strong { font-weight: 600; }
+hr { border: 0; border-top: 1px solid #ddd8ca; margin: 7mm 0; }
+blockquote { margin: 5mm 0; padding: 3mm 0 3mm 5mm; border-left: 3px solid #b45309; font-size: 12pt; color: #222; }
+blockquote p { margin: 0; }
+table { width: 100%; border-collapse: collapse; margin: 3mm 0 6mm; font-family: Inter, sans-serif; font-size: 8.4pt; line-height: 1.42; }
+th, td { text-align: start; vertical-align: top; padding: 2mm 2.2mm; border-bottom: 1px solid #e2ddcf; }
+th { background: #f4f1e8; font-weight: 600; color: #222; border-bottom: 1px solid #b9b2a0; }
+tr:nth-child(even) td { background: #fbfaf6; }
+img { max-width: 100%; height: auto; display: block; margin: 3mm 0 2mm; }
+p img { margin: 0; }
+em { color: #555; }
+code { font-family: "JetBrains Mono", Consolas, monospace; font-size: 8.6pt; background: #f4f1e8; padding: .4mm 1mm; border-radius: 1mm; }
+pre { background: #f6f3ea; border: 1px solid #e2ddcf; padding: 3mm 3.5mm; overflow: hidden; font-size: 7.8pt; line-height: 1.45; page-break-inside: avoid; }
+pre code { background: none; padding: 0; }
+h2 + p, h3 + p { margin-top: 1mm; }
+table { page-break-inside: auto; }
+tr { page-break-inside: avoid; }
+</style></head>
+<body>
+
+<div class="cover">
+  <div>
+    <div class="kicker">Nasser AI News · Dhofar University · Computer Science</div>
+    <h1>UX/UI Audit &amp;<br>Audience Growth Plan</h1>
+    <p class="sub">Why the magazine is hard to read, and how to make students, faculty and
+    first-time visitors actually open it — a redesign blueprint, a working prototype, and a
+    90-day plan.</p>
+    <img src="shots/compare_front_1440.jpg" alt="Before and after">
+  </div>
+  <div class="meta">
+    Prepared 6 November 2026 &nbsp;·&nbsp; Scope: public reader experience
+    &nbsp;·&nbsp; Evidence: 39 templates, 124 KB CSS, live page metrics, and a rebuilt prototype
+  </div>
+</div>
+
+<ul>
+<li><strong>Prepared:</strong> 6 November 2026</li>
+<li><strong>Scope:</strong> the public (reader-facing) magazine: <code>/magazine</code>, the article page, department, watch, tools, photos, subscribe, and the shared layout/design system.</li>
+<li><strong>Method:</strong> full read of the Flask routes, all 39 templates and 124 KB of CSS; a scripted visual audit of the running app (Edge/Playwright) at 1440 px and 390 px, in English and Arabic, including print media; live data from <code>app/instance/local_dev.db</code>; and a rebuilt prototype of the front page and article page.</li>
+</ul>
+<blockquote>
+<p>Everything below is measured from the app as it runs today, not from the design intent in <code>BUILD_NASSER_NEWS.md</code>. Where the two disagree (for example, the brief mandates a dark theme; the saved setting is light), this audit describes what readers actually see.</p>
+</blockquote>
+<hr />
+<h2 id="1-the-short-version">1. The short version</h2>
+<p>The magazine does not have an attention problem. It has a <strong>focus problem, a depth problem, and a distribution problem</strong>.</p>
+<ul>
+<li><strong>Focus:</strong> the front page is <strong>13,755 px tall on a laptop and 32,212 px on a phone</strong> — about 38 phone screens — carrying 69 images and roughly 60 story cards with no hierarchy beyond "cover, then everything". A reader cannot tell what to read first, so most read nothing.</li>
+<li><strong>Depth:</strong> <strong>69 of 71 published stories have no article body.</strong> The "article" page renders a single ~30-word summary in bold and then a large button that sends the reader to the publisher. The magazine is currently a link blog wearing a newspaper costume.</li>
+<li><strong>Distribution:</strong> every public content URL returns a <strong>language gate with HTTP 200</strong> to anyone without a cookie, so search engines, WhatsApp previews, and first-time readers all see the same choice screen instead of the story. There is no sitemap, no RSS, no canonical URL, no public search, no public archive, no analytics. In this database: <strong>32 total article views, 0 subscribers, 1 comment.</strong></li>
+</ul>
+<p>The good news: the raw material is unusually strong. The two-desk idea (department life vs. the world), the bilingual edition, the source-first attribution, the "why this belongs in class" bridge, the photo archive, and the AI reading companion are genuinely distinctive. The redesign is not about throwing that away. It is about <strong>giving it an order, a depth, and a reason to come back</strong>.</p>
+<p>The proposal in one sentence:</p>
+<blockquote>
+<p><strong>One weekly issue of about 20 stories, opened by a 90-second brief, led by one story worth five minutes, and finished with a class layer that turns the news into revision — on a paper-calm design system that works on a 3G phone in Arabic first.</strong></p>
+</blockquote>
+<p><img alt="Front page: current vs proposed" src="shots/compare_front_1440.jpg" /></p>
+<p><em>Left: today. Right: the proposed front page, built as a working prototype with the real stories and images. Same content, one third of the length.</em></p>
+<hr />
+<h2 id="2-what-the-audit-measured">2. What the audit measured</h2>
+<table>
+<thead>
+<tr>
+<th>Measure</th>
+<th>Today</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Front page height, 1440 px</td>
+<td><strong>13,755 px</strong></td>
+<td>69 images, ~60 cards</td>
+</tr>
+<tr>
+<td>Front page height, 390 px</td>
+<td><strong>32,212 px</strong></td>
+<td>≈ 38 screens; nav clipped</td>
+</tr>
+<tr>
+<td>Article page height, 1440 px</td>
+<td><strong>7,919 px</strong></td>
+<td>its sidebar carries a 71-story archive list</td>
+</tr>
+<tr>
+<td>Article body length</td>
+<td><strong>median 171 characters</strong></td>
+<td>69/71 stories have no <code>full_content</code></td>
+</tr>
+<tr>
+<td>Published stories</td>
+<td>71</td>
+<td>4 campus, 13 research, 56 world</td>
+</tr>
+<tr>
+<td>Stories with images</td>
+<td>66</td>
+<td>62 are hotlinked from publishers</td>
+</tr>
+<tr>
+<td>Images lazy-loaded</td>
+<td><strong>1</strong></td>
+<td>and it is on the editor's CV page</td>
+</tr>
+<tr>
+<td>CSS shipped</td>
+<td><strong>116 KB</strong>, 3 files</td>
+<td>plus 83 KB inline in templates</td>
+</tr>
+<tr>
+<td>Fonts per page</td>
+<td><strong>5 families / 10 weights</strong></td>
+<td>plus a render-blocking <code>@import</code></td>
+</tr>
+<tr>
+<td>Public search</td>
+<td><strong>none</strong></td>
+<td><code>/search</code> is admin-only</td>
+</tr>
+<tr>
+<td>Public archive</td>
+<td><strong>none</strong></td>
+<td><code>/archive</code> is admin-only</td>
+</tr>
+<tr>
+<td>Analytics / consent</td>
+<td><strong>none</strong></td>
+<td><code>views += 1</code> on article GET only</td>
+</tr>
+<tr>
+<td>Subscribers</td>
+<td><strong>0</strong></td>
+<td>no double opt-in, no confirmation</td>
+</tr>
+<tr>
+<td>Total article views</td>
+<td><strong>32</strong></td>
+<td>61 of 71 published stories have never been opened</td>
+</tr>
+<tr>
+<td>Accessibility</td>
+<td>no <code>&lt;main&gt;</code>, no skip link, 8 unlabelled images, 3 modals without dialog semantics</td>
+<td>see §5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Caveat:</strong> this is the local development database. Production numbers may differ, but every structural finding below is in the code, not in the data.</p>
+<hr />
+<h2 id="3-what-readers-actually-experience">3. What readers actually experience</h2>
+<h3 id="31-the-front-page-asks-for-too-much-before-it-gives-anything">3.1 The front page asks for too much before it gives anything</h3>
+<p>The current front page opens with: a masthead, two "desk doors" that look like a table row, a pink YouTube strip, two competing covers, a four-image rail with four different aspect ratios, an opening spread, a photo wall, a three-room department block, a course band, a classroom bridge, desk chips, and finally the story grid — then a "back of the book".</p>
+<p>On a phone, the <strong>first actual headline is about two screens down</strong>, and the nav cuts off at "NEWS PHO…". The page never says <em>start here</em>.</p>
+<p>Compounding it:</p>
+<ul>
+<li>The same department workshop appears <strong>three times</strong> on one page (cover, week board, "Department life").</li>
+<li>The world cover appears again under "Also from the world".</li>
+<li>Two covers compete for the same job, so neither wins.</li>
+<li>The picture rail numbers its items 02–05 because 01 is the cover — a numbering system only the editor can decode.</li>
+<li>The image on the campus cover <strong>contains the headline</strong>, which is then printed again underneath.</li>
+</ul>
+<h3 id="32-the-article-page-has-no-article">3.2 The article page has no article</h3>
+<p><code>magazine_detail.html</code> prints the summary as body copy, bold, then shows a gradient card that says <strong>"Read the Full Story"</strong> and links off-site. In Arabic, the Arabic headline is printed twice and the Arabic body inherits Playfair Display — a Latin-only font — so the most important text on the page falls back to an arbitrary system serif.</p>
+<p>Before the story begins, the reader scrolls past a 100 px logo, a 4.5 rem site title, "VOL. 1 / date / PREMIUM EDITION", an "Editor-in-Chief" pill, a breadcrumb that says only "← The department", and a meta line that includes the <strong>raw source URL in uppercase</strong>.</p>
+<p>What is missing is exactly what a student needs: <em>what happened, why it matters, what to say in class</em>.</p>
+<h3 id="33-the-magazine-cannot-be-found-or-shared">3.3 The magazine cannot be found or shared</h3>
+<p>Every public content route calls <code>_render_language_gate()</code> when the <code>lang_pref</code> cookie is absent and returns it with status 200. Consequences:</p>
+<ul>
+<li>Googlebot, LinkedIn, WhatsApp and X never set that cookie, so every shared link previews the gate — in English — regardless of the story.</li>
+<li>There is no <code>robots.txt</code>, <code>sitemap.xml</code>, RSS feed, canonical tag, <code>hreflang</code>, or <code>NewsArticle</code> structured data anywhere in the repo.</li>
+<li>Story titles average 68 characters (max 148) and non-article pages all share one title and one description.</li>
+<li>The share image for every non-article page is the 280 KB logo PNG; <code>twitter:image</code> is never set.</li>
+</ul>
+<p>For a magazine whose entire growth plan is a QR code on a door, <strong>the link is the product</strong>, and the link is currently broken for anyone who is not already a returning reader.</p>
+<h3 id="34-navigation-promises-rooms-that-are-empty">3.4 Navigation promises rooms that are empty</h3>
+<p>The reader bar has <strong>nine links plus three language toggles</strong>. Three of those rooms are empty in this database (<code>/watch</code>: 0 reels, <code>/directory</code>: 0 tools, <code>/campus/photos</code>: 0 albums), <code>/campus</code> has 4 stories, and <code>/archive</code> — the one label readers will look for — is a login wall.</p>
+<p>Naming is also inconsistent: <code>/department</code> is the admin desk while <code>/campus</code> is the public "Department"; <code>/tools</code> is admin while <code>/directory</code> is public; <code>/search</code> is admin-only.</p>
+<h3 id="35-mobile-is-an-afterthought">3.5 Mobile is an afterthought</h3>
+<ul>
+<li>The nav is a horizontal scroller with no fade, arrow, or hamburger; tap targets are <strong>~28 px</strong> (44 px is the minimum).</li>
+<li>The article sidebar becomes a <strong>full archive tree of all 71 stories</strong> after the article, on a single column.</li>
+<li>The fixed chat bubble, the sticky two-row header, the progress bar, and two modals compete for z-index and thumb space.</li>
+<li><code>secondary-grid</code> uses <code>minmax(300px, 1fr)</code> inside a 320 px viewport with 2×0.9 rem padding — a guaranteed horizontal scroll on small phones.</li>
+<li>The modal close button on the video overlay sits at <code>top: -40px</code> inside <code>overflow: hidden</code>, i.e. partly invisible.</li>
+</ul>
+<h3 id="36-the-visual-system-has-no-contract">3.6 The visual system has no contract</h3>
+<p>There is a token <em>vocabulary</em> but no token <em>system</em>:</p>
+<ul>
+<li>14 palette variables re-declared <strong>12 times</strong> (4 admin themes + 8 magazine templates).</li>
+<li><strong>294 hex literals</strong>, 117 unique; <strong>589 <code>!important</code></strong>; 12 breakpoints; 19 card surfaces; 56 font sizes, 36 of them below 12 px.</li>
+<li>The saved "custom accent colour" is injected at <code>:root</code> with <code>!important</code> — currently <code>#000000</code>, which turns every accent, chip and pill black and produces white-on-cyan pills at <strong>2.14:1</strong> contrast.</li>
+<li>Arabic body font is wrong (see 3.2), and <code>dir="rtl"</code> is used ~50 times with a <code>lang</code> attribute exactly once.</li>
+<li><strong>Printing is broken on dark themes</strong>: <code>body { color: black }</code> is overridden by every <code>color: var(--text-main)</code>, so text prints light-on-white; gradient-clipped titles print blank; there is no <code>@page</code>, no link URLs, no page breaks.</li>
+<li>The admin dashboard hardcodes <code>#0f172a</code> headings, so the moment someone switches the site theme away from light, the admin becomes unreadable (1:1 contrast).</li>
+</ul>
+<p>None of this is visible to a reader as "bad CSS". It shows up as the thing they actually feel: <strong>the page looks like a link dump, not a publication</strong>.</p>
+<hr />
+<h2 id="4-who-the-readers-are-and-what-they-are-hiring-the-magazine-to-do">4. Who the readers are (and what they are hiring the magazine to do)</h2>
+<p>The magazine serves four audiences with different jobs:</p>
+<table>
+<thead>
+<tr>
+<th>Audience</th>
+<th>Job to be done</th>
+<th>What they need from the page</th>
+<th>What blocks them today</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CS students (Arabic-first)</strong></td>
+<td>"Catch me up in 3 minutes; tell me what matters for my course."</td>
+<td>Arabic headline first, a short brief, a class angle, phone-first speed</td>
+<td>English-first gate, 38-screen scroll, machine-translated body, no class layer</td>
+</tr>
+<tr>
+<td><strong>Students (English-first)</strong></td>
+<td>"What happened in AI this week that I should know?"</td>
+<td>A ranked brief, one deep story, sources</td>
+<td>No hierarchy, no article body, broken search</td>
+</tr>
+<tr>
+<td><strong>Faculty / department</strong></td>
+<td>"What is happening in my department, and is this credible?"</td>
+<td>Dates, events, student work, byline, standards</td>
+<td>Admin-only archive, no editorial policy, no AI disclosure</td>
+</tr>
+<tr>
+<td><strong>Prospective students / visitors (QR)</strong></td>
+<td>"What is this place?"</td>
+<td>A beautiful, fast first screen with one clear action</td>
+<td>Language gate, no context, gate previews the wrong story</td>
+</tr>
+</tbody>
+</table>
+<p>The design implication is blunt: <strong>the first screen must serve the 3-minute student</strong>, and everything else must be one tap away. The current page serves the editor's mental model of a newspaper instead.</p>
+<hr />
+<h2 id="5-what-to-keep-do-not-redesign-these-away">5. What to keep (do not redesign these away)</h2>
+<ol>
+<li><strong>The two desks.</strong> Department vs. world is the magazine's identity. Keep it — but as two <em>sections in one ordered page</em>, not two competing covers.</li>
+<li><strong>Bilingual parity.</strong> Every story already has Arabic title and summary. That is rare and valuable.</li>
+<li><strong>Source-first attribution.</strong> The source link on every card and the original-article CTA are trust assets.</li>
+<li><strong>"Why this belongs in class."</strong> This is the single most differentiated idea in the product. It is currently one band near the bottom of a 13,000 px page.</li>
+<li><strong>The editor's voice and photo archive.</strong> A named editor with a face beats an anonymous aggregator.</li>
+<li><strong>"Ask the Magazine."</strong> A grounded, cited reading companion is a strong retention feature — if readers can find it.</li>
+</ol>
+<hr />
+<h2 id="6-the-redesign">6. The redesign</h2>
+<h3 id="61-five-principles">6.1 Five principles</h3>
+<ol>
+<li><strong>One issue, one path.</strong> Every screen answers one question and offers one next step. The front page is a funnel, not an archive.</li>
+<li><strong>Depth over volume.</strong> 15–20 curated stories a week beat 71 dumped links. A story without a body, an image, and a "why" is a <em>brief</em>, not an article.</li>
+<li><strong>Arabic is not a translation layer.</strong> Design RTL and Arabic typography first, then mirror to English. One language switch, remembered.</li>
+<li><strong>Paper calm, digital speed.</strong> Hairlines, generous margins, two colours, real photography; no glassmorphism, no shadows on every card, no 12 breakpoints.</li>
+<li><strong>The link is the product.</strong> Every story has a clean URL, a share image, a title, and a WhatsApp message that works without a cookie.</li>
+</ol>
+<h3 id="62-new-information-architecture">6.2 New information architecture</h3>
+<pre><code>The Issue        /                     front page (weekly)
+Department       /department           campus life, events, photos, student board
+Watch            /watch                reels + YouTube shelves, one permalink per clip
+Tools            /tools                public AI tool directory
+Search           /search               public full-text search
+Archive          /archive              public, by issue/week
+About            /about                editor, standards, corrections, AI disclosure
+</code></pre>
+<p>Header (desktop): wordmark · The Issue · Department · The World · Watch · Tools · search icon · EN | ع · Subscribe.
+Mobile: brand + search + language in the bar; <strong>five bottom tabs</strong> (Issue, Department, World, Watch, Search).</p>
+<p>Why: 9 links + 3 language buttons become 5 + 1. Empty rooms stop being advertised; they are merged (<code>/watch</code> + <code>/youtube</code>) or hidden until they have content.</p>
+<h3 id="63-front-page-blueprint">6.3 Front page blueprint</h3>
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│ header: brand · sections · search · EN|ع · Subscribe         │
+├──────────────────────────────────────────────────────────────┤
+│ masthead: name · Issue 12 · Thu 6 Nov · 9 stories · PDF      │
+├──────────────────────────────────────────────────────────────┤
+│ THE 90-SECOND BRIEF        01 ─ 05 numbered lines            │
+│ (label + 3 min read)       headline + source, two columns    │
+├───────────────────────────────────────┬──────────────────────┤
+│ LEAD STORY                            │ THIS WEEK IN THE     │
+│ 16:9 image · kicker · H1 · dek        │ DEPARTMENT (3 dates) │
+│ What happened / Why it matters /      │ TERM OF THE DAY      │
+│ In class · byline · 4 min             │ PRINT ISSUE (A4 PDF) │
+├───────────────────────────────────────┴──────────────────────┤
+│ 02  THE WORLD, IN ORDER OF USEFULNESS      All 67 stories →  │
+│ 3 cards + 5 one-line briefs                                  │
+├──────────────────────────────────────────────────────────────┤
+│ 01  INSIDE THE DEPARTMENT                  Department issue →│
+│ 3 dated items + photo strip │ Coming up + student board      │
+├──────────────────────────────────────────────────────────────┤
+│ COURSE OF THE WEEK — dark band, 4 slots, quiz CTA            │
+├──────────────────────────────────────────────────────────────┤
+│ 03  EDITOR'S PICKS · 3 rows                                  │
+│ SUBSCRIBE band                                               │
+├──────────────────────────────────────────────────────────────┤
+│ footer: sections · standards · corrections · RSS · contact    │
+│ AI disclosure + privacy line                                 │
+└──────────────────────────────────────────────────────────────┘
+</code></pre>
+<p>Rules that make it work:</p>
+<ul>
+<li><strong>Hard limits.</strong> 1 lead, 3 features, 5 briefs, 3 department items, 3 picks. Everything else lives in the archive. The <code>has_more</code> flag already exists in <code>app.py:3721</code>; use it.</li>
+<li><strong>No duplicates.</strong> A story appears once on the front page; the brief links to the same URL but does not repeat the card.</li>
+<li><strong>Every section has a number and a one-line purpose.</strong> The number is the reading order, not decoration.</li>
+<li><strong>The brief is the product.</strong> Five lines, each a complete thought with a source, readable in 90 seconds on a phone.</li>
+<li><strong>The department has equal billing, earlier.</strong> It is the reason a student at Dhofar University opens this instead of TechCrunch.</li>
+</ul>
+<h3 id="64-article-page-blueprint">6.4 Article page blueprint</h3>
+<pre><code>breadcrumb · kicker · H1 · dek
+byline (photo, name, role) · date · read time · Save
+┌ IN 30 SECONDS ──────────────────────────────┐
+│ What happened · Why it matters · In class    │
+└──────────────────────────────────────────────┘
+hero 16:9 + caption + credit
+body 60–70ch, drop cap, subheads, pull quote,
+inline term definitions, source callout
+┌ CHECK YOURSELF — 3 questions ───────────────┐
+│ 3 MCQs, instant feedback, score              │
+└──────────────────────────────────────────────┘
+Original reporting + why we chose it · share/save
+Read next (same desk) · prev/next
+</code></pre>
+<p>What changes vs. today:</p>
+<ul>
+<li>Headline becomes the <code>h1</code>; the masthead shrinks to a 40 px bar with breadcrumb.</li>
+<li>The raw URL disappears from the meta line.</li>
+<li>The summary becomes a <strong>dek</strong>, not a bold paragraph.</li>
+<li>The "Read the Full Story" card moves below the body, reframed as attribution, with an editor's note on why the story was chosen.</li>
+<li>Arabic and English are one switch, in place; no side-by-side wall on mobile.</li>
+<li>Every story carries a <strong>class layer</strong>: term, discussion question, and three quiz questions.</li>
+</ul>
+<p><img alt="Article: current vs proposed" src="shots/compare_article_1440.jpg" /></p>
+<p><em>Left: the story starts third, after the masthead; body is one bold paragraph. Right: headline first, a 30-second brief, then a real body, then a quiz.</em></p>
+<h3 id="65-design-system-the-contract">6.5 Design system (the contract)</h3>
+<p><strong>Tokens, once.</strong> One palette block with <code>light</code>, <code>dark</code>, and <code>print</code> variants. No per-template redefinition; templates become <em>layout variants</em> that consume the same tokens.</p>
+<pre><code class="language-css">:root{
+  --paper:#fbfaf7; --surface:#fff; --ink:#14161a; --ink-2:#33373e;
+  --muted:#6e7178; --rule:#e4e0d6; --rule-strong:#c9c3b4;
+  --brand:#0b4f6c; --accent:#b45309;
+  --campus:#0f766e; --world:#1e3a8a;
+  --serif:&quot;Playfair Display&quot;,Georgia,serif;
+  --body:&quot;Source Serif 4&quot;,Georgia,serif;
+  --sans:&quot;Inter&quot;,system-ui,sans-serif;
+  --ar:&quot;Amiri&quot;,serif; --ar-ui:&quot;Cairo&quot;,sans-serif;
+}
+@media print{ :root{ --paper:#fff; --ink:#000; --muted:#333; --rule:#bbb; } }
+</code></pre>
+<p><strong>Type scale</strong> (six sizes, not 56): 12 / 14 / 16 / 18 / 22 / 32 / 48 / 64; body 18 px / 1.7; measure 60–70 characters; Arabic 1.2 rem / 1.95.</p>
+<p><strong>Spacing</strong> 4/8/12/16/24/32/48/64. <strong>Radius</strong> 4 and 8 only. <strong>Breakpoints</strong> 1280 / 900 / 560 (three, not twelve).</p>
+<p><strong>Components</strong> (one of each, not nineteen cards): <code>Lead</code>, <code>StoryCard</code> (3 densities: lead / standard / row), <code>BriefRow</code>, <code>SectionHead</code>, <code>Panel</code>, <code>AgendaItem</code>, <code>DateChip</code>, <code>TermCard</code>, <code>Quiz</code>, <code>SubscribeBand</code>, <code>Footer</code>.</p>
+<p><strong>Images</strong>: fixed aspect ratios (16:9 lead, 4:3 department, 1:1 strip), <code>object-fit: cover</code>, explicit <code>width</code>/<code>height</code>, <code>loading="lazy"</code> below the fold, <code>fetchpriority="high"</code> on the LCP cover, <code>srcset</code> at 480/960/1440, and a designed fallback tile instead of a broken image or a scraped logo.</p>
+<p><strong>Bilingual</strong>: one <code>EN | ع</code> switch; <code>dir</code> and <code>lang</code> set together; <code>lang="ar"</code> on every Arabic block; logical CSS properties (<code>margin-inline</code>, <code>inset-inline</code>) so RTL is not a patch layer; Arabic default when the browser language is <code>ar</code> or the reader chose it.</p>
+<h3 id="66-what-the-prototype-demonstrates">6.6 What the prototype demonstrates</h3>
+<p>A working prototype is included in <a href="prototype/index.html"><code>prototype/index.html</code></a> (front page) and <a href="prototype/article.html"><code>prototype/article.html</code></a> (article). It uses <strong>the real stories, images and Arabic titles from the database</strong>, and implements:</p>
+<ul>
+<li>the 90-second brief, lead, world, department, class band, editor's picks, subscribe band;</li>
+<li>the article TL;DR, pull quote, term callout, source box, save, share, related;</li>
+<li>an interactive 3-question quiz with scoring;</li>
+<li>one language switch that flips the entire page to RTL with Arabic typography;</li>
+<li>a public search overlay (Ctrl/⌘ K), mobile tab bar, skip link, focus styles, <code>aria-live</code> status, print stylesheet.</li>
+</ul>
+<p>Open it with any static server (<code>python -m http.server</code>) or the path above. Screenshots: <a href="shots/"><code>shots/</code></a>.</p>
+<hr />
+<h2 id="7-new-ideas-to-make-the-magazine-wanted">7. New ideas to make the magazine wanted</h2>
+<p>Ranked by impact on a student's decision to open it again. Effort is engineering + editorial, in days.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Idea</th>
+<th>Why it earns a return visit</th>
+<th>Effort</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>The 90-second brief</strong> — five numbered lines at the top of every issue</td>
+<td>Gives a reason to open the page even when there is no time to read</td>
+<td>S</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Class Mode on every story</strong> — term, why-it-matters, 3-question quiz, course tag</td>
+<td>Turns reading into revision; a lecturer can assign it; students share it</td>
+<td>M</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Public search + archive by issue</strong></td>
+<td>The first thing a reader does after "I remember a story about…"</td>
+<td>S</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>WhatsApp-first sharing + channel</strong></td>
+<td>WhatsApp is where Omani student groups actually live; one tap to the group</td>
+<td>S</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Follow a desk + Sunday digest</strong></td>
+<td>Converts a one-off visit into a weekly habit; the email becomes the product</td>
+<td>M</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Save for later / continue reading</strong></td>
+<td>Half-read stories are the strongest return trigger</td>
+<td>S</td>
+<td>★★</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Department calendar + .ics + reminders</strong></td>
+<td>Utility no aggregator has: exams, workshops, deadlines</td>
+<td>S</td>
+<td>★★</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>A real print edition (4-page A4 PDF)</strong></td>
+<td>Corridor presence, QR back to the site, something to hand a visitor</td>
+<td>M</td>
+<td>★★</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Issue cover + poster generator</strong></td>
+<td>A shareable object ("Issue 12") and a printable QR poster per issue</td>
+<td>M</td>
+<td>★★</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Student bylines, guest picks, photo submissions</strong></td>
+<td>Belonging: students read what their classmates wrote</td>
+<td>M</td>
+<td>★★</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>One-tap feedback + analytics</strong></td>
+<td>Tells the editor what to publish; today there is zero signal</td>
+<td>S</td>
+<td>★★</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>PWA: installable, offline last issue, push</strong></td>
+<td>The magazine on the home screen, readable in a lab with no Wi-Fi</td>
+<td>M</td>
+<td>★</td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>Audio version (TTS) of the brief</strong></td>
+<td>Listening while walking between classes</td>
+<td>S</td>
+<td>★</td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>Polls and quiz leaderboard</strong></td>
+<td>Light gamification tied to courses, not vanity points</td>
+<td>M</td>
+<td>★</td>
+</tr>
+</tbody>
+</table>
+<h3 id="three-feature-specs-worth-spelling-out">Three feature specs worth spelling out</h3>
+<p><strong>A. Class Mode (the differentiator).</strong>
+Every story gets four optional fields that already exist in the model (<code>lesson_why</code>, <code>lesson_term</code>, <code>lesson_gloss</code>, <code>lesson_ask</code>) plus a new <code>course</code> tag and a <code>quiz_json</code>. On the article page they render as a boxed "For class" section; on the front page, one story per issue is promoted into the dark "Course of the week" band. The quiz is 3 MCQs, instant feedback, no login, score kept in <code>localStorage</code>. Lecturers can project the question of the week; students can screenshot the term card. This is the feature that makes the magazine <em>useful</em> rather than merely interesting — and it is 80% built already.</p>
+<p><strong>B. The weekly issue object.</strong>
+Give every week a number, a date, a cover image, and a permanent URL (<code>/issue/12</code>). The issue page is the current front page frozen at publication; the archive lists issues, not 71 loose stories. This makes sharing, printing, and "what did I miss?" trivial, and gives the editor a natural deadline: the issue closes on Sunday.</p>
+<p><strong>C. WhatsApp loop.</strong>
+Every article gets a <code>wa.me/?text=</code> share with a pre-written bilingual message (<code>📌 [Arabic headline] — [link]</code>), plus a WhatsApp Channel link in the header/footer. Every issue gets a QR poster (A4, cover image, "Issue 12", QR to the issue URL) generated by the existing <code>qrcode</code> dependency. The door QR stays, but it points at the <em>issue</em>, not only at a subscribe form.</p>
+<hr />
+<h2 id="8-roadmap">8. Roadmap</h2>
+<h3 id="week-1-stop-the-bleeding-p0-23-days">Week 1 — stop the bleeding (P0, ~2–3 days)</h3>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>File / route</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Remove the cookie gate from public routes; default language from <code>?lang=</code> then <code>Accept-Language</code>; keep the cookie as an override</td>
+<td><code>app.py:3449,3543,1984,2709,2726,3765,4219,4328</code></td>
+</tr>
+<tr>
+<td>Cap the front page: <code>sub_news[:8]</code> and per-desk 3 cards; link to archive</td>
+<td><code>app.py:3568</code>, <code>_issue_front.html:416</code></td>
+</tr>
+<tr>
+<td>Nav: 5 items + search + language; hide empty rooms</td>
+<td><code>public.html:57-72</code></td>
+</tr>
+<tr>
+<td>Lazy-load + <code>width</code>/<code>height</code> + <code>srcset</code> on every card image</td>
+<td><code>_cards.html:10</code>, <code>_issue_front.html</code></td>
+</tr>
+<tr>
+<td>Article: headline as <code>h1</code>, hero <code>alt</code>, remove raw URL, fix Arabic font (<code>--font-ar</code>)</td>
+<td><code>magazine_detail.html</code>, <code>styles.css</code></td>
+</tr>
+<tr>
+<td>Print token reset (<code>@media print :root</code>) and remove gradient text</td>
+<td><code>styles.css:542</code>, <code>templates.css</code></td>
+</tr>
+<tr>
+<td>Public search route (reuse the existing SQL, drop <code>@login_required</code>)</td>
+<td><code>app.py:1683</code></td>
+</tr>
+<tr>
+<td>404 template with the reader bar</td>
+<td>new</td>
+</tr>
+<tr>
+<td>Add <code>robots.txt</code>, <code>sitemap.xml</code>, canonical, <code>og:image</code>/<code>twitter:image</code>, <code>NewsArticle</code> JSON-LD</td>
+<td>new / <code>public.html</code></td>
+</tr>
+<tr>
+<td>Analytics (cookieless) + fix view counting (dedupe, bots, front page)</td>
+<td><code>public.html</code>, <code>app.py:3460</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="weeks-24-the-new-shell-p1">Weeks 2–4 — the new shell (P1)</h3>
+<ul>
+<li>New design tokens + base CSS; retire duplicated palettes and inline <code>&lt;style&gt;</code> blocks.</li>
+<li>New front page and article templates (port the prototype to Jinja).</li>
+<li>Mobile bottom tabs; 44 px targets; sticky header reduced to one row.</li>
+<li>Image proxy/cache: rehost hotlinked images at 3 widths (fixes CLS, broken images, publisher blocking).</li>
+<li>Subscribe: double opt-in, confirmation screen, privacy note, unsubscribe in every email.</li>
+<li>Editorial pages: About, Standards, Corrections, AI disclosure, contact.</li>
+<li>Arabic-first QA pass: every RTL block has <code>lang="ar"</code>, every Arabic body uses Amiri.</li>
+</ul>
+<h3 id="month-2-the-habits-p1p2">Month 2 — the habits (P1–P2)</h3>
+<ul>
+<li>Class Mode fields + quiz rendering; course tags; course-of-the-week automation.</li>
+<li>Issue object + public archive by issue.</li>
+<li>WhatsApp share + channel + QR poster generator.</li>
+<li>Digest automation (weekly send, not a manual button), per-desk follow preferences.</li>
+<li>Department calendar (<code>/department/calendar.ics</code>) and event reminders.</li>
+</ul>
+<h3 id="month-3-growth-p2">Month 3 — growth (P2)</h3>
+<ul>
+<li>PWA (manifest, service worker, offline last issue, optional push).</li>
+<li>Student contributions: guest picks, bylines, photo submission, polls.</li>
+<li>Print edition: a designed 4-page A4 PDF generated from the issue, not <code>window.print()</code>.</li>
+<li>A/B test front page order (brief-first vs lead-first) on subscribe conversion and 7-day return.</li>
+</ul>
+<hr />
+<h2 id="9-measurement-how-you-will-know-it-is-working">9. Measurement: how you will know it is working</h2>
+<p>Today the only signal is a naive <code>views</code> counter on article GETs: <strong>32 views across 71 published stories, and 61 of them have never been opened.</strong> The front page, section pages, search, subscribe and language choice are unmeasured.</p>
+<p>Install a cookieless analytics tool (Plausible/Umami, ~1 KB) and track:</p>
+<p><strong>Pageviews:</strong> <code>/</code>, <code>/issue/:n</code>, <code>/magazine/article/:id</code>, <code>/department</code>, <code>/watch</code>, <code>/tools</code>, <code>/search</code>, <code>/subscribe</code>.</p>
+<p><strong>Events (7):</strong> <code>brief_click</code>, <code>article_reach</code> (scroll 75%), <code>quiz_start</code>, <code>quiz_complete</code>, <code>source_open</code> (outbound to publisher — the real engagement signal), <code>share</code> (network), <code>subscribe_submit</code> (already carries <code>source=qr|web|digest</code>).</p>
+<p><strong>KPIs and targets for the first 90 days:</strong></p>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Today</th>
+<th>90-day target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Weekly unique readers</td>
+<td>unknown</td>
+<td>150</td>
+</tr>
+<tr>
+<td>Brief → article click-through</td>
+<td>n/a</td>
+<td>25%</td>
+</tr>
+<tr>
+<td>Article reach rate (article views ÷ issue views)</td>
+<td>n/a</td>
+<td>20%</td>
+</tr>
+<tr>
+<td>Quiz starts per issue</td>
+<td>0</td>
+<td>40</td>
+</tr>
+<tr>
+<td>Subscribe conversion (QR + web)</td>
+<td>0 subscribers</td>
+<td>60 subscribers</td>
+</tr>
+<tr>
+<td>7-day return rate</td>
+<td>unknown</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>Arabic vs English mix</td>
+<td>unknown</td>
+<td>measured, and used to order the front page</td>
+</tr>
+</tbody>
+</table>
+<p>Also add a one-tap <strong>"Was this useful?"</strong> at the end of every article. Two buttons, no login. That single data point is worth more to an editor than a page-view chart.</p>
+<hr />
+<h2 id="10-technical-appendix">10. Technical appendix</h2>
+<h3 id="101-highest-impact-fixes-in-order">10.1 Highest-impact fixes, in order</h3>
+<ol>
+<li><strong>Public routes must not return the gate</strong> (<code>app.py</code>), plus <code>robots.txt</code>/<code>sitemap.xml</code>/canonical/RSS. Without this, nothing else compounds.</li>
+<li><strong>Cap and paginate the issue</strong> (<code>sub_news</code>, per-desk). One line removes ~50 cards and ~4 MB.</li>
+<li><strong>Images</strong>: lazy, dimensions, <code>srcset</code>, rehost. Fixes CLS, LCP, broken hotlinks, and publisher blocking.</li>
+<li><strong>Article page</strong>: real <code>h1</code>, real body, Arabic font, no duplicated headline.</li>
+<li><strong>Nav and mobile</strong>: 5 items, 44 px targets, bottom tabs, no horizontal clipped links.</li>
+<li><strong>Design tokens once</strong>: one palette block with light/dark/print; delete 12 palettes and 589 <code>!important</code> over time.</li>
+<li><strong>Print</strong>: token reset, page size/margins, break rules, visible link URLs.</li>
+<li><strong>Accessibility</strong>: <code>&lt;main&gt;</code>, skip link, <code>aria-label</code> on 8 icon buttons, dialog semantics for 3 modals, <code>aria-live</code> for async status, labels on 5 inputs, <code>lang="ar"</code> on RTL blocks, focus-visible.</li>
+<li><strong>Contrast</strong>: replace white-on-cyan/pink pills (2.1–2.9:1); stop injecting custom colours with <code>!important</code>.</li>
+<li><strong>Admin</strong>: remove hardcoded <code>#0f172a</code> from <code>admin-desks.css</code> so the dashboard survives a theme change.</li>
+</ol>
+<h3 id="102-content-rules-to-enforce-at-publication">10.2 Content rules to enforce at publication</h3>
+<p>A story can be <strong>published as a full article</strong> only if it has:</p>
+<ul>
+<li>an image with a real subject (not a logo screenshot), or a designed fallback;</li>
+<li>a 25–40 word dek;</li>
+<li>a 150–250 word body: what happened, why it matters, what to watch;</li>
+<li>an Arabic title that has been read by a human (machine translation of proper nouns is currently producing errors such as "أ. بوم" for "A.I. Boom");</li>
+<li>a source link;</li>
+<li>optionally, the class layer (term, question, quiz).</li>
+</ul>
+<p>Anything else is a <strong>brief</strong>: title + one line + source, no card, no article page. This single rule fixes the "article page has no article" problem better than any template change.</p>
+<h3 id="103-checklist-for-the-new-front-page">10.3 Checklist for the new front page</h3>
+<ul>
+<li>[ ] first headline visible within one phone screen</li>
+<li>[ ] at most 20 stories, no duplicates</li>
+<li>[ ] every section numbered and capped</li>
+<li>[ ] one accent colour + two desk colours only</li>
+<li>[ ] every image has dimensions, alt, and a fallback</li>
+<li>[ ] language switch works without reload and remembers choice</li>
+<li>[ ] keyboard reachable; focus visible; skip link</li>
+<li>[ ] 320 px wide: no horizontal scroll</li>
+<li>[ ] print: black on white, 4 pages, no nav</li>
+<li>[ ] share preview: correct title, image, description, URL</li>
+</ul>
+<h3 id="104-security-hygiene-outside-ux-but-urgent">10.4 Security hygiene (outside UX, but urgent)</h3>
+<ul>
+<li><code>.env</code> contains live OpenAI, Google and YouTube keys plus the admin password. Rotate them, add <code>.env</code> to <code>.gitignore</code>, and use <code>ADMIN_PASSWORD_HASH</code>.</li>
+<li><code>/debug_env</code> is login-protected but still exposes paths and configuration; remove it from production.</li>
+<li>Set <code>SESSION_COOKIE_SECURE</code>/<code>HTTPONLY</code>/<code>SAMESITE</code> and run behind a WSGI server for production.</li>
+</ul>
+<hr />
+<h2 id="11-files-in-this-review">11. Files in this review</h2>
+<pre><code>design-review/
+├── UX_AUDIT_AND_REDESIGN.md      this document
+├── README.md                     how to open the prototype and screenshots
+├── prototype/
+│   ├── index.html                redesigned front page (EN/AR, live data)
+│   ├── article.html              redesigned article page + quiz
+│   ├── proto.css                 design tokens + components
+│   ├── proto.js                  language, search, save, quiz, progress
+│   └── assets/                   logo, author photo, department images
+└── shots/
+    ├── compare_front_1440.jpg    before/after, desktop
+    ├── compare_front_390.jpg    before/after, mobile
+    ├── compare_article_1440.jpg before/after, article
+    ├── proto_*.png              prototype screenshots (EN/AR, 1440/390)
+    └── current_*.png            current app screenshots
+</code></pre>
+<hr />
+<h2 id="12-closing-note">12. Closing note</h2>
+<p>The instinct behind this magazine is right: a department deserves its own paper, in its own two languages, with its own editor. What it needs now is not more features or more stories. It needs <strong>an order, a depth, and a front door that opens</strong>.</p>
+<p>If only three things are done this month:</p>
+<ol>
+<li><strong>Open the front door</strong> — remove the gate from public routes, fix titles/share images, and add a sitemap.</li>
+<li><strong>Cut the issue in half and put a 90-second brief on top</strong> — 20 stories, one lead, five lines.</li>
+<li><strong>Give every story a body and a class layer</strong> — 150 words and three questions.</li>
+</ol>
+<p>Everything else in this document is detail on those three moves.</p>
+</body></html>

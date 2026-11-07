@@ -1,0 +1,274 @@
+{% extends "public_v3.html" %}
+{% import "_v3_macros.html" as m %}
+
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ title }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_desc %}{{ summary | striptags | truncate(158) }}{% endblock %}
+{% block og_type %}article{% endblock %}
+
+{% block page_image %}
+{% if item.image %}
+<meta property="og:image" content="{{ item.image }}">
+<meta name="twitter:image" content="{{ item.image }}">
+{% elif settings and settings.logo_path %}
+<meta property="og:image" content="{{ settings.logo_path if settings.logo_path.startswith('http') else request.url_root.rstrip('/') + settings.logo_path }}">
+<meta name="twitter:image" content="{{ settings.logo_path if settings.logo_path.startswith('http') else request.url_root.rstrip('/') + settings.logo_path }}">
+{% endif %}
+{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{{ {
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": title,
+  "description": summary | striptags | truncate(200),
+  "datePublished": published_iso,
+  "dateModified": published_iso,
+  "inLanguage": "ar" if ar else "en",
+  "url": request.base_url,
+  "mainEntityOfPage": {"@type": "WebPage", "@id": request.base_url},
+  "author": {"@type": "Person", "name": (settings.author_name if settings and settings.author_name else "Nasser")},
+  "publisher": {"@type": "Organization", "name": (settings.magazine_title if settings else "Nasser AI News")},
+  "image": ([item.image] if item.image else [])
+} | tojson }}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="progress" aria-hidden="true"></div>
+<div class="wrap">
+
+<nav class="crumbs" aria-label="{{ 'مسار التنقل' if ar else 'Breadcrumb' }}" style="padding-top:26px;">
+    <a href="{{ url_for('magazine_view') }}">{{ 'العدد' if ar else 'The issue' }}</a>
+    <span class="sep" aria-hidden="true">›</span>
+    <a href="{{ url_for('find_stories', desk=item.desk) }}">{{ item.desk_ar if ar else item.desk_en }}</a>
+</nav>
+
+<div class="article-wrap">
+    <article class="article-main desk-{{ item.desk }}">
+        <div class="kicker" style="margin-top:14px;">
+            <span class="desk-tag">{{ item.desk_ar if ar else item.desk_en }}</span>
+            <span class="sep" aria-hidden="true"></span>
+            <span>{{ reading_minutes }} {{ 'دقائق قراءة' if ar else 'min read' }}</span>
+            <span class="src-badge src-{{ item.source_kind }}">{{ item.source_kind_ar if ar else item.source_kind_en }}</span>
+        </div>
+
+        <h1 class="article-title">{{ title }}</h1>
+
+        {% if summary and has_body %}<p class="article-dek">{{ summary | plain_dek | truncate(260, true) }}</p>{% endif %}
+
+        <div class="article-byline">
+            {% if settings and settings.author_image %}
+            <img class="avatar" src="{{ settings.author_image }}" alt="" width="32" height="32">
+            {% endif %}
+            <span><strong>{{ (settings.author_name_ar if ar and settings.author_name_ar else settings.author_name) if settings else 'Nasser' }}</strong> ·
+                {{ 'المحرر، جامعة ظفار' if ar else 'Editor, Dhofar University' }}</span>
+            <span class="dot" aria-hidden="true">·</span>
+            <time datetime="{{ published_iso }}">{{ published }}</time>
+            <span class="spacer"></span>
+            <button class="save-btn" type="button" data-save-story="{{ item.id }}" aria-pressed="false">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M6 4h12v17l-6-4-6 4z"></path>
+                </svg>
+                <span>{{ 'حفظ' if ar else 'Save' }}</span>
+            </button>
+        </div>
+
+        {% if what or why or ask %}
+        <section class="tldr" aria-labelledby="brief-title">
+            <h2 id="brief-title">{{ 'في ٣٠ ثانية' if ar else 'In 30 seconds' }}</h2>
+            <dl>
+                {% if what %}
+                <div class="row">
+                    <dt>{{ 'ماذا حدث' if ar else 'What happened' }}</dt>
+                    <dd>{{ what }}</dd>
+                </div>
+                {% endif %}
+                {% if why %}
+                <div class="row">
+                    <dt>{{ 'لماذا يهم' if ar else 'Why it matters' }}</dt>
+                    <dd>{{ why }}</dd>
+                </div>
+                {% endif %}
+                {% if ask %}
+                <div class="row">
+                    <dt>{{ 'في القاعة' if ar else 'In class' }}</dt>
+                    <dd>{{ ask }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </section>
+        {% endif %}
+
+        {% if item.image %}
+        <figure class="hero-figure">
+            <img src="{{ item.image }}" alt="" width="1200" height="675" fetchpriority="high"
+                onerror="this.closest('figure').style.display='none'">
+            {% if item.source %}
+            <figcaption>
+                <span>{{ 'صورة من القصة الأصلية' if ar else 'Image from the original story' }}</span>
+                <span>{{ item.source }}</span>
+            </figcaption>
+            {% endif %}
+        </figure>
+        {% endif %}
+
+        <div class="article-body">
+            {% if has_body %}
+            {{ body | clean_html }}
+            {% else %}
+            <p>{{ body_text | plain_dek }}</p>
+            <span class="brief-badge">{{ 'موجز' if ar else 'Brief' }}</span>
+            <div class="callout">
+                <strong>{{ 'هذه القصة موجز' if ar else 'This is a brief' }}</strong>
+                <span>{{ 'نكتب الموجز هنا، والتقرير الكامل عند المصدر الأصلي. اقرأه هناك ثم عُد.' if ar else 'We write the brief here; the full report lives at the original source. Read it there, then come back.' }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if term or gloss or ask %}
+        <section class="quiz" aria-labelledby="class-title" style="margin-top:30px;">
+            <h2 id="class-title">{{ 'للقاعة' if ar else 'For class' }}</h2>
+            <p class="sub">{{ 'تعريف المصطلح وسؤال نقاش — مأخوذة من القصة نفسها.' if ar else 'The term and a discussion question, taken from the story itself.' }}</p>
+            <div style="margin-top:16px; display:grid; gap:14px;">
+                {% if term %}
+                <div class="callout" style="margin:0;">
+                    <strong>{{ 'المصطلح' if ar else 'Term' }}</strong>
+                    <span><b>{{ term }}</b>{% if gloss %} — {{ gloss }}{% endif %}</span>
+                </div>
+                {% endif %}
+                {% if ask %}
+                <div class="callout" style="margin:0;">
+                    <strong>{{ 'سؤال النقاش' if ar else 'Discussion question' }}</strong>
+                    <span>{{ ask }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <div class="source-box">
+            <p>
+                <b>{{ 'التقرير الأصلي:' if ar else 'Original reporting:' }}</b>
+                {{ item.source or 'Nasser AI News' }}.
+                {{ 'هذه الصفحة موجز مكتوب للطلبة، وليست إعادة نشر.' if ar else 'This page is a summary written for students, not a reproduction.' }}
+                <span class="src-note">
+                    <span class="src-badge src-{{ item.source_kind }}">{{ item.source_kind_ar if ar else item.source_kind_en }}</span>
+                    {{ item.source_kind_note_ar if ar else item.source_kind_note_en }}
+                </span>
+            </p>
+            {% if item.url and not item.url.startswith('manual-') %}
+            <a class="btn btn-ghost" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">
+                {{ 'اقرأ الأصل ↗' if ar else 'Read the original ↗' }}
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="share-row">
+            <span class="eyebrow">{{ 'شارك' if ar else 'Share' }}</span>
+            {% set share_text = (title ~ ' — ' ~ request.base_url) | urlencode %}
+            <a class="share-btn" href="https://wa.me/?text={{ share_text }}" target="_blank" rel="noopener"
+                aria-label="{{ 'شارك على واتساب' if ar else 'Share on WhatsApp' }}">WA</a>
+            <a class="share-btn" href="https://twitter.com/intent/tweet?text={{ share_text }}" target="_blank" rel="noopener"
+                aria-label="{{ 'شارك على إكس' if ar else 'Share on X' }}">X</a>
+            <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.base_url | urlencode }}"
+                target="_blank" rel="noopener" aria-label="{{ 'شارك على لينكدإن' if ar else 'Share on LinkedIn' }}">in</a>
+            <button class="share-btn" type="button" data-copy-link="{{ request.base_url }}"
+                aria-label="{{ 'انسخ الرابط' if ar else 'Copy link' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"></path>
+                    <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"></path>
+                </svg>
+            </button>
+            <button class="share-btn listen-btn" type="button" data-listen aria-pressed="false"
+                aria-label="{{ 'استمع إلى القصة' if ar else 'Listen to this story' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"></path>
+                </svg>
+                <span>{{ 'استمع' if ar else 'Listen' }}</span>
+            </button>
+        </div>
+    </article>
+
+    <aside class="article-aside" aria-label="{{ 'أدوات القصة' if ar else 'Story tools' }}">
+        <div class="aside-box">
+            <h3>{{ 'في هذا العدد' if ar else 'In this issue' }}</h3>
+            <ul class="related-mini">
+                <li><a href="{{ url_for('magazine_view') }}">{{ 'العدد كاملًا' if ar else 'The full issue' }}</a>
+                    <span>{{ 'الغلاف والملخص' if ar else 'Cover and brief' }}</span></li>
+                <li><a href="{{ url_for('find_stories', desk=item.desk) }}">{{ item.desk_ar if ar else item.desk_en }}</a>
+                    <span>{{ 'كل قصص القسم' if ar else 'All stories in this desk' }}</span></li>
+                <li><a href="{{ url_for('subscribe') }}">{{ 'ملخص الأحد' if ar else 'Sunday digest' }}</a>
+                    <span>{{ 'النشرة' if ar else 'Newsletter' }}</span></li>
+            </ul>
+        </div>
+
+        <div class="aside-box ask-box">
+            <h3>{{ 'اسأل عن هذه القصة' if ar else 'Ask about this story' }}</h3>
+            <p>{{ 'اسأل بالعربية أو الإنجليزية. الإجابات من قصص المجلة فقط، ومعها مصادرها.' if ar else "Ask in Arabic or English. Answers come from this magazine's stories only, with sources." }}</p>
+            <button class="btn btn-ghost" type="button" data-open-ask="{{ title }}">{{ 'افتح المساعد' if ar else 'Open the assistant' }}</button>
+        </div>
+
+        {% if related %}
+        <div class="aside-box">
+            <h3>{{ 'المزيد' if ar else 'More' }}</h3>
+            <ul class="related-mini">
+                {% for story in related %}
+                <li>
+                    <a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a>
+                    <span>{{ (story.desk_ar if ar else story.desk_en) }} · {{ story.reading_minutes }} {{ 'دقائق' if ar else 'min' }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </aside>
+</div>
+
+{% if related %}
+<section class="related" aria-labelledby="related-title">
+    <header class="section-head">
+        <span class="num" aria-hidden="true">→</span>
+        <h2 id="related-title">{{ 'اقرأ بعدها' if ar else 'Read next' }}</h2>
+        <p>{{ 'القسم نفسه، خطوة أبعد.' if ar else 'Same desk, one step further.' }}</p>
+        <a class="more" href="{{ url_for('find_stories', desk=item.desk) }}">{{ 'كل القصص' if ar else 'All stories' }} →</a>
+    </header>
+    <div class="cards">
+        {% for story in related %}
+        <article class="card">
+            <a class="media-link" href="{{ url_for('magazine_detail', item_id=story.id) }}">
+                {{ m.media(story, '16x9') }}
+            </a>
+            <div class="kicker"><span>{{ story.desk_ar if ar else story.desk_en }}</span></div>
+            <h3 class="card-title"><a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a></h3>
+            <div class="card-meta">{{ story.source or 'Nasser AI News' }} · {{ story.reading_minutes }} {{ 'دقائق' if ar else 'min' }}</div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block pre_footer %}
+<div class="wrap">
+    <div class="subscribe">
+        <div>
+            <h2>{{ 'بريد واحد كل أحد. أسبوع الذكاء الاصطناعي، بالعربية والإنجليزية.' if ar else 'One email on Sunday. The week in AI, in Arabic and English.' }}</h2>
+            <p>{{ 'الملخص، وقصة الغلاف، وما هو قادم في القسم. مجانًا، وبلا ضجيج.' if ar else 'The brief, the cover story, and what is coming up in the department. Free, and no noise.' }}</p>
+        </div>
+        <div>
+            <form action="{{ url_for('subscribe') }}" method="POST">
+                <input type="hidden" name="source" value="article">
+                <label class="visually-hidden" for="v3-email-article">{{ 'بريدك الإلكتروني' if ar else 'Your email' }}</label>
+                <input id="v3-email-article" type="email" name="email" required
+                    placeholder="{{ 'بريدك@du.edu.om' if ar else 'you@du.edu.om' }}">
+                <button class="btn btn-primary" type="submit">{{ 'اشترك' if ar else 'Subscribe' }}</button>
+            </form>
+            <p class="note">{{ 'نحفظ بريدك لإرسال الملخص. رابط إلغاء الاشتراك في كل عدد.' if ar else 'We store your email to send the digest. Unsubscribe link in every issue.' }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

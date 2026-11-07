@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>{{ A('np_title') }}</h1>
+        <p class="subtitle">{{ A('np_dek') }}</p>
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">{{ A('np_back') }}</a>
+        <a href="{{ url_for('news_photos') }}" class="btn btn-secondary" target="_blank">{{ A('preview') }}</a>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('add_news_photo') }}" enctype="multipart/form-data" class="dash-section photo-form">
+    <h2>{{ A('np_add') }}</h2>
+    <div class="photo-form-grid">
+        <div class="form-group">
+            <label>{{ A('np_topic') }}</label>
+            <select name="topic">
+                {% for key, en, ar, words in news_desks %}
+                <option value="{{ key }}">{{ ar if admin_ar else en }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_date') }}</label>
+            <input type="date" name="event_date" value="{{ today }}" required>
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_photo_title') }}</label>
+            <input type="text" name="title_ar" maxlength="190" dir="rtl" placeholder="{{ A('ph_photo_title') }}">
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_photo_title_en') }}</label>
+            <input type="text" name="title" maxlength="190" placeholder="{{ A('ph_photo_title_en') }}">
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_photo_caption') }}</label>
+            <input type="text" name="caption_ar" maxlength="400" dir="rtl" placeholder="{{ A('ph_photo_caption') }}">
+        </div>
+        <div class="form-group">
+            <label>{{ A('ph_photo_caption_en') }}</label>
+            <input type="text" name="caption" maxlength="400" placeholder="{{ A('ph_photo_caption_en') }}">
+        </div>
+        <div class="form-group">
+            <label>{{ A('np_link') }}</label>
+            <input type="url" name="source_url" maxlength="500" placeholder="{{ A('np_link_ph') }}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{ A('ph_files') }}</label>
+        <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" required>
+    </div>
+    <label class="photo-show">
+        <input type="checkbox" name="show" value="1" checked> {{ A('np_show') }}
+    </label>
+    <button type="submit" class="btn btn-primary">{{ A('np_save') }}</button>
+</form>
+
+{% if desks %}
+<nav class="photo-topic-nav">
+    <a class="btn {{ 'btn-primary' if not topic else 'btn-secondary' }}" href="{{ url_for('news_photos_admin') }}">{{ A('np_all') }}</a>
+    {% for desk in desks %}
+    <a class="btn {{ 'btn-primary' if topic == desk.key else 'btn-secondary' }}" href="{{ url_for('news_photos_admin', topic=desk.key) }}">{{ desk.ar if admin_ar else desk.en }} · {{ desk.count }}</a>
+    {% endfor %}
+</nav>
+{% endif %}
+
+{% if months %}
+{% for month in months %}
+<section class="photo-semester" id="month-{{ month.key }}">
+    <h2>{{ month.label }}</h2>
+    <div class="photo-admin-grid">
+        {% for frame in month.frames %}
+        <figure>
+            <img src="{{ frame.image }}" alt="">
+            <p class="photo-kicker">{{ frame.topic_ar if admin_ar else frame.topic_en }} · {{ A('np_from_story') if frame.kind == 'story' else A('np_added') }}</p>
+            <strong>{{ frame.title_ar or frame.title }}</strong>
+            {% if frame.caption_ar or frame.caption %}<p>{{ (frame.caption_ar or frame.caption) | truncate(180) }}</p>{% endif %}
+            <div class="photo-album-actions">
+                {% if frame.story_url %}<a class="btn btn-secondary" href="{{ frame.story_url }}">{{ A('np_story') }}</a>{% endif %}
+                {% if frame.source_url %}<a class="btn btn-secondary" href="{{ frame.source_url }}" target="_blank" rel="noopener">{{ A('np_source') }}</a>{% endif %}
+                {% if frame.kind == 'story' %}
+                <a class="btn btn-secondary" href="{{ url_for('edit_news', item_id=frame.id) }}">{{ A('edit') }}</a>
+                {% else %}
+                <form method="POST" action="{{ url_for('remove_news_photo', photo_id=frame.id) }}" onsubmit="return confirm('{{ A('ph_remove_photo_q') }}');">
+                    <button type="submit" class="btn btn-secondary">{{ A('ph_remove_photo') }}</button>
+                </form>
+                {% endif %}
+            </div>
+        </figure>
+        {% endfor %}
+    </div>
+</section>
+{% endfor %}
+{% else %}
+<p class="subtitle">{{ A('np_empty') }}</p>
+{% endif %}
+{% endblock %}

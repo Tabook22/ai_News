@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perplexity launches its own take on AI agents for work — Nasser AI News</title>
+    <meta name="description"
+        content="Perplexity's Teammates put agents inside a shared workspace with roles and memory. The interesting question is who audits what they do.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="proto.css">
+</head>
+
+<body>
+    <div class="progress" aria-hidden="true"></div>
+    <a class="skip-link" href="#main" data-en="Skip to content" data-ar="تخطَّ إلى المحتوى">Skip to content</a>
+
+    <header class="topbar">
+        <div class="wrap topbar-in">
+            <a class="brand" href="index.html" aria-label="Nasser AI News — home">
+                <span class="brand-mark" aria-hidden="true">N</span>
+                <span class="brand-name">Nasser AI News</span>
+            </a>
+            <nav class="nav" aria-label="Sections">
+                <a href="index.html" aria-current="page" data-en="The Issue" data-ar="العدد">The Issue</a>
+                <a href="index.html#department" data-en="Department" data-ar="القسم">Department</a>
+                <a href="index.html#world" data-en="The World" data-ar="العالم">The World</a>
+                <a href="index.html#watch" data-en="Watch" data-ar="مشاهدة">Watch</a>
+                <a href="index.html#tools" data-en="Tools" data-ar="أدوات">Tools</a>
+            </nav>
+            <div class="top-actions">
+                <button class="icon-btn" type="button" id="search-open" aria-label="Search the magazine"
+                    data-aria-en="Search the magazine" data-aria-ar="ابحث في المجلة">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+                    </svg>
+                </button>
+                <div class="lang" role="group" aria-label="Language" data-aria-en="Language" data-aria-ar="اللغة">
+                    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+                    <button type="button" data-lang="ar" aria-pressed="false" aria-label="العربية">ع</button>
+                </div>
+                <a class="btn btn-primary" href="index.html#subscribe" data-en="Subscribe" data-ar="اشترك">Subscribe</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="tabbar" aria-label="Quick navigation">
+        <a href="index.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path>
+            </svg>
+            <span data-en="Issue" data-ar="العدد">Issue</span>
+        </a>
+        <a href="index.html#department">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M3 10 12 4l9 6"></path><path d="M5 10v9h14v-9"></path>
+            </svg>
+            <span data-en="Department" data-ar="القسم">Department</span>
+        </a>
+        <a href="index.html#world">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <circle cx="12" cy="12" r="8"></circle><path d="M4 12h16M12 4c3 3 3 13 0 16"></path>
+            </svg>
+            <span data-en="World" data-ar="العالم">World</span>
+        </a>
+        <a href="index.html#watch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m10 9 5 3-5 3z"></path>
+            </svg>
+            <span data-en="Watch" data-ar="مشاهدة">Watch</span>
+        </a>
+        <button type="button" id="search-open-mobile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+            </svg>
+            <span data-en="Search" data-ar="بحث">Search</span>
+        </button>
+    </nav>
+
+    <main id="main">
+        <div class="wrap">
+            <div class="article-head">
+                <nav class="crumbs" aria-label="Breadcrumb">
+                    <a href="index.html" data-en="The issue" data-ar="العدد">The issue</a>
+                    <span class="sep" aria-hidden="true">›</span>
+                    <a href="index.html#world" data-en="The world" data-ar="العالم">The world</a>
+                    <span class="sep" aria-hidden="true">›</span>
+                    <span aria-current="page" data-en="AI agents" data-ar="وكلاء الذكاء الاصطناعي">AI agents</span>
+                </nav>
+            </div>
+
+            <div class="article-wrap">
+                <article class="article-main">
+                    <div class="kicker">
+                        <span data-en="The world" data-ar="العالم">The world</span>
+                        <span class="sep" aria-hidden="true"></span>
+                        <span data-en="AI agents" data-ar="وكلاء الذكاء الاصطناعي">AI agents</span>
+                    </div>
+
+                    <h1 class="article-title"
+                        data-en="Perplexity launches its own take on AI agents for work"
+                        data-ar="بيربليكسيتي تطلق رؤيتها الخاصة لوكلاء الذكاء الاصطناعي في العمل">Perplexity launches its own take on AI agents for work</h1>
+
+                    <p class="article-dek"
+                        data-en="Always-on “Teammates” with a role, a shared workspace, and the memory of everything you already did in Perplexity. The product is not the model — it is the memory."
+                        data-ar="«زملاء فريق» دائمون لهم دور ومساحة عمل مشتركة وذاكرة لكل ما فعلته سابقًا في بيربليكسيتي. المنتج ليس النموذج، بل الذاكرة.">
+                        Always-on “Teammates” with a role, a shared workspace, and the memory of everything you already
+                        did in Perplexity. The product is not the model — it is the memory.</p>
+
+                    <div class="article-byline">
+                        <img class="avatar" src="assets/author.jpg" alt="" width="32" height="32">
+                        <span><strong data-en="Nasser" data-ar="ناصر">Nasser</strong> ·
+                            <span data-en="Editor, Dhofar University" data-ar="المحرر، جامعة ظفار">Editor, Dhofar University</span></span>
+                        <span class="dot" aria-hidden="true">·</span>
+                        <time datetime="2026-11-06" data-en="6 November 2026" data-ar="٦ نوفمبر ٢٠٢٦">6 November 2026</time>
+                        <span class="dot" aria-hidden="true">·</span>
+                        <span data-en="4 min read" data-ar="قراءة ٤ دقائق">4 min read</span>
+                        <span class="spacer"></span>
+                        <button class="save-btn" id="save-story" data-story="perplexity-teammates" aria-pressed="false">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M6 4h12v17l-6-4-6 4z"></path>
+                            </svg>
+                            <span data-en="Save" data-ar="حفظ">Save</span>
+                        </button>
+                    </div>
+
+                    <section class="tldr" aria-labelledby="tldr-title">
+                        <h2 id="tldr-title" data-en="In 30 seconds" data-ar="في ٣٠ ثانية">In 30 seconds</h2>
+                        <dl>
+                            <div class="row">
+                                <dt data-en="What happened" data-ar="ماذا حدث">What happened</dt>
+                                <dd data-en="Perplexity announced Teammates: always-on agents that take a role inside a workspace and reuse projects, skills, and memory from its existing tools."
+                                    data-ar="أعلنت بيربليكسيتي عن «Teammates»: وكلاء دائمون يشغلون دورًا داخل مساحة عمل ويعيدون استخدام المشاريع والمهارات والذاكرة من أدواتها الحالية.">
+                                    Perplexity announced Teammates: always-on agents that take a role inside a
+                                    workspace and reuse projects, skills, and memory from its existing tools.</dd>
+                            </div>
+                            <div class="row">
+                                <dt data-en="Why it matters" data-ar="لماذا يهم">Why it matters</dt>
+                                <dd data-en="The competitive ground moved from answer quality to persistence: who holds the agent's context, and who can inspect what it did."
+                                    data-ar="انتقل التنافس من جودة الإجابة إلى الاستمرارية: من يحتفظ بسياق الوكيل، ومن يستطيع فحص ما فعله.">
+                                    The competitive ground moved from answer quality to persistence: who holds the
+                                    agent's context, and who can inspect what it did.</dd>
+                            </div>
+                            <div class="row">
+                                <dt data-en="In class" data-ar="في القاعة">In class</dt>
+                                <dd data-en="COMP 340: treat the agent as a service with state. Define its contract, its permissions, and its audit log before arguing about the model."
+                                    data-ar="COMP 340: تعامل مع الوكيل كخدمة لها حالة. حدّد عقدها وصلاحياتها وسجل تدقيقها قبل الجدل حول النموذج.">
+                                    COMP 340: treat the agent as a service with state. Define its contract, its
+                                    permissions, and its audit log before arguing about the model.</dd>
+                            </div>
+                        </dl>
+                    </section>
+
+                    <figure class="hero-figure">
+                        <img src="https://platform.theverge.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/25472503/STK271_PERPLEXITY_C.jpg?quality=90&strip=all&crop=0%2C10.732984293194%2C100%2C78.534031413613&w=1200"
+                            alt="Illustration of the Perplexity logo" width="1200" height="675" fetchpriority="high">
+                        <figcaption>
+                            <span data-en="Perplexity is positioning its agents as co-workers rather than a chat window."
+                                data-ar="تضع بيربليكسيتي وكلاءها كزملاء عمل بدلًا من نافذة محادثة.">Perplexity is positioning its agents as co-workers rather than a chat window.</span>
+                            <span data-en="Illustration: The Verge" data-ar="رسم: ذا فيرج">Illustration: The Verge</span>
+                        </figcaption>
+                    </figure>
+
+                    <div class="article-body">
+                        <p data-en="Perplexity has announced a set of work-focused agents it calls Teammates. Unlike a chat session that forgets you when the tab closes, a Teammate is meant to keep a role inside a workspace: it can pick up an existing project, reuse the skills you have already set up, and draw on the memory stored in Perplexity's tools. The company says the agents integrate with Perplexity Computer, its system for running agents on a device."
+                            data-ar="أعلنت بيربليكسيتي عن مجموعة وكلاء موجّهة للعمل أطلقت عليها «Teammates». وخلافًا لجلسة محادثة تنساك بمجرد إغلاق التبويب، يُفترض بالزميل أن يحتفظ بدور داخل مساحة العمل: يستأنف مشروعًا قائمًا، ويعيد استخدام المهارات التي أعددتها، ويستند إلى الذاكرة المخزّنة في أدوات بيربليكسيتي. وتقول الشركة إن الوكلاء يتكاملون مع Perplexity Computer، نظامها لتشغيل الوكلاء على الجهاز.">
+                            Perplexity has announced a set of work-focused agents it calls Teammates. Unlike a chat
+                            session that forgets you when the tab closes, a Teammate is meant to keep a role inside a
+                            workspace: it can pick up an existing project, reuse the skills you have already set up,
+                            and draw on the memory stored in Perplexity's tools. The company says the agents integrate
+                            with Perplexity Computer, its system for running agents on a device.</p>
+
+                        <p data-en="That sounds like a feature list. It is really a change in what the product is. For two years, the assistant was a box you typed into. Here, the assistant is a participant with a name, a scope, and a history. The model still matters, but the interesting engineering sits around it: what the agent is allowed to do, what it remembers, and what a human can replay afterwards."
+                            data-ar="يبدو هذا كقائمة ميزات، لكنه في الحقيقة تغيير في ماهية المنتج. لسنتين، كان المساعد صندوقًا تكتب فيه. هنا، يصبح المساعد مشاركًا له اسم ونطاق وتاريخ. لا يزال النموذج مهمًا، لكن الهندسة الأهم حوله: ما يُسمح للوكيل بفعله، وما يتذكره، وما يستطيع الإنسان إعادة تشغيله لاحقًا.">
+                            That sounds like a feature list. It is really a change in what the product is. For two
+                            years, the assistant was a box you typed into. Here, the assistant is a participant with a
+                            name, a scope, and a history. The model still matters, but the interesting engineering sits
+                            around it: what the agent is allowed to do, what it remembers, and what a human can replay
+                            afterwards.</p>
+
+                        <h2 data-en="Memory is the product" data-ar="الذاكرة هي المنتج">Memory is the product</h2>
+
+                        <p data-en="Carrying context across sessions is what makes an agent feel like a colleague rather than a tool. It is also what makes a small mistake expensive. If the agent mislabels one project, that label can quietly travel into later summaries, tickets, and code reviews. The risk is not that the model is wrong once — it is that the error becomes persistent and looks like institutional knowledge."
+                            data-ar="نقل السياق بين الجلسات هو ما يجعل الوكيل يبدو زميلًا لا أداة. وهو أيضًا ما يجعل الخطأ الصغير مكلفًا. إذا أخطأ الوكيل في وسم مشروع واحد، فقد ينتقل هذا الوسم بهدوء إلى الملخصات والتذاكر ومراجعات الشيفرة لاحقًا. الخطر ليس أن يخطئ النموذج مرة، بل أن يصبح الخطأ مستمرًا ويبدو كمعرفة مؤسسية.">
+                            Carrying context across sessions is what makes an agent feel like a colleague rather than
+                            a tool. It is also what makes a small mistake expensive. If the agent mislabels one
+                            project, that label can quietly travel into later summaries, tickets, and code reviews.
+                            The risk is not that the model is wrong once — it is that the error becomes persistent and
+                            looks like institutional knowledge.</p>
+
+                        <blockquote class="pullquote"
+                            data-en="Memory is what turns a chatbot into a colleague — and what turns one bad assumption into a systemic one."
+                            data-ar="الذاكرة هي ما يحوّل روبوت المحادثة إلى زميل — وهي ما يحوّل افتراضًا خاطئًا واحدًا إلى خطأ منهجي.">
+                            Memory is what turns a chatbot into a colleague — and what turns one bad assumption into a
+                            systemic one.</blockquote>
+
+                        <p data-en="The practical questions are therefore the unglamorous ones. What can the agent change without asking? Which actions require a human signature? Where is the log, and can a reviewer see the exact inputs that produced an action six weeks ago? Teams that answer these before deployment will get the productivity; teams that skip them will get an incident report."
+                            data-ar="الأسئلة العملية إذن هي الأسئلة غير البرّاقة: ما الذي يستطيع الوكيل تغييره دون سؤال؟ أي الأفعال تتطلب توقيع إنسان؟ أين السجل، وهل يستطيع المراجع رؤية المدخلات التي أنتجت فعلًا قبل ستة أسابيع؟ الفرق التي تجيب عن هذه الأسئلة قبل النشر ستحصل على الإنتاجية؛ والتي تتجاهلها ستحصل على تقرير حادث.">
+                            The practical questions are therefore the unglamorous ones. What can the agent change
+                            without asking? Which actions require a human signature? Where is the log, and can a
+                            reviewer see the exact inputs that produced an action six weeks ago? Teams that answer
+                            these before deployment will get the productivity; teams that skip them will get an
+                            incident report.</p>
+
+                        <div class="callout">
+                            <strong data-en="Term used in this story" data-ar="مصطلح ورد في القصة">Term used in this story</strong>
+                            <span data-en="Agentic system — software in which a model plans steps, calls tools, and acts toward a goal instead of producing a single answer."
+                                data-ar="نظام وكيلي — برمجيات يخطط فيها النموذج خطواته ويستدعي الأدوات ويتصرف نحو هدف بدلًا من إنتاج إجابة واحدة.">
+                                Agentic system — software in which a model plans steps, calls tools, and acts toward a
+                                goal instead of producing a single answer.</span>
+                        </div>
+
+                        <h2 data-en="What to take to class" data-ar="ما تأخذه إلى القاعة">What to take to class</h2>
+
+                        <p data-en="In a software engineering course, this is a clean exercise in boundaries. Ask students to write the service contract for a “teammate”: its inputs, its state, its permissions, and the events it must emit. Then ask what happens when two agents claim the same task, or when the memory contradicts the latest instruction. Those are design questions with exam-grade answers, and they are exactly what the product teams are still figuring out."
+                            data-ar="في مقرر هندسة البرمجيات، هذا تمرين نظيف على الحدود. اطلب من الطلبة كتابة عقد خدمة «للزميل»: مدخلاته وحالته وصلاحياته والأحداث التي يجب أن يصدرها. ثم اسأل: ماذا يحدث عندما يدّعي وكيلان المهمة نفسها، أو حين تناقض الذاكرةُ أحدثَ تعليم؟ هذه أسئلة تصميم لها إجابات بمستوى الاختبار، وهي بالضبط ما تحاول فرق المنتجات حلّه الآن.">
+                            In a software engineering course, this is a clean exercise in boundaries. Ask students to
+                            write the service contract for a “teammate”: its inputs, its state, its permissions, and
+                            the events it must emit. Then ask what happens when two agents claim the same task, or
+                            when the memory contradicts the latest instruction. Those are design questions with
+                            exam-grade answers, and they are exactly what the product teams are still figuring out.</p>
+
+                        <p data-en="The bottom line: the announcement is less about a better model than about a new boundary — between what an agent may do alone and what needs a person. Read it that way and it becomes useful beyond Perplexity."
+                            data-ar="الخلاصة: الإعلان لا يتعلق بنموذج أفضل بقدر ما يتعلق بحد جديد — بين ما يستطيع الوكيل فعله وحده وما يحتاج إلى إنسان. اقرأه بهذه الطريقة يصبح مفيدًا خارج بيربليكسيتي.">
+                            The bottom line: the announcement is less about a better model than about a new boundary —
+                            between what an agent may do alone and what needs a person. Read it that way and it becomes
+                            useful beyond Perplexity.</p>
+                    </div>
+
+                    <section class="quiz" id="quiz" aria-labelledby="quiz-title">
+                        <h2 id="quiz-title" data-en="Check yourself — 3 questions" data-ar="اختبر نفسك — ٣ أسئلة">Check yourself — 3 questions</h2>
+                        <p class="sub" data-en="Same questions the editor would ask in a tutorial. Answers reveal instantly."
+                            data-ar="الأسئلة نفسها التي يطرحها المحرر في القاعة. تظهر الإجابات فورًا.">Same questions the editor would ask in a tutorial. Answers reveal instantly.</p>
+                        <ol>
+                            <li data-answer="b">
+                                <p data-en="1. What actually changed with Teammates?" data-ar="١. ما الذي تغيّر فعلًا مع Teammates؟">1. What actually changed with Teammates?</p>
+                                <div class="opts">
+                                    <label><input type="radio" name="q1" value="a"> <span data-en="A bigger model" data-ar="نموذج أكبر">A bigger model</span></label>
+                                    <label><input type="radio" name="q1" value="b"> <span data-en="Agents with roles and persistent context inside a workspace" data-ar="وكلاء بأدوار وسياق مستمر داخل مساحة عمل">Agents with roles and persistent context inside a workspace</span></label>
+                                    <label><input type="radio" name="q1" value="c"> <span data-en="A cheaper subscription" data-ar="اشتراك أرخص">A cheaper subscription</span></label>
+                                </div>
+                                <p class="answer" aria-live="polite"></p>
+                            </li>
+                            <li data-answer="c">
+                                <p data-en="2. Which risk grows when an agent keeps memory across projects?" data-ar="٢. أي خطر ينمو عندما يحتفظ الوكيل بذاكرة بين المشاريع؟">2. Which risk grows when an agent keeps memory across projects?</p>
+                                <div class="opts">
+                                    <label><input type="radio" name="q2" value="a"> <span data-en="The model gets slower" data-ar="يصبح النموذج أبطأ">The model gets slower</span></label>
+                                    <label><input type="radio" name="q2" value="b"> <span data-en="The interface gets crowded" data-ar="تزدحم الواجهة">The interface gets crowded</span></label>
+                                    <label><input type="radio" name="q2" value="c"> <span data-en="One wrong assumption becomes persistent" data-ar="يصبح افتراض خاطئ واحد مستمرًا">One wrong assumption becomes persistent</span></label>
+                                </div>
+                                <p class="answer" aria-live="polite"></p>
+                            </li>
+                            <li data-answer="a">
+                                <p data-en="3. What should a team define before deploying an agent?" data-ar="٣. ما الذي يجب أن تحدده الفرقة قبل نشر الوكيل؟">3. What should a team define before deploying an agent?</p>
+                                <div class="opts">
+                                    <label><input type="radio" name="q3" value="a"> <span data-en="Permissions, state, and an audit log" data-ar="الصلاحيات والحالة وسجل تدقيق">Permissions, state, and an audit log</span></label>
+                                    <label><input type="radio" name="q3" value="b"> <span data-en="A logo and a slogan" data-ar="شعارًا ولافتة">A logo and a slogan</span></label>
+                                    <label><input type="radio" name="q3" value="c"> <span data-en="A bigger context window" data-ar="نافذة سياق أكبر">A bigger context window</span></label>
+                                </div>
+                                <p class="answer" aria-live="polite"></p>
+                            </li>
+                        </ol>
+                        <div class="quiz-actions">
+                            <button class="btn btn-primary" type="button" id="quiz-check" data-en="Check answers" data-ar="تحقق من الإجابات">Check answers</button>
+                            <span class="score" id="quiz-score" aria-live="polite"></span>
+                        </div>
+                    </section>
+
+                    <div class="source-box">
+                        <p>
+                            <b data-en="Original reporting:" data-ar="التقرير الأصلي:">Original reporting:</b>
+                            <span data-en="“Perplexity launches its own take on AI agents for work”, The Verge. This page is a summary written for students, not a reproduction."
+                                data-ar="«Perplexity launches its own take on AI agents for work»، ذا فيرج. هذه الصفحة ملخص مكتوب للطلبة، وليست إعادة نشر.">“Perplexity launches its own take on AI agents for work”, The Verge. This page is a summary written for students, not a reproduction.</span>
+                        </p>
+                        <a class="btn btn-ghost" href="https://www.theverge.com/ai-artificial-intelligence/1028302/perplexity-teammates-ai-agents-work"
+                            target="_blank" rel="noopener" data-en="Read the original ↗" data-ar="اقرأ الأصل ↗">Read the original ↗</a>
+                    </div>
+
+                    <div class="share-row">
+                        <span class="eyebrow" data-en="Share" data-ar="شارك">Share</span>
+                        <a class="share-btn" href="#" aria-label="Share on WhatsApp"
+                            data-aria-en="Share on WhatsApp" data-aria-ar="شارك على واتساب">WA</a>
+                        <a class="share-btn" href="#" aria-label="Share on X" data-aria-en="Share on X" data-aria-ar="شارك على إكس">X</a>
+                        <a class="share-btn" href="#" aria-label="Share on LinkedIn"
+                            data-aria-en="Share on LinkedIn" data-aria-ar="شارك على لينكدإن">in</a>
+                        <button class="share-btn" type="button" id="copy-link" aria-label="Copy link"
+                            data-aria-en="Copy link" data-aria-ar="انسخ الرابط">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"></path>
+                                <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </article>
+
+                <aside class="article-aside" aria-label="Story tools">
+                    <div class="aside-box">
+                        <h3 data-en="In this issue" data-ar="في هذا العدد">In this issue</h3>
+                        <ul class="related-mini">
+                            <li><a href="index.html#world" data-en="The world, in order of usefulness" data-ar="العالم، مرتبًا حسب الفائدة">The world, in order of usefulness</a><span data-en="Section · 67 stories" data-ar="قسم · ٦٧ قصة">Section · 67 stories</span></li>
+                            <li><a href="index.html#department" data-en="Inside the department" data-ar="داخل القسم">Inside the department</a><span data-en="Section · 4 stories" data-ar="قسم · ٤ قصص">Section · 4 stories</span></li>
+                            <li><a href="index.html#subscribe" data-en="Get the Sunday digest" data-ar="احصل على ملخص الأحد">Get the Sunday digest</a><span data-en="Newsletter" data-ar="النشرة">Newsletter</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="aside-box ask-box">
+                        <h3 data-en="Ask about this story" data-ar="اسأل عن هذه القصة">Ask about this story</h3>
+                        <p data-en="Ask in Arabic or English. Answers use this magazine's stories only, and every answer shows its sources."
+                            data-ar="اسأل بالعربية أو الإنجليزية. تعتمد الإجابات على قصص المجلة فقط، وكل إجابة تُظهر مصادرها.">
+                            Ask in Arabic or English. Answers use this magazine's stories only, and every answer
+                            shows its sources.</p>
+                        <button class="btn btn-ghost" type="button" id="ask-demo" data-en="Open the assistant" data-ar="افتح المساعد">Open the assistant</button>
+                    </div>
+
+                    <div class="aside-box">
+                        <h3 data-en="More from the world" data-ar="المزيد من العالم">More from the world</h3>
+                        <ul class="related-mini">
+                            <li><a href="article.html" data-en="A tiny supercurrent could unlock quantum information" data-ar="تيار فائق صغير يفتح المعلومات الكمومية">A tiny supercurrent could unlock quantum information</a><span data-en="Research · 2 min" data-ar="بحث · دقيقتان">Research · 2 min</span></li>
+                            <li><a href="article.html" data-en="Nasdaq's worst day in 19 months" data-ar="أسوأ يوم لناسداك منذ ١٩ شهرًا">Nasdaq's worst day in 19 months</a><span data-en="Markets · 3 min" data-ar="أسواق · ٣ دقائق">Markets · 3 min</span></li>
+                            <li><a href="article.html" data-en="Clearing up a robot's fuzzy memory" data-ar="تنظيف ذاكرة الروبوت الغامضة">Clearing up a robot's fuzzy memory</a><span data-en="Robotics · 2 min" data-ar="روبوتات · دقيقتان">Robotics · 2 min</span></li>
+                        </ul>
+                    </div>
+                </aside>
+            </div>
+
+            <section class="related" aria-labelledby="related-title">
+                <header class="section-head">
+                    <span class="num" aria-hidden="true">→</span>
+                    <h2 id="related-title" data-en="Read next" data-ar="اقرأ بعدها">Read next</h2>
+                    <p data-en="Same desk, one step further." data-ar="القسم نفسه، خطوة أبعد.">Same desk, one step further.</p>
+                    <a class="more" href="index.html#world" data-en="All world stories →" data-ar="كل أخبار العالم ←">All world stories →</a>
+                </header>
+                <div class="cards">
+                    <article class="card">
+                        <a class="card-media" href="article.html">
+                            <img src="https://www.sciencedaily.com/images/1920/supercurrent-enables-reading-of-quantum-information.webp"
+                                alt="Quantum information illustration" width="800" height="450" loading="lazy">
+                        </a>
+                        <div class="kicker"><span data-en="Research" data-ar="بحث">Research</span></div>
+                        <h3 class="card-title"><a href="article.html" data-en="A tiny supercurrent could unlock quantum information without destroying it" data-ar="تيار فائق صغير قد يفتح المعلومات الكمومية دون تدميرها">A tiny supercurrent could unlock quantum information without destroying it</a></h3>
+                        <div class="card-meta"><span data-en="ScienceDaily · 2 min" data-ar="ساينس ديلي · دقيقتان">ScienceDaily · 2 min</span></div>
+                    </article>
+                    <article class="card">
+                        <a class="card-media" href="article.html">
+                            <img src="https://i.guim.co.uk/img/media/3a568c8ddd6dd680b69418b3c568815a7cbbea29/261_0_3478_2784/master/3478.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=fac99bf9d327d4af1ba6f307151b25bc"
+                                alt="Stock exchange floor" width="800" height="450" loading="lazy">
+                        </a>
+                        <div class="kicker"><span data-en="Markets" data-ar="أسواق">Markets</span></div>
+                        <h3 class="card-title"><a href="article.html" data-en="Nasdaq sees its worst day in 19 months" data-ar="ناسداك يشهد أسوأ يوم منذ ١٩ شهرًا">Nasdaq sees its worst day in 19 months</a></h3>
+                        <div class="card-meta"><span data-en="The Guardian · 3 min" data-ar="ذا غارديان · ٣ دقائق">The Guardian · 3 min</span></div>
+                    </article>
+                    <article class="card">
+                        <a class="card-media" href="article.html">
+                            <img src="https://news.mit.edu/sites/default/files/images/202611/MIT-Confident-Mem-01-press.jpg"
+                                alt="Robot in a lab" width="800" height="450" loading="lazy">
+                        </a>
+                        <div class="kicker"><span data-en="Robotics" data-ar="روبوتات">Robotics</span></div>
+                        <h3 class="card-title"><a href="article.html" data-en="Clearing up a robot's fuzzy memory" data-ar="تنظيف ذاكرة الروبوت الغامضة">Clearing up a robot's fuzzy memory</a></h3>
+                        <div class="card-meta"><span data-en="MIT News · 2 min" data-ar="MIT نيوز · دقيقتان">MIT News · 2 min</span></div>
+                    </article>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer">
+            <div class="wrap">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <div class="wordmark">Nasser AI News</div>
+                        <p data-en="The AI magazine of Computer Science at Dhofar University. Written and edited by students, for students and faculty."
+                            data-ar="مجلة الذكاء الاصطناعي لقسم علوم الحاسوب في جامعة ظفار. يكتبها ويحرّرها طلبة، لطلبة وأعضاء هيئة تدريس.">
+                            The AI magazine of Computer Science at Dhofar University. Written and edited by students,
+                            for students and faculty.</p>
+                        <p class="disclosure" style="margin-top:14px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path>
+                            </svg>
+                            <span data-en="How this is made: stories are summarised and translated with AI, then reviewed by the editor before publishing. Each story links to its original source."
+                                data-ar="كيف يُصنع هذا: تُلخّص القصص وتُترجم بالذكاء الاصطناعي، ثم يراجعها المحرر قبل النشر. كل قصة مرتبطة بمصدرها الأصلي.">
+                                How this is made: stories are summarised and translated with AI, then reviewed by the
+                                editor before publishing. Each story links to its original source.</span>
+                        </p>
+                    </div>
+                    <div>
+                        <h3 data-en="Sections" data-ar="الأقسام">Sections</h3>
+                        <ul>
+                            <li><a href="index.html" data-en="The issue" data-ar="العدد">The issue</a></li>
+                            <li><a href="index.html#department" data-en="Department" data-ar="القسم">Department</a></li>
+                            <li><a href="index.html#world" data-en="The world" data-ar="العالم">The world</a></li>
+                            <li><a href="index.html#watch" data-en="Watch" data-ar="مشاهدة">Watch</a></li>
+                            <li><a href="index.html#tools" data-en="Tools" data-ar="أدوات">Tools</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 data-en="The magazine" data-ar="المجلة">The magazine</h3>
+                        <ul>
+                            <li><a href="#" data-en="About the editor" data-ar="عن المحرر">About the editor</a></li>
+                            <li><a href="#" data-en="Editorial standards" data-ar="المعايير التحريرية">Editorial standards</a></li>
+                            <li><a href="#" data-en="Corrections" data-ar="التصحيحات">Corrections</a></li>
+                            <li><a href="#" data-en="Archive" data-ar="الأرشيف">Archive</a></li>
+                            <li><a href="#" data-en="RSS feed" data-ar="خلاصة RSS">RSS feed</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 data-en="Follow" data-ar="تابعنا">Follow</h3>
+                        <ul>
+                            <li><a href="#" data-en="WhatsApp channel" data-ar="قناة واتساب">WhatsApp channel</a></li>
+                            <li><a href="#" data-en="X / Twitter" data-ar="إكس / تويتر">X / Twitter</a></li>
+                            <li><a href="#" data-en="Instagram" data-ar="إنستغرام">Instagram</a></li>
+                            <li><a href="mailto:editor@du.edu.om" data-en="Email the editor" data-ar="راسل المحرر">Email the editor</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>© 2026 Nasser AI News · Dhofar University</span>
+                    <span data-en="Design prototype · sample edition · content from the live archive" data-ar="نموذج تصميم · عدد تجريبي · المحتوى من الأرشيف الحقيقي">Design prototype · sample edition · content from the live archive</span>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <div class="search-sheet" id="search-sheet" role="dialog" aria-modal="true" aria-labelledby="search-label">
+        <div class="search-box">
+            <label id="search-label" class="eyebrow sr-only">Search the magazine</label>
+            <input type="search" id="search-input" placeholder="Search stories, terms, courses…" data-placeholder-en="Search stories, terms, courses…" data-placeholder-ar="ابحث في القصص والمصطلحات والمقررات…">
+            <div class="search-results" id="search-results"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><span></span></div>
+
+    <script src="proto.js"></script>
+    <script>
+        document.getElementById("copy-link").addEventListener("click", function () {
+            navigator.clipboard.writeText(location.href).then(function () {
+                toast(document.documentElement.lang === "ar" ? "نُسخ الرابط" : "Link copied");
+            });
+        });
+        document.getElementById("ask-demo").addEventListener("click", function () {
+            toast(document.documentElement.lang === "ar" ? "يفتح المساعد في النسخة الكاملة" : "The assistant opens in the full build");
+        });
+    </script>
+</body>
+
+</html>

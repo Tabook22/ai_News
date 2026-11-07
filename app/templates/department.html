@@ -1,0 +1,444 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block content %}
+<div class="dept-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Department desk', 'مكتب القسم') }}</p>
+            <h1>{{ A('dept_title') }}</h1>
+            <p class="editor-dek">{{ t('Publish notices, manage topics, curate the photo archive, and add project ideas for students.', 'انشر الإعلانات، وأدر المواضيع، ونسّق أرشيف الصور، وأضف أفكار مشاريع للطلبة.') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a href="{{ url_for('campus_weekly') }}" target="_blank" rel="noopener" class="btn btn-secondary">
+                <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg>
+                {{ A('preview_issue') }}
+            </a>
+            <a href="{{ url_for('photo_archive_admin') }}" class="btn btn-secondary">
+                <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+                {{ A('ph_nav') }}
+            </a>
+            <a href="{{ url_for('add_project_idea') }}" class="btn btn-primary">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ t('New project idea', 'فكرة مشروع جديدة') }}
+            </a>
+        </div>
+    </div>
+
+    <div class="dept-stats">
+        <div class="dept-stat is-green">
+            <b>{{ stats.published }}</b>
+            <span>{{ t('Published posts', 'منشورات ظاهرة') }}</span>
+        </div>
+        <div class="dept-stat is-amber">
+            <b>{{ stats.hidden }}</b>
+            <span>{{ t('Hidden posts', 'منشورات مخفية') }}</span>
+        </div>
+        <div class="dept-stat is-teal">
+            <b>{{ stats.photos }}</b>
+            <span>{{ stats.albums }} {{ t('photo albums', 'ألبوم صور') }}</span>
+        </div>
+        <div class="dept-stat is-indigo">
+            <b>{{ stats.projects }}</b>
+            <span>{{ stats.research }} {{ t('research', 'بحثية') }} · {{ stats.competitions }} {{ t('competitions', 'مسابقات') }}</span>
+        </div>
+    </div>
+
+    <div class="dept-tabs" role="tablist" aria-label="{{ t('Department sections', 'أقسام القسم') }}">
+        <button type="button" class="dept-tab is-active" data-dept-tab="compose" role="tab" aria-selected="true">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+            {{ t('Compose', 'نشر جديد') }}
+        </button>
+        <button type="button" class="dept-tab" data-dept-tab="posts" role="tab" aria-selected="false">
+            <svg class="icon" aria-hidden="true"><use href="#i-newspaper"></use></svg>
+            {{ t('Posts & topics', 'المنشورات والمواضيع') }}
+            <span>{{ stats.published + stats.hidden }}</span>
+        </button>
+        <button type="button" class="dept-tab" data-dept-tab="photos" role="tab" aria-selected="false">
+            <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+            {{ t('Photo archive', 'أرشيف الصور') }}
+            <span>{{ stats.photos }}</span>
+        </button>
+        <button type="button" class="dept-tab" data-dept-tab="projects" role="tab" aria-selected="false">
+            <svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg>
+            {{ t('Project ideas', 'أفكار المشاريع') }}
+            <span>{{ stats.projects }}</span>
+        </button>
+    </div>
+
+    <section class="dept-panel" data-dept-panel="compose">
+        <form method="POST" action="{{ url_for('add_campus_post') }}" class="dept-compose">
+            <input type="hidden" name="show_choice" value="1">
+            <div class="dept-compose-grid">
+                <div class="dept-compose-main">
+                    <section class="editor-card">
+                        <div class="editor-card-head">
+                            <span class="editor-icon is-indigo"><svg class="icon" aria-hidden="true"><use href="#i-newspaper"></use></svg></span>
+                            <div>
+                                <h2>{{ t('The post', 'المنشور') }}</h2>
+                                <p>{{ t('A notice, a workshop, a student project, or a teaching video.', 'إعلان أو ورشة أو مشروع طالب أو فيديو تعليمي.') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="editor-grid-2">
+                            <div class="editor-field">
+                                <label for="dept-kind">{{ A('topic') }}</label>
+                                <select name="campus_kind" id="dept-kind">
+                                    {% for key, en, ar in campus_kind_choices %}
+                                    <option value="{{ key }}">{{ ar if admin_ar else en }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="editor-field">
+                                <label for="dept-title">{{ A('title') }}</label>
+                                <input type="text" name="title_en" id="dept-title" maxlength="490" placeholder="{{ A('title_ph') }}">
+                            </div>
+                        </div>
+
+                        <div class="editor-field">
+                            <label for="dept-title-ar">{{ A('title_ar') }}</label>
+                            <input type="text" name="title_ar" id="dept-title-ar" maxlength="490" dir="rtl" class="is-ar" placeholder="{{ t('اختياري', 'Optional') }}">
+                        </div>
+
+                        <div class="editor-grid-2">
+                            <div class="editor-field">
+                                <label for="dept-summary">{{ A('summary') }}</label>
+                                <textarea name="summary_en" id="dept-summary" rows="4"></textarea>
+                            </div>
+                            <div class="editor-field">
+                                <label for="dept-summary-ar">{{ A('summary_ar') }}</label>
+                                <textarea name="summary_ar" id="dept-summary-ar" rows="4" dir="rtl" class="is-ar"></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="editor-card">
+                        <div class="editor-card-head">
+                            <span class="editor-icon is-amber"><svg class="icon" aria-hidden="true"><use href="#i-bell"></use></svg></span>
+                            <div>
+                                <h2>{{ t('When and where', 'الموعد والمكان') }}</h2>
+                                <p>{{ t('Optional, but these make the post appear in the department week.', 'اختياري، لكنها تجعل المنشور يظهر في أسبوع القسم.') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="editor-field">
+                            <label for="dept-source">{{ A('when_place') }}</label>
+                            <input type="text" name="source" id="dept-source" maxlength="190" placeholder="{{ A('when_ph') }}">
+                        </div>
+
+                        <div class="editor-grid-2">
+                            <div class="editor-field">
+                                <label for="dept-day">{{ A('event_day') }}</label>
+                                <input type="date" name="event_on" id="dept-day">
+                            </div>
+                            <div class="editor-field">
+                                <label for="dept-place">{{ A('place') }}</label>
+                                <input type="text" name="place" id="dept-place" maxlength="160" placeholder="{{ A('place_ph') }}">
+                            </div>
+                        </div>
+
+                        <div class="editor-field">
+                            <label for="dept-course">{{ A('course') }}</label>
+                            <input type="text" name="course" id="dept-course" maxlength="120" placeholder="{{ A('course_ph') }}">
+                        </div>
+                    </section>
+
+                    <section class="editor-card">
+                        <div class="editor-card-head">
+                            <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-video"></use></svg></span>
+                            <div>
+                                <h2>{{ t('Link and cover', 'الرابط والغلاف') }}</h2>
+                                <p>{{ t('Paste a YouTube link and the title, summary and cover fill in automatically.', 'ألصق رابط يوتيوب ليُملأ العنوان والملخص والغلاف تلقائيًا.') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="editor-field">
+                            <label for="dept-url">{{ A('link') }}</label>
+                            <input type="url" name="url" id="dept-url" placeholder="https://www.youtube.com/watch?v=...">
+                            <p id="dept-hint" class="field-hint"></p>
+                        </div>
+                        <img id="dept-cover" alt="" hidden>
+                    </section>
+                </div>
+
+                <aside class="dept-compose-side">
+                    <section class="editor-card">
+                        <div class="editor-card-head is-compact">
+                            <span class="editor-icon is-green"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+                            <div><h2>{{ t('Publishing', 'النشر') }}</h2></div>
+                        </div>
+                        <div class="switch-row" style="padding-top:0;">
+                            <input type="checkbox" name="show" id="dept-show" value="1" checked>
+                            <span class="switch"></span>
+                            <span>
+                                <b>{{ A('show_on_page') }}</b>
+                                <small>{{ t('Uncheck to keep it hidden while you finish it.', 'أزل التحديد لإخفائه أثناء الإعداد.') }}</small>
+                            </span>
+                        </div>
+                        <button type="submit" class="btn btn-primary dept-submit">
+                            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                            {{ t('Publish post', 'نشر المنشور') }}
+                        </button>
+                        <p class="field-hint" style="margin-top:10px;">{{ t('The post appears immediately on the department page.', 'يظهر المنشور فورًا في صفحة القسم.') }}</p>
+                    </section>
+
+                    <section class="editor-card">
+                        <div class="editor-card-head is-compact">
+                            <span class="editor-icon is-slate"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+                            <div><h2>{{ t('Shortcuts', 'اختصارات') }}</h2></div>
+                        </div>
+                        <div class="dept-shortcuts">
+                            <a href="{{ url_for('photo_archive_admin') }}">
+                                <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+                                <span><b>{{ t('Add photos', 'أضف صورًا') }}</b><small>{{ stats.photos }} {{ t('photos in the archive', 'صورة في الأرشيف') }}</small></span>
+                            </a>
+                            <a href="{{ url_for('add_project_idea') }}">
+                                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                                <span><b>{{ t('New project idea', 'فكرة مشروع') }}</b><small>{{ stats.projects }} {{ t('ideas for students', 'فكرة للطلبة') }}</small></span>
+                            </a>
+                            <a href="{{ url_for('archive_page', desk='campus') }}">
+                                <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg>
+                                <span><b>{{ A('dept_archive') }}</b><small>{{ t('Every past post', 'كل المنشورات السابقة') }}</small></span>
+                            </a>
+                        </div>
+                    </section>
+                </aside>
+            </div>
+        </form>
+    </section>
+
+    <section class="dept-panel" data-dept-panel="posts" hidden>
+        <div class="dept-panel-head">
+            <div>
+                <h2>{{ t('Posts and topics', 'المنشورات والمواضيع') }}</h2>
+                <p>{{ A('topic_drag') }}</p>
+            </div>
+            <p id="topic-order-status" class="field-hint" hidden>{{ A('topic_saved') }}</p>
+        </div>
+
+        <div class="dept-board">
+            {% for group in groups %}
+            <section class="dept-topic" data-kind="{{ group.key }}">
+                <header class="dept-topic-head topic-handle" title="{{ A('topic_drag') }}">
+                    <span class="dept-grip" aria-hidden="true">⠿</span>
+                    <h3>{{ group.label_ar if admin_ar else group.label_en }}</h3>
+                    <span class="dept-count">{{ group.stories|length }}</span>
+                </header>
+                <div class="dept-list" data-kind="{{ group.key }}">
+                    {% for item in group.stories %}
+                    <article class="dept-row" data-id="{{ item.id }}">
+                        <span class="drag-handle-card" title="{{ t('Drag to reorder', 'اسحب لإعادة الترتيب') }}">⠿</span>
+                        <span class="dept-thumb">
+                            {% if item.image %}<img src="{{ item.image }}" alt="" loading="lazy">{% else %}<svg class="icon"><use href="#i-newspaper"></use></svg>{% endif %}
+                        </span>
+                        <div class="dept-row-copy">
+                            <b>{{ item.title }}</b>
+                            <small>{{ item.source or item.kind_en }} · {{ A('shown') if item.is_published else A('hidden') }}</small>
+                        </div>
+                        <div class="dept-row-actions">
+                            <a href="{{ url_for('edit_news', item_id=item.id) }}">{{ A('edit') }}</a>
+                            <form method="POST" action="{{ url_for('toggle_campus_post', item_id=item.id) }}">
+                                <button type="submit">{{ A('hide') if item.is_published else A('show') }}</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('remove_campus_post', item_id=item.id) }}" onsubmit="return confirm('{{ A('remove_confirm') }}');">
+                                <button type="submit" class="is-danger">{{ A('remove') }}</button>
+                            </form>
+                        </div>
+                    </article>
+                    {% endfor %}
+                    {% if not group.stories %}
+                    <p class="dept-empty">{{ t('Nothing in this topic yet.', 'لا يوجد شيء في هذا الموضوع بعد.') }}</p>
+                    {% endif %}
+                </div>
+            </section>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="dept-panel" data-dept-panel="photos" hidden>
+        <div class="dept-panel-head">
+            <div>
+                <h2>{{ t('Photo archive', 'أرشيف الصور') }}</h2>
+                <p>{{ t('Occasions, workshops and student work, grouped by semester.', 'المناسبات والورش وأعمال الطلبة، مجمعة حسب الفصل.') }}</p>
+            </div>
+            <a href="{{ url_for('photo_archive_admin') }}" class="btn btn-primary">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ t('Add photos', 'أضف صورًا') }}
+            </a>
+        </div>
+
+        <div class="dept-photo-stats">
+            <span><b>{{ stats.albums }}</b> {{ t('albums', 'ألبوم') }}</span>
+            <span><b>{{ stats.photos }}</b> {{ t('photos', 'صورة') }}</span>
+            <a href="{{ url_for('campus_photos') }}" target="_blank" rel="noopener">{{ t('View public archive', 'عرض الأرشيف العام') }} ↗</a>
+        </div>
+
+        {% if albums %}
+        <div class="dept-albums">
+            {% for album in albums %}
+            <a class="dept-album" href="{{ url_for('photo_archive_admin') }}#album-{{ album.id }}">
+                <span class="dept-album-cover">
+                    {% if album.photos %}
+                    <img src="{{ album.photos[0].image }}" alt="" loading="lazy">
+                    {% else %}
+                    <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+                    {% endif %}
+                </span>
+                <span class="dept-album-copy">
+                    <b>{{ (album.title_ar or album.title) if admin_ar else album.title }}</b>
+                    <small>{{ album.photos|length }} {{ t('photos', 'صورة') }} · {{ album.term }} {{ album.year }}</small>
+                </span>
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="dept-empty-state">
+            <span class="dept-empty-icon"><svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg></span>
+            <h3>{{ t('No photo albums yet', 'لا توجد ألبومات صور بعد') }}</h3>
+            <p>{{ t('Create an occasion album, drop the photos, and publish it. It will appear on the public department page automatically.', 'أنشئ ألبوم مناسبة، وأفلت الصور، وانشره. سيظهر تلقائيًا في صفحة القسم العامة.') }}</p>
+            <a class="btn btn-primary" href="{{ url_for('photo_archive_admin') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ t('Create the first album', 'أنشئ الألبوم الأول') }}
+            </a>
+        </div>
+        {% endif %}
+
+        <p class="field-hint" style="margin-top:14px;">{{ t('Photos are uploaded in the photo archive, then appear on the public department page automatically.', 'تُرفع الصور في أرشيف الصور ثم تظهر تلقائيًا في صفحة القسم العامة.') }}</p>
+    </section>
+
+    <section class="dept-panel" data-dept-panel="projects" hidden>
+        <div class="dept-panel-head">
+            <div>
+                <h2>{{ t('Project ideas', 'أفكار المشاريع') }}</h2>
+                <p>{{ t('Final-year projects, research directions and competition briefs — each with a reference.', 'مشاريع التخرج والاتجاهات البحثية ومسابقات التحدي، ولكل منها مرجع.') }}</p>
+            </div>
+            <a href="{{ url_for('add_project_idea') }}" class="btn btn-primary">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ t('New idea', 'فكرة جديدة') }}
+            </a>
+        </div>
+
+        <div class="dept-project-list">
+            {% for idea in projects %}
+            <article class="dept-project-row">
+                <span class="dept-track is-{{ idea.track }}">{% if idea.track == 'research' %}{{ 'بحث' if admin_ar else 'Research' }}{% elif idea.track == 'competition' %}{{ 'مسابقة' if admin_ar else 'Competition' }}{% else %}{{ 'تخرج' if admin_ar else 'Final year' }}{% endif %}</span>
+                <div class="dept-project-copy">
+                    <b>{{ (idea.title_ar or idea.title_en) if admin_ar else idea.title_en }}</b>
+                    <small>{{ idea.area_ar if admin_ar else idea.area_en }} · {{ idea.difficulty }}{% if idea.reference_title %} · {{ idea.reference_title }}{% endif %}</small>
+                </div>
+                {% if idea.featured %}<span class="dept-featured">★</span>{% endif %}
+                <div class="dept-row-actions">
+                    <a href="{{ url_for('edit_project_idea', project_id=idea.id) }}">{{ A('edit') }}</a>
+                    <form method="POST" action="{{ url_for('delete_project_idea', project_id=idea.id) }}" onsubmit="return confirm('Remove this project idea?');">
+                        <button type="submit" class="is-danger">{{ A('remove') }}</button>
+                    </form>
+                </div>
+            </article>
+            {% else %}
+            <p class="dept-empty">{{ t('No project ideas yet.', 'لا توجد أفكار مشاريع بعد.') }}</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+    (function () {
+        var tabs = Array.from(document.querySelectorAll('[data-dept-tab]'));
+        var panels = Array.from(document.querySelectorAll('[data-dept-panel]'));
+
+        function showPanel(key) {
+            tabs.forEach(function (tab) {
+                var active = tab.getAttribute('data-dept-tab') === key;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', String(active));
+            });
+            panels.forEach(function (panel) {
+                panel.hidden = panel.getAttribute('data-dept-panel') !== key;
+            });
+            if (history.replaceState) history.replaceState(null, '', '#' + key);
+        }
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () { showPanel(tab.getAttribute('data-dept-tab')); });
+        });
+        var initial = (location.hash || '').replace('#', '');
+        if (['compose', 'posts', 'photos', 'projects'].indexOf(initial) !== -1) showPanel(initial);
+    })();
+
+    function saveTopicOrder() {
+        var order = Array.from(document.querySelectorAll('.dept-topic')).map(function (column) { return column.dataset.kind; });
+        var status = document.getElementById('topic-order-status');
+        fetch('/api/department/kind-order', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: order })
+        }).then(function (response) { if (response.ok && status) status.hidden = false; });
+    }
+
+    var topicBoard = document.querySelector('.dept-board');
+    if (topicBoard) {
+        new Sortable(topicBoard, {
+            animation: 150, handle: '.topic-handle', draggable: '.dept-topic',
+            ghostClass: 'sortable-ghost', onEnd: saveTopicOrder
+        });
+    }
+
+    function saveDepartmentOrder() {
+        var groups = {};
+        document.querySelectorAll('.dept-list').forEach(function (list) {
+            groups[list.dataset.kind] = Array.from(list.querySelectorAll('.dept-row')).map(function (row) { return row.dataset.id; });
+        });
+        fetch('/api/department/reorder', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groups: groups })
+        });
+    }
+
+    document.querySelectorAll('.dept-list').forEach(function (list) {
+        new Sortable(list, {
+            group: 'department', animation: 150, handle: '.drag-handle-card',
+            ghostClass: 'sortable-ghost', delay: 120, delayOnTouchOnly: true,
+            onEnd: saveDepartmentOrder
+        });
+    });
+
+    var lastUrl = '';
+    var previewTimer = null;
+    var urlInput = document.getElementById('dept-url');
+    var hint = document.getElementById('dept-hint');
+    var cover = document.getElementById('dept-cover');
+
+    async function readYouTube(url) {
+        if (!url || !/youtu\.?be|youtube\.com/i.test(url) || url === lastUrl) return;
+        hint.textContent = '{{ t("Reading the video…", "جارٍ قراءة الفيديو…") }}';
+        try {
+            var res = await fetch('/api/youtube/preview', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+            var data = await res.json();
+            if (data.status !== 'success') {
+                hint.textContent = data.message || '{{ t("Could not read that link.", "تعذر قراءة الرابط.") }}';
+                return;
+            }
+            document.getElementById('dept-kind').value = 'video';
+            if (data.title) document.getElementById('dept-title').value = data.title;
+            if (data.source) document.getElementById('dept-source').value = data.source;
+            if (data.summary) document.getElementById('dept-summary').value = data.summary;
+            if (data.image) { cover.src = data.image; cover.hidden = false; }
+            lastUrl = url;
+            hint.textContent = '{{ t("Title, summary and cover filled from YouTube.", "تم ملء العنوان والملخص والغلاف من يوتيوب.") }}';
+        } catch (e) {
+            hint.textContent = '{{ t("Could not reach YouTube. You can still type the title.", "تعذر الوصول إلى يوتيوب. يمكنك كتابة العنوان.") }}';
+        }
+    }
+
+    if (urlInput) {
+        urlInput.addEventListener('input', function () {
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(function () { readYouTube(urlInput.value.trim()); }, 400);
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,2230 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+/* ============================================================
+   NASSER AI NEWS — MAGAZINE DESIGN TEMPLATES
+   Layered on top of styles.css. Each template is scoped under
+   `.template-XXXX` so it wins the cascade over page-level
+   <style> blocks and re-declares the CSS variables those blocks
+   already use — plus a few !important overrides for the couple
+   of spots that use raw inline style="" attributes.
+   "slate" (the default premium dark look) needs no rules here.
+   ============================================================ */
+
+
+/* ============================================================
+   1) BROADSHEET — classic black-and-white newspaper front page
+   ============================================================ */
+.template-broadsheet {
+    --bg-main: #f6f3ec;
+    --bg-card: #fffdf8;
+    --bg-hover: #ece7da;
+    --text-main: #191713;
+    --text-muted: #55504a;
+    --accent-primary: #7a1f1f;
+    --accent-secondary: #1a1a1a;
+    --accent-warning: #7a1f1f;
+    --accent-danger: #7a1f1f;
+    --border-color: #191713;
+    --overlay-chrome: rgba(246, 243, 236, 0.9);
+    --glass-blur: none;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-glow: none;
+    --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+}
+
+.template-broadsheet {
+    background-image: none !important;
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+.template-broadsheet a:hover {
+    text-shadow: none;
+}
+
+/* Masthead -> newspaper flag */
+.template-broadsheet .majestic-masthead {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+}
+
+.template-broadsheet .majestic-masthead h1,
+.template-broadsheet .masthead-title {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-weight: 900 !important;
+    font-size: 4.2rem !important;
+    letter-spacing: 0 !important;
+    color: #191713 !important;
+    -webkit-text-fill-color: #191713 !important;
+    background: none !important;
+}
+
+.template-broadsheet .masthead-meta-bar,
+.template-broadsheet .majestic-masthead>div:last-child {
+    border-top: 3px solid #191713 !important;
+    border-bottom: 1px solid #191713 !important;
+    font-family: Georgia, serif !important;
+}
+
+.template-broadsheet .majestic-masthead::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: #191713;
+    margin-top: 0.5rem;
+}
+
+/* Hero */
+.template-broadsheet .hero-card,
+.template-broadsheet .hero-visual {
+    border-radius: 0 !important;
+    border: 1px solid #191713 !important;
+    box-shadow: none !important;
+}
+
+.template-broadsheet .hero-label {
+    background: #191713 !important;
+    color: #f6f3ec !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-family: Georgia, serif !important;
+}
+
+.template-broadsheet .hero-title,
+.template-broadsheet .secondary-title,
+.template-broadsheet .subscribe-title,
+.template-broadsheet .gate-brand {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-weight: 700 !important;
+    -webkit-text-fill-color: currentColor !important;
+    background: none !important;
+}
+
+/* Cards */
+.template-broadsheet .secondary-card,
+.template-broadsheet .sidebar-widget,
+.template-broadsheet .ad-card,
+.template-broadsheet .card {
+    border-radius: 0 !important;
+    border: 1px solid #191713 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+.template-broadsheet .secondary-card:hover,
+.template-broadsheet .card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: #7a1f1f !important;
+}
+
+.template-broadsheet .secondary-card:hover .secondary-img,
+.template-broadsheet .card:hover .card-image img {
+    transform: none !important;
+}
+
+.template-broadsheet .card-image img,
+.template-broadsheet .secondary-img,
+.template-broadsheet .sidebar-list-thumb,
+.template-broadsheet .hero-visual img {
+    filter: grayscale(1) contrast(1.05);
+}
+
+/* Buttons */
+.template-broadsheet .btn-primary {
+    background: #191713 !important;
+    color: #f6f3ec !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-family: Georgia, serif !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.template-broadsheet .btn-secondary {
+    border-radius: 0 !important;
+    border: 1px solid #191713 !important;
+    background: transparent !important;
+}
+
+/* Article body reads like ink on paper */
+.template-broadsheet .full-content,
+.template-broadsheet .full-content-ar,
+.template-broadsheet .article-body {
+    font-family: Georgia, 'Times New Roman', serif !important;
+}
+
+/* --- STRUCTURE: front-page hero + a running two-column "briefs" list,
+       the way a real newspaper front page is laid out --- */
+.template-broadsheet .hero-card {
+    grid-template-columns: 1fr !important;
+}
+
+.template-broadsheet .hero-visual {
+    min-height: 340px !important;
+}
+
+.template-broadsheet .hero-content {
+    padding: 2rem 0 0 !important;
+    border-top: 4px double #191713;
+    margin-top: 1.5rem;
+}
+
+.template-broadsheet .secondary-grid {
+    display: block !important;
+    column-count: 2;
+    column-gap: 3rem;
+}
+
+.template-broadsheet .secondary-card {
+    display: block !important;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.75rem;
+}
+
+.template-broadsheet .secondary-card>div:first-child {
+    float: left;
+    margin-right: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.template-broadsheet .secondary-img {
+    width: 96px !important;
+    height: 96px !important;
+    border-radius: 0 !important;
+}
+
+.template-broadsheet .secondary-content {
+    display: block !important;
+}
+
+.template-broadsheet .meta-row {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Sidebar reads like a newspaper's index column: no card chrome */
+.template-broadsheet .sidebar-widget {
+    background: transparent !important;
+}
+
+.template-broadsheet .mv-rank {
+    font-weight: 400 !important;
+    opacity: 1 !important;
+}
+
+.template-broadsheet .mv-rank::after {
+    content: '.';
+}
+
+/* Subtle newsprint texture — a real newspaper is never a flat color */
+.template-broadsheet {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E") !important;
+}
+
+@media (max-width: 640px) {
+    .template-broadsheet .secondary-grid {
+        column-count: 1;
+    }
+
+    .template-broadsheet .majestic-masthead h1,
+    .template-broadsheet .masthead-title {
+        font-size: 2.6rem !important;
+    }
+}
+
+
+/* ============================================================
+   2) THE WIRE — bold, oversized modern tech-editorial
+   ============================================================ */
+.template-wire {
+    --bg-main: #0a0a0f;
+    --bg-card: #16161f;
+    --bg-hover: #23232f;
+    --text-main: #f5f5f7;
+    --text-muted: #9797a8;
+    --accent-primary: #f5b400;
+    --accent-secondary: #a855f7;
+    --accent-warning: #f5b400;
+    --accent-danger: #ff3b6b;
+    --border-color: rgba(245, 245, 247, 0.12);
+    --overlay-chrome: rgba(10, 10, 15, 0.85);
+    --glass-blur: none;
+    --shadow-sm: none;
+    --shadow-md: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 0 3px rgba(245, 180, 0, 0.25);
+}
+
+.template-wire {
+    background-image: radial-gradient(circle at 15% 10%, rgba(245, 180, 0, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 90%, rgba(168, 85, 247, 0.1) 0%, transparent 30%) !important;
+}
+
+.template-wire .majestic-masthead h1,
+.template-wire .masthead-title {
+    font-family: Impact, 'Archivo Black', 'Inter', sans-serif !important;
+    font-weight: 900 !important;
+    font-size: 5rem !important;
+    letter-spacing: -2px !important;
+    -webkit-text-fill-color: transparent !important;
+    background: linear-gradient(120deg, #f5b400, #ff3b6b 60%, #a855f7) !important;
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+}
+
+.template-wire .majestic-masthead,
+.template-wire .masthead-meta-bar {
+    border-color: rgba(245, 245, 247, 0.12) !important;
+}
+
+.template-wire .hero-card {
+    border-radius: 4px !important;
+    border: none !important;
+    border-left: 8px solid #f5b400 !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+.template-wire .hero-label {
+    background: #f5b400 !important;
+    color: #0a0a0f !important;
+    border-radius: 2px !important;
+    font-weight: 900 !important;
+    box-shadow: none !important;
+}
+
+.template-wire .hero-title {
+    font-family: 'Inter', 'Archivo Black', sans-serif !important;
+    font-weight: 900 !important;
+    font-size: 3.2rem !important;
+    letter-spacing: -1.5px !important;
+    line-height: 1 !important;
+}
+
+.template-wire .secondary-title {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.5px;
+}
+
+.template-wire .secondary-card,
+.template-wire .sidebar-widget,
+.template-wire .card {
+    border-radius: 4px !important;
+    border: none !important;
+    border-top: 4px solid #a855f7 !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+.template-wire .ad-card {
+    border-radius: 4px !important;
+    border: 2px dashed #f5b400 !important;
+}
+
+.template-wire .secondary-card:hover,
+.template-wire .card:hover {
+    transform: translateY(-8px) scale(1.01) !important;
+    border-top-color: #f5b400 !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+.template-wire .btn-primary {
+    background: #f5b400 !important;
+    color: #0a0a0f !important;
+    border-radius: 2px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase;
+    box-shadow: none !important;
+}
+
+.template-wire .btn-primary:hover {
+    background: #ffcc33 !important;
+    filter: none !important;
+}
+
+.template-wire .btn-secondary {
+    border-radius: 2px !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+.template-wire .badge {
+    border-radius: 2px !important;
+}
+
+/* --- STRUCTURE: full-bleed poster hero + an asymmetric editorial grid
+       where every third card runs bigger, for visual rhythm --- */
+.template-wire .hero-card {
+    display: block !important;
+    position: relative;
+    min-height: 460px;
+    overflow: hidden;
+}
+
+.template-wire .hero-visual {
+    position: absolute !important;
+    inset: 0;
+    min-height: unset !important;
+}
+
+.template-wire .hero-visual::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10, 10, 15, 0.95) 15%, rgba(10, 10, 15, 0.1) 65%);
+}
+
+.template-wire .hero-content {
+    position: absolute !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 2.5rem !important;
+}
+
+.template-wire .secondary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    grid-auto-flow: dense;
+}
+
+.template-wire .secondary-card:nth-of-type(3n+1) {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+.template-wire .secondary-card:nth-of-type(3n+1) .secondary-img {
+    height: 260px !important;
+}
+
+.template-wire .secondary-card:nth-of-type(3n+1) .secondary-title {
+    font-size: 1.4rem !important;
+}
+
+@media (max-width: 1024px) {
+
+    .template-wire .secondary-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .template-wire .secondary-card:nth-of-type(3n+1) {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .template-wire .secondary-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .template-wire .secondary-card:nth-of-type(3n+1) {
+        grid-column: span 1;
+        grid-row: span 1;
+    }
+
+    .template-wire .secondary-card:nth-of-type(3n+1) .secondary-img {
+        height: 180px !important;
+    }
+
+    .template-wire .hero-card {
+        min-height: 360px;
+    }
+
+    .template-wire .majestic-masthead h1,
+    .template-wire .masthead-title {
+        font-size: 2.8rem !important;
+    }
+
+    .template-wire .hero-content {
+        padding: 1.5rem !important;
+    }
+}
+
+.template-wire .mv-rank {
+    background: #f5b400;
+    color: #0a0a0f;
+    width: 1.8rem;
+    height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1rem !important;
+    opacity: 1 !important;
+}
+
+
+/* ============================================================
+   3) THE QUARTERLY — minimalist premium print magazine
+   ============================================================ */
+.template-quarterly {
+    --bg-main: #faf7f0;
+    --bg-card: #ffffff;
+    --bg-hover: #f0ece1;
+    --text-main: #2a2621;
+    --text-muted: #7a7266;
+    --accent-primary: #3f5d4e;
+    --accent-secondary: #8a6d3b;
+    --accent-warning: #8a6d3b;
+    --accent-danger: #a13d3d;
+    --border-color: #ded6c4;
+    --overlay-chrome: rgba(250, 247, 240, 0.9);
+    --glass-blur: none;
+    --shadow-sm: none;
+    --shadow-md: 0 8px 24px -8px rgba(42, 38, 33, 0.12);
+    --shadow-glow: none;
+}
+
+.template-quarterly {
+    background-image: none !important;
+}
+
+.template-quarterly .majestic-masthead {
+    border-bottom: none !important;
+    padding: 3.5rem 0 !important;
+}
+
+.template-quarterly .majestic-masthead h1,
+.template-quarterly .masthead-title {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-weight: 400 !important;
+    font-style: italic;
+    font-size: 3.2rem !important;
+    letter-spacing: 1px !important;
+    text-transform: none !important;
+    color: #2a2621 !important;
+    -webkit-text-fill-color: #2a2621 !important;
+    background: none !important;
+}
+
+.template-quarterly .masthead-meta-bar,
+.template-quarterly .majestic-masthead>div:last-child {
+    border-top: 1px solid #ded6c4 !important;
+    border-bottom: none !important;
+    font-weight: 400 !important;
+    letter-spacing: 3px !important;
+}
+
+.template-quarterly .hero-card {
+    border-radius: 2px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    gap: 3rem;
+}
+
+.template-quarterly .hero-visual {
+    border-radius: 2px !important;
+}
+
+.template-quarterly .hero-label {
+    background: transparent !important;
+    color: #3f5d4e !important;
+    border: 1px solid #3f5d4e !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-weight: 400 !important;
+    letter-spacing: 3px !important;
+}
+
+.template-quarterly .hero-title {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-weight: 400 !important;
+    font-style: italic;
+    font-size: 2.4rem !important;
+    -webkit-text-fill-color: currentColor !important;
+    background: none !important;
+}
+
+.template-quarterly .secondary-title {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-weight: 600 !important;
+}
+
+.template-quarterly .secondary-card,
+.template-quarterly .sidebar-widget,
+.template-quarterly .card {
+    border-radius: 2px !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+.template-quarterly .ad-card {
+    border-radius: 2px !important;
+    border: 1px solid #ded6c4 !important;
+    background: #fff !important;
+}
+
+.template-quarterly .secondary-card:hover,
+.template-quarterly .card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.template-quarterly .secondary-card:hover .secondary-title,
+.template-quarterly .card:hover .title-en {
+    color: #3f5d4e !important;
+}
+
+.template-quarterly .btn-primary {
+    background: #3f5d4e !important;
+    color: #faf7f0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    letter-spacing: 1px;
+}
+
+.template-quarterly .btn-secondary {
+    border-radius: 0 !important;
+    border: 1px solid #2a2621 !important;
+    background: transparent !important;
+}
+
+.template-quarterly .full-content,
+.template-quarterly .full-content-ar,
+.template-quarterly .article-body {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-size: 1.2rem !important;
+}
+
+/* --- STRUCTURE: single flowing column (sidebar drops below the story,
+       not beside it), a soft full-bleed hero, and a horizontal
+       image-left/text-right list instead of a card grid --- */
+.template-quarterly .magazine-layout {
+    grid-template-columns: 1fr !important;
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.template-quarterly .sidebar-section {
+    position: static !important;
+    margin-top: 4rem;
+    border-top: 1px solid #ded6c4;
+    padding-top: 3rem;
+}
+
+.template-quarterly .hero-card {
+    display: block !important;
+}
+
+.template-quarterly .hero-visual {
+    min-height: 380px !important;
+    border-radius: 2px !important;
+}
+
+.template-quarterly .hero-content {
+    padding: 2.5rem 0.5rem 0.5rem !important;
+    text-align: center;
+}
+
+.template-quarterly .hero-label {
+    margin: 0 auto 1.25rem !important;
+    display: inline-block;
+}
+
+.template-quarterly .secondary-grid {
+    display: block !important;
+}
+
+.template-quarterly .secondary-card {
+    display: grid !important;
+    grid-template-columns: 180px 1fr !important;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid #ded6c4 !important;
+}
+
+.template-quarterly .secondary-img {
+    height: 100% !important;
+    min-height: 130px;
+    border-radius: 2px !important;
+}
+
+.template-quarterly .card-content,
+.template-quarterly .secondary-content {
+    justify-content: center;
+}
+
+@media (max-width: 640px) {
+    .template-quarterly .secondary-card {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.template-quarterly .mv-rank {
+    font-style: italic;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+}
+
+/* Faint paper grain — the "warm, tactile print" look readers associate with
+   a boutique quarterly rather than a cold digital page */
+.template-quarterly {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E") !important;
+}
+
+@media (max-width: 768px) {
+    .template-quarterly .majestic-masthead h1,
+    .template-quarterly .masthead-title {
+        font-size: 2.2rem !important;
+    }
+
+    .template-quarterly .hero-title {
+        font-size: 1.7rem !important;
+    }
+}
+
+
+/* ============================================================
+   5) THE BLOOM — vibrant, colorful, maximalist lifestyle-mag energy
+   ============================================================ */
+.template-bloom {
+    --bg-main: #fffaf3;
+    --bg-card: #ffffff;
+    --bg-hover: #fff1e6;
+    --text-main: #241a2e;
+    --text-muted: #7a6d8a;
+    --accent-primary: #ff5d8f;
+    /* Hot pink */
+    --accent-secondary: #6c5ce7;
+    /* Violet */
+    --accent-warning: #ffb400;
+    --accent-danger: #ff5d8f;
+    --border-color: #f0e3d3;
+    --overlay-chrome: rgba(255, 250, 243, 0.9);
+    --glass-blur: none;
+    --shadow-sm: 0 2px 8px rgba(108, 92, 231, 0.08);
+    --shadow-md: 0 12px 30px -8px rgba(255, 93, 143, 0.25);
+    --shadow-glow: 0 0 0 3px rgba(255, 93, 143, 0.15);
+}
+
+.template-bloom {
+    background-image: radial-gradient(circle at 8% 8%, rgba(255, 93, 143, 0.08) 0%, transparent 22%),
+        radial-gradient(circle at 92% 18%, rgba(108, 92, 231, 0.08) 0%, transparent 25%) !important;
+}
+
+/* Masthead: big rounded playful wordmark, pill meta bar */
+.template-bloom .majestic-masthead h1,
+.template-bloom .masthead-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 900 !important;
+    font-size: 4rem !important;
+    letter-spacing: -1.5px !important;
+    text-transform: none !important;
+    -webkit-text-fill-color: transparent !important;
+    background: linear-gradient(120deg, #ff5d8f, #6c5ce7) !important;
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+}
+
+.template-bloom .majestic-masthead {
+    border-bottom: none !important;
+}
+
+.template-bloom .masthead-meta-bar,
+.template-bloom .majestic-masthead>div:last-child {
+    border: none !important;
+    background: var(--bg-card);
+    border-radius: 50px !important;
+    padding: 0.6rem 1.5rem !important;
+    box-shadow: var(--shadow-sm);
+    display: inline-flex !important;
+    width: auto !important;
+}
+
+/* Hero: rounded photo card, pill badge floats on top of the image */
+.template-bloom .hero-card {
+    border-radius: 28px !important;
+    border: none !important;
+    box-shadow: var(--shadow-md) !important;
+    position: relative;
+}
+
+.template-bloom .hero-visual {
+    border-radius: 28px 0 0 28px !important;
+}
+
+@media (max-width: 768px) {
+    .template-bloom .hero-visual {
+        border-radius: 28px 28px 0 0 !important;
+    }
+}
+
+.template-bloom .hero-label {
+    border-radius: 50px !important;
+    background: linear-gradient(120deg, #ff5d8f, #6c5ce7) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 16px rgba(255, 93, 143, 0.4) !important;
+    font-weight: 800 !important;
+}
+
+.template-bloom .hero-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 900 !important;
+    font-size: 2.4rem !important;
+    letter-spacing: -1px !important;
+    -webkit-text-fill-color: currentColor !important;
+    background: none !important;
+}
+
+/* Secondary grid: rounded cards, alternating colorful top accent stripe */
+.template-bloom .secondary-card,
+.template-bloom .sidebar-widget,
+.template-bloom .card {
+    border-radius: 22px !important;
+    border: none !important;
+    box-shadow: var(--shadow-sm) !important;
+    backdrop-filter: none !important;
+    overflow: hidden;
+}
+
+.template-bloom .secondary-card {
+    border-top: 5px solid #ff5d8f !important;
+}
+
+.template-bloom .secondary-card:nth-of-type(2n) {
+    border-top-color: #6c5ce7 !important;
+}
+
+.template-bloom .secondary-card:nth-of-type(3n) {
+    border-top-color: #ffb400 !important;
+}
+
+.template-bloom .secondary-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 800 !important;
+}
+
+.template-bloom .secondary-card:hover,
+.template-bloom .card:hover {
+    transform: translateY(-6px) !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+.template-bloom .ad-card {
+    border-radius: 22px !important;
+    border: 2px dashed #6c5ce7 !important;
+}
+
+/* Buttons: friendly pill shape */
+.template-bloom .btn-primary {
+    background: linear-gradient(120deg, #ff5d8f, #6c5ce7) !important;
+    border-radius: 50px !important;
+    box-shadow: 0 6px 16px rgba(255, 93, 143, 0.35) !important;
+    font-weight: 800 !important;
+}
+
+.template-bloom .btn-secondary {
+    border-radius: 50px !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+.template-bloom .badge {
+    border-radius: 50px !important;
+}
+
+.template-bloom .mv-rank {
+    background: linear-gradient(120deg, #ff5d8f, #6c5ce7);
+    color: #fff;
+    width: 1.8rem;
+    height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1rem !important;
+    font-family: 'Inter', sans-serif !important;
+    opacity: 1 !important;
+}
+
+.template-bloom .full-content,
+.template-bloom .full-content-ar,
+.template-bloom .article-body {
+    font-size: 1.15rem !important;
+    line-height: 1.85 !important;
+}
+
+@media (max-width: 640px) {
+    .template-bloom .majestic-masthead h1,
+    .template-bloom .masthead-title {
+        font-size: 2.4rem !important;
+    }
+}
+
+/* --- STRUCTURE: a floating overlap card on the hero photo, and a Pinterest-style
+       waterfall grid instead of uniform cards --- */
+.template-bloom .hero-card {
+    display: block !important;
+    padding-bottom: 3rem;
+}
+
+.template-bloom .hero-visual {
+    border-radius: 28px !important;
+    min-height: 340px !important;
+}
+
+.template-bloom .hero-content {
+    position: relative;
+    margin: -3.5rem 1.5rem 0 !important;
+    background: var(--bg-card);
+    border-radius: 22px !important;
+    padding: 2rem !important;
+    box-shadow: var(--shadow-md);
+    z-index: 2;
+}
+
+.template-bloom .secondary-grid {
+    display: block !important;
+    column-count: 3;
+    column-gap: 1.5rem;
+}
+
+.template-bloom .secondary-card {
+    display: inline-block !important;
+    width: 100%;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+    .template-bloom .secondary-grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 640px) {
+    .template-bloom .secondary-grid {
+        column-count: 1;
+    }
+
+    .template-bloom .hero-content {
+        margin: -2rem 1rem 0 !important;
+        padding: 1.5rem !important;
+    }
+}
+
+
+/* ============================================================
+   6) THE CIRCUIT — clean AI-native dark UI, neon used sparingly
+   ============================================================ */
+.template-circuit {
+    --bg-main: #05070d;
+    --bg-card: #0d1220;
+    --bg-hover: #161d32;
+    --text-main: #e8edf7;
+    --text-muted: #7c8aab;
+    --accent-primary: #22e0c0;
+    /* Electric teal */
+    --accent-secondary: #7c6bff;
+    /* Violet */
+    --accent-warning: #22e0c0;
+    --accent-danger: #ff4d6d;
+    --border-color: rgba(34, 224, 192, 0.18);
+    --overlay-chrome: rgba(5, 7, 13, 0.85);
+    --glass-blur: none;
+    --shadow-sm: none;
+    --shadow-md: 0 20px 45px -12px rgba(0, 0, 0, 0.7);
+    --shadow-glow: 0 0 0 1px rgba(34, 224, 192, 0.4), 0 0 24px rgba(34, 224, 192, 0.18);
+}
+
+.template-circuit {
+    background-image:
+        linear-gradient(rgba(34, 224, 192, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 224, 192, 0.05) 1px, transparent 1px),
+        radial-gradient(circle at 50% 0%, rgba(124, 107, 255, 0.12) 0%, transparent 40%) !important;
+    background-size: 42px 42px, 42px 42px, 100% 100% !important;
+}
+
+.template-circuit .majestic-masthead {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.template-circuit .majestic-masthead h1,
+.template-circuit .masthead-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 3.4rem !important;
+    letter-spacing: -1px !important;
+    text-transform: none !important;
+    color: var(--text-main) !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    background: none !important;
+    text-shadow: 0 0 30px rgba(34, 224, 192, 0.35);
+}
+
+.template-circuit .masthead-meta-bar,
+.template-circuit .majestic-masthead>div:last-child {
+    font-family: 'Courier New', monospace !important;
+    text-transform: uppercase;
+    font-size: 0.75rem !important;
+    letter-spacing: 2px !important;
+    border-top: 1px solid var(--border-color) !important;
+    border-bottom: none !important;
+}
+
+/* Hero: "terminal window" chrome around the story */
+.template-circuit .hero-card {
+    border-radius: 10px !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-md) !important;
+    position: relative;
+    padding-top: 2rem;
+}
+
+.template-circuit .hero-card::before {
+    content: '● ● ●';
+    position: absolute;
+    top: 0.6rem;
+    left: 1rem;
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    color: var(--accent-primary);
+    opacity: 0.6;
+}
+
+.template-circuit .hero-visual {
+    border-radius: 6px !important;
+}
+
+.template-circuit .hero-label {
+    background: transparent !important;
+    color: var(--accent-primary) !important;
+    border: 1px solid var(--accent-primary) !important;
+    border-radius: 4px !important;
+    box-shadow: var(--shadow-glow) !important;
+    font-family: 'Courier New', monospace !important;
+}
+
+.template-circuit .hero-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 800 !important;
+    -webkit-text-fill-color: currentColor !important;
+    background: none !important;
+}
+
+/* Cards: thin glowing left rail, monospace meta */
+.template-circuit .secondary-card,
+.template-circuit .sidebar-widget,
+.template-circuit .card {
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    border-left: 3px solid var(--accent-primary) !important;
+    background: var(--bg-card) !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+.template-circuit .secondary-card:hover,
+.template-circuit .card:hover {
+    border-left-color: var(--accent-secondary) !important;
+    box-shadow: var(--shadow-glow) !important;
+    transform: translateY(-3px) !important;
+}
+
+.template-circuit .meta-row {
+    font-family: 'Courier New', monospace !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 1px;
+}
+
+.template-circuit .ad-card {
+    border-radius: 8px !important;
+    border: 1px dashed var(--accent-secondary) !important;
+}
+
+.template-circuit .btn-primary {
+    background: var(--accent-primary) !important;
+    color: #05070d !important;
+    border-radius: 4px !important;
+    font-weight: 800 !important;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+.template-circuit .btn-secondary {
+    border-radius: 4px !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.template-circuit .badge {
+    border-radius: 4px !important;
+    font-family: 'Courier New', monospace !important;
+}
+
+.template-circuit .mv-rank {
+    font-family: 'Courier New', monospace !important;
+    border: 1px solid var(--accent-primary);
+    color: var(--accent-primary);
+    width: 1.8rem;
+    height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 0.9rem !important;
+    opacity: 1 !important;
+    box-shadow: var(--shadow-glow);
+}
+
+.template-circuit .full-content,
+.template-circuit .full-content-ar,
+.template-circuit .article-body {
+    font-size: 1.15rem !important;
+    line-height: 1.85 !important;
+    color: var(--text-main) !important;
+}
+
+@media (max-width: 640px) {
+    .template-circuit .majestic-masthead h1,
+    .template-circuit .masthead-title {
+        font-size: 2.2rem !important;
+    }
+}
+
+/* --- STRUCTURE: a "system dashboard" grid — dense, evenly-gapped, each card
+       numbered like an indexed log entry --- */
+.template-circuit .secondary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1px !important;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.template-circuit .secondary-card {
+    border-radius: 0 !important;
+    border-left: none !important;
+    counter-increment: circuit-card;
+}
+
+.template-circuit .secondary-grid {
+    counter-reset: circuit-card;
+}
+
+.template-circuit .secondary-card .secondary-content::before {
+    content: "0" counter(circuit-card) " //";
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: var(--accent-primary);
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
+}
+
+@media (max-width: 900px) {
+    .template-circuit .secondary-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .template-circuit .secondary-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+
+/* ============================================================
+   7) MISSION CONTROL — futuristic AI command-center / HUD dashboard
+   ============================================================ */
+.template-mission {
+    --bg-main: #04060c;
+    --bg-card: #0a0f1c;
+    --bg-hover: #121b30;
+    --text-main: #e4ecff;
+    --text-muted: #6f80a8;
+    --accent-primary: #00d9ff;
+    /* HUD cyan */
+    --accent-secondary: #ffb238;
+    /* Amber telemetry */
+    --accent-warning: #ffb238;
+    --accent-danger: #ff3b5c;
+    --border-color: rgba(0, 217, 255, 0.25);
+    --overlay-chrome: rgba(4, 6, 12, 0.85);
+    --glass-blur: none;
+    --shadow-sm: none;
+    --shadow-md: 0 25px 60px -15px rgba(0, 0, 0, 0.8);
+    --shadow-glow: 0 0 0 1px rgba(0, 217, 255, 0.5), 0 0 30px rgba(0, 217, 255, 0.25);
+}
+
+@keyframes mission-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 217, 255, 0.6);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(0, 217, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 217, 255, 0);
+    }
+}
+
+/* Scanline + radar-grid ambience */
+.template-mission {
+    background-image:
+        repeating-linear-gradient(0deg, rgba(0, 217, 255, 0.025) 0px, rgba(0, 217, 255, 0.025) 1px, transparent 1px, transparent 3px),
+        linear-gradient(rgba(0, 217, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 217, 255, 0.05) 1px, transparent 1px),
+        radial-gradient(circle at 50% 0%, rgba(0, 217, 255, 0.15) 0%, transparent 45%) !important;
+    background-size: 100% 3px, 48px 48px, 48px 48px, 100% 100% !important;
+}
+
+.template-mission .majestic-masthead {
+    border-bottom: 1px solid var(--border-color) !important;
+    position: relative;
+}
+
+.template-mission .majestic-masthead::before {
+    content: '● LIVE FEED — AI INTELLIGENCE NETWORK';
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    color: var(--accent-primary);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    animation: mission-pulse 2.5s infinite;
+    border: 1px solid var(--border-color);
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.template-mission .majestic-masthead h1,
+.template-mission .masthead-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 900 !important;
+    font-size: 3.6rem !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    color: var(--text-main) !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    background: none !important;
+    text-shadow: 0 0 40px rgba(0, 217, 255, 0.45);
+}
+
+.template-mission .masthead-meta-bar,
+.template-mission .majestic-masthead>div:last-child {
+    font-family: 'Courier New', monospace !important;
+    text-transform: uppercase;
+    font-size: 0.7rem !important;
+    letter-spacing: 2px !important;
+    color: var(--accent-primary) !important;
+}
+
+/* Hero: the "main viewscreen" panel, bracketed like a HUD target frame */
+.template-mission .hero-card {
+    border-radius: 4px !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-md), inset 0 0 60px rgba(0, 217, 255, 0.05) !important;
+    position: relative;
+}
+
+.template-mission .hero-card::before,
+.template-mission .hero-card::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--accent-primary);
+    z-index: 3;
+    opacity: 0.85;
+}
+
+.template-mission .hero-card::before {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.template-mission .hero-card::after {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+}
+
+.template-mission .hero-label {
+    background: transparent !important;
+    color: var(--accent-primary) !important;
+    border: 1px solid var(--accent-primary) !important;
+    border-radius: 2px !important;
+    font-family: 'Courier New', monospace !important;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+.template-mission .hero-label::before {
+    content: '● ';
+    animation: mission-pulse 1.8s infinite;
+}
+
+.template-mission .hero-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 800 !important;
+    -webkit-text-fill-color: currentColor !important;
+    background: none !important;
+}
+
+/* Story cards: telemetry data panels, each with a labeled header strip */
+.template-mission .secondary-card,
+.template-mission .sidebar-widget,
+.template-mission .card {
+    border-radius: 4px !important;
+    border: 1px solid var(--border-color) !important;
+    background: var(--bg-card) !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+.template-mission .secondary-card::before {
+    content: 'FEED';
+    position: absolute;
+    top: -9px;
+    left: 12px;
+    background: var(--bg-main);
+    color: var(--accent-secondary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    padding: 0 6px;
+    z-index: 2;
+}
+
+.template-mission .secondary-card:hover,
+.template-mission .card:hover {
+    border-color: var(--accent-primary) !important;
+    box-shadow: var(--shadow-glow) !important;
+    transform: translateY(-4px) !important;
+}
+
+.template-mission .secondary-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 700 !important;
+}
+
+.template-mission .meta-row {
+    font-family: 'Courier New', monospace !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 1px;
+    color: var(--accent-secondary) !important;
+}
+
+.template-mission .ad-card {
+    border-radius: 4px !important;
+    border: 1px dashed var(--accent-secondary) !important;
+}
+
+.template-mission .btn-primary {
+    background: var(--accent-primary) !important;
+    color: #04060c !important;
+    border-radius: 2px !important;
+    font-weight: 800 !important;
+    font-family: 'Courier New', monospace !important;
+    letter-spacing: 1px;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+.template-mission .btn-secondary {
+    border-radius: 2px !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.template-mission .badge {
+    border-radius: 2px !important;
+    font-family: 'Courier New', monospace !important;
+}
+
+.template-mission .mv-rank {
+    font-family: 'Courier New', monospace !important;
+    border: 1px solid var(--accent-secondary);
+    color: var(--accent-secondary);
+    width: 1.8rem;
+    height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    font-size: 0.9rem !important;
+    opacity: 1 !important;
+}
+
+.template-mission .full-content,
+.template-mission .full-content-ar,
+.template-mission .article-body {
+    font-size: 1.15rem !important;
+    line-height: 1.85 !important;
+    color: var(--text-main) !important;
+}
+
+/* --- STRUCTURE: sidebar becomes a stack of labeled telemetry panels,
+       secondary grid keeps a tight console-row rhythm --- */
+.template-mission .sidebar-widget {
+    padding-top: 1.75rem !important;
+}
+
+.template-mission .secondary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.75rem;
+}
+
+@media (max-width: 900px) {
+    .template-mission .secondary-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .template-mission .secondary-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .template-mission .majestic-masthead h1,
+    .template-mission .masthead-title {
+        font-size: 2.2rem !important;
+        letter-spacing: 1px !important;
+    }
+
+    .template-mission .majestic-masthead::before {
+        font-size: 0.55rem;
+        letter-spacing: 1.5px;
+    }
+}
+
+
+/* ============================================================
+   8) THE HALO — same futuristic/robotic HUD language as Mission
+      Control, in a clean light theme (crisp borders/shadow instead
+      of glow-on-dark; ring/halo lighting instead of neon).
+   ============================================================ */
+.template-halo {
+    --bg-main: #f2f5fb;
+    --bg-card: #ffffff;
+    --bg-hover: #e6ecf7;
+    --text-main: #10192e;
+    --text-muted: #5a6685;
+    --accent-primary: #0066ff;
+    /* Halo blue */
+    --accent-secondary: #d9720a;
+    /* Amber telemetry */
+    --accent-warning: #d9720a;
+    --accent-danger: #e0334f;
+    --border-color: rgba(0, 102, 255, 0.22);
+    --overlay-chrome: rgba(242, 245, 251, 0.9);
+    --glass-blur: none;
+    --shadow-sm: 0 2px 10px rgba(16, 25, 46, 0.06);
+    --shadow-md: 0 20px 45px -15px rgba(16, 25, 46, 0.18);
+    --shadow-glow: 0 0 0 3px rgba(0, 102, 255, 0.15);
+}
+
+@keyframes halo-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 102, 255, 0.45);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(0, 102, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 102, 255, 0);
+    }
+}
+
+/* Faint grid ambience — same robotic language, dark-on-light instead of glow */
+.template-halo {
+    background-image:
+        linear-gradient(rgba(0, 102, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 102, 255, 0.05) 1px, transparent 1px),
+        radial-gradient(circle at 50% 0%, rgba(0, 102, 255, 0.06) 0%, transparent 45%) !important;
+    background-size: 48px 48px, 48px 48px, 100% 100% !important;
+}
+
+.template-halo .majestic-masthead {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.template-halo .majestic-masthead::before {
+    content: '● LIVE FEED — AI INTELLIGENCE NETWORK';
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    color: var(--accent-primary);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    animation: halo-pulse 2.5s infinite;
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-card);
+}
+
+.template-halo .majestic-masthead h1,
+.template-halo .masthead-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 900 !important;
+    font-size: 3.6rem !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    color: var(--text-main) !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    background: none !important;
+}
+
+.template-halo .masthead-meta-bar,
+.template-halo .majestic-masthead>div:last-child {
+    font-family: 'Courier New', monospace !important;
+    text-transform: uppercase;
+    font-size: 0.7rem !important;
+    letter-spacing: 2px !important;
+    border-top: 1px solid var(--border-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--accent-primary) !important;
+}
+
+/* Hero: bracketed viewscreen, same HUD frame motif as Mission Control */
+.template-halo .hero-card {
+    border-radius: 6px !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-md) !important;
+    position: relative;
+}
+
+.template-halo .hero-card::before,
+.template-halo .hero-card::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--accent-primary);
+    z-index: 3;
+}
+
+.template-halo .hero-card::before {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.template-halo .hero-card::after {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+}
+
+.template-halo .hero-label {
+    background: #fff !important;
+    color: var(--accent-primary) !important;
+    border: 1px solid var(--accent-primary) !important;
+    border-radius: 2px !important;
+    font-family: 'Courier New', monospace !important;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+.template-halo .hero-label::before {
+    content: '● ';
+    animation: halo-pulse 1.8s infinite;
+}
+
+.template-halo .hero-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 800 !important;
+    -webkit-text-fill-color: currentColor !important;
+    background: none !important;
+}
+
+/* Story cards: same "telemetry panel" motif, crisp shadow instead of glow */
+.template-halo .secondary-card,
+.template-halo .sidebar-widget,
+.template-halo .card {
+    border-radius: 6px !important;
+    border: 1px solid var(--border-color) !important;
+    background: var(--bg-card) !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--shadow-sm) !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+.template-halo .secondary-card::before {
+    content: 'FEED';
+    position: absolute;
+    top: -9px;
+    left: 12px;
+    background: var(--bg-main);
+    color: var(--accent-secondary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    padding: 0 6px;
+    z-index: 2;
+}
+
+.template-halo .secondary-card:hover,
+.template-halo .card:hover {
+    border-color: var(--accent-primary) !important;
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-4px) !important;
+}
+
+.template-halo .secondary-title {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 700 !important;
+}
+
+.template-halo .meta-row {
+    font-family: 'Courier New', monospace !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 1px;
+    color: var(--accent-secondary) !important;
+}
+
+.template-halo .ad-card {
+    border-radius: 6px !important;
+    border: 1px dashed var(--accent-secondary) !important;
+    background: #fff !important;
+}
+
+.template-halo .btn-primary {
+    background: var(--accent-primary) !important;
+    color: #fff !important;
+    border-radius: 2px !important;
+    font-weight: 800 !important;
+    font-family: 'Courier New', monospace !important;
+    letter-spacing: 1px;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+.template-halo .btn-secondary {
+    border-radius: 2px !important;
+    border: 1px solid var(--border-color) !important;
+    background: #fff !important;
+}
+
+.template-halo .badge {
+    border-radius: 2px !important;
+    font-family: 'Courier New', monospace !important;
+}
+
+.template-halo .mv-rank {
+    font-family: 'Courier New', monospace !important;
+    border: 1px solid var(--accent-secondary);
+    color: var(--accent-secondary);
+    width: 1.8rem;
+    height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    font-size: 0.9rem !important;
+    opacity: 1 !important;
+}
+
+.template-halo .full-content,
+.template-halo .full-content-ar,
+.template-halo .article-body {
+    font-size: 1.15rem !important;
+    line-height: 1.85 !important;
+    color: var(--text-main) !important;
+}
+
+/* --- STRUCTURE: identical console-row rhythm to Mission Control --- */
+.template-halo .sidebar-widget {
+    padding-top: 1.75rem !important;
+}
+
+.template-halo .secondary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.75rem;
+}
+
+@media (max-width: 900px) {
+    .template-halo .secondary-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .template-halo .secondary-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .template-halo .majestic-masthead h1,
+    .template-halo .masthead-title {
+        font-size: 2.2rem !important;
+        letter-spacing: 1px !important;
+    }
+
+    .template-halo .majestic-masthead::before {
+        font-size: 0.55rem;
+        letter-spacing: 1.5px;
+    }
+}
+
+
+/* ============================================================
+   9) DIGITAL ERA — a modern AI newsroom. Aurora light, geometric
+      type, luminous glass. The digital world, not a paper page.
+   ============================================================ */
+.template-digital {
+    --bg-main: #07080f;
+    --bg-card: rgba(16, 18, 32, 0.78);
+    --bg-hover: #1a1d33;
+    --text-main: #f5f7ff;
+    --text-muted: #9aa3c2;
+    --accent-primary: #8b7cff;
+    --accent-secondary: #3ee0ff;
+    --accent-warning: #f5c16c;
+    --accent-danger: #ff5d7a;
+    --border-color: rgba(139, 124, 255, 0.28);
+    --overlay-chrome: rgba(7, 8, 15, 0.82);
+    --glass-blur: blur(16px);
+    --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.28);
+    --shadow-md: 0 24px 50px -20px rgba(0, 0, 0, 0.65);
+    --shadow-glow: 0 0 0 1px rgba(62, 224, 255, 0.35), 0 0 28px rgba(139, 124, 255, 0.25);
+    --font-serif: 'Space Grotesk', 'Inter', sans-serif;
+}
+
+@keyframes digital-pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(62, 224, 255, 0.55); }
+    50% { opacity: 0.55; box-shadow: 0 0 0 6px rgba(62, 224, 255, 0); }
+}
+
+.template-digital {
+    background-color: #07080f !important;
+    background-image:
+        radial-gradient(ellipse 50% 40% at 12% -10%, rgba(139, 124, 255, 0.35), transparent 60%),
+        radial-gradient(ellipse 40% 35% at 100% 0%, rgba(62, 224, 255, 0.22), transparent 55%),
+        radial-gradient(ellipse 30% 25% at 80% 100%, rgba(139, 124, 255, 0.12), transparent 50%),
+        radial-gradient(rgba(245, 247, 255, 0.05) 1px, transparent 1px) !important;
+    background-size: auto, auto, auto, 22px 22px !important;
+}
+
+.template-digital .reader-bar,
+.template-digital .reader-footer {
+    background: rgba(7, 8, 15, 0.78);
+    border-color: rgba(139, 124, 255, 0.28);
+}
+
+.template-digital .reader-brand span,
+.template-digital .reader-links a {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: 0.12em;
+}
+
+.template-digital .reader-links a.reader-subscribe,
+.template-digital .btn-primary {
+    background: linear-gradient(120deg, #8b7cff, #3ee0ff) !important;
+    color: #07080f !important;
+    border: none !important;
+    box-shadow: 0 8px 24px rgba(139, 124, 255, 0.35) !important;
+}
+
+.template-digital .reader-lang {
+    background: rgba(16, 18, 32, 0.9);
+    border-color: rgba(139, 124, 255, 0.35);
+}
+
+.template-digital .majestic-masthead {
+    border-bottom: none !important;
+    position: relative;
+}
+
+.template-digital .majestic-masthead::before {
+    content: 'DIGITAL ERA  ·  ARTIFICIAL INTELLIGENCE';
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    color: #3ee0ff;
+    margin-bottom: 0.85rem;
+}
+
+.template-digital .majestic-masthead::after {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-top: 1.25rem;
+    background: linear-gradient(90deg, transparent, #8b7cff, #3ee0ff, transparent);
+}
+
+.template-digital .majestic-masthead h1,
+.template-digital .masthead-title,
+.template-digital .sw-title {
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.045em !important;
+    text-transform: none !important;
+    background: linear-gradient(120deg, #ffffff 10%, #c9c2ff 45%, #3ee0ff 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+}
+
+.template-digital .masthead-meta-bar,
+.template-digital .majestic-masthead > div:last-child {
+    font-family: 'JetBrains Mono', monospace !important;
+    letter-spacing: 0.14em !important;
+    border: none !important;
+    color: var(--text-muted);
+}
+
+.template-digital .edition-bar {
+    border-color: rgba(139, 124, 255, 0.28);
+    font-family: 'JetBrains Mono', monospace;
+    color: #c9c2ff;
+}
+
+.template-digital .edition-date strong {
+    color: #f5f7ff;
+}
+
+.template-digital .edition-print {
+    border-color: rgba(62, 224, 255, 0.45);
+    color: #3ee0ff;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.template-digital .desk-chip {
+    background: rgba(16, 18, 32, 0.7);
+    border-color: rgba(139, 124, 255, 0.32);
+    color: #c9c2ff;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.template-digital .desk-chip.active,
+.template-digital .desk-chip:hover {
+    background: linear-gradient(120deg, #8b7cff, #3ee0ff);
+    color: #07080f;
+    border-color: transparent;
+}
+
+.template-digital .hero-card {
+    border-radius: 28px !important;
+    border: 1px solid rgba(139, 124, 255, 0.4) !important;
+    background: rgba(12, 14, 26, 0.72) !important;
+    box-shadow: 0 0 0 1px rgba(62, 224, 255, 0.08), 0 30px 80px -30px rgba(139, 124, 255, 0.55) !important;
+    overflow: hidden;
+}
+
+.template-digital .hero-visual img {
+    filter: saturate(1.08) contrast(1.04);
+}
+
+.template-digital .hero-label {
+    background: transparent !important;
+    color: #3ee0ff !important;
+    border: 1px solid rgba(62, 224, 255, 0.5);
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    letter-spacing: 0.16em;
+}
+
+.template-digital .hero-title,
+.template-digital .secondary-title {
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.03em !important;
+    -webkit-text-fill-color: #f5f7ff !important;
+    color: #f5f7ff !important;
+    background: none !important;
+}
+
+.template-digital [dir="rtl"].hero-title,
+.template-digital [dir="rtl"].secondary-title,
+.template-digital .hero-title[dir="rtl"],
+.template-digital .secondary-title[dir="rtl"],
+.template-digital .card-ar-sub {
+    font-family: var(--font-ar) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+.template-digital .hero-dek,
+.template-digital .card-dek {
+    color: #b7bed6;
+}
+
+.template-digital .section-header {
+    border: none !important;
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.03em;
+}
+
+.template-digital .section-header span {
+    background: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.template-digital .section-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(139, 124, 255, 0.8), transparent);
+}
+
+.template-digital .secondary-card,
+.template-digital .sidebar-widget,
+.template-digital .card,
+.template-digital .continue-banner,
+.template-digital .gate-card {
+    background: rgba(16, 18, 32, 0.72) !important;
+    border: 1px solid rgba(139, 124, 255, 0.28) !important;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(12px);
+}
+
+.template-digital .secondary-card {
+    position: relative;
+}
+
+.template-digital .secondary-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: linear-gradient(180deg, #8b7cff, #3ee0ff);
+    z-index: 1;
+}
+
+.template-digital .secondary-card:hover,
+.template-digital .card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(62, 224, 255, 0.7) !important;
+    box-shadow: 0 16px 40px -20px rgba(62, 224, 255, 0.45) !important;
+}
+
+.template-digital .secondary-img,
+.template-digital .hero-visual {
+    border-radius: 0 !important;
+}
+
+.template-digital .desk-kicker,
+.template-digital .meta-row,
+.template-digital .fresh-pill {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.template-digital .fresh-pill {
+    background: linear-gradient(120deg, #8b7cff, #3ee0ff);
+    color: #07080f;
+}
+
+.template-digital .card-fallback {
+    background:
+        radial-gradient(circle at 30% 20%, rgba(62, 224, 255, 0.25), transparent 50%),
+        linear-gradient(160deg, #16182c, #0c0e1a);
+    color: #3ee0ff;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.template-digital .ad-card {
+    background: rgba(16, 18, 32, 0.8) !important;
+    border: 1px dashed rgba(62, 224, 255, 0.45) !important;
+    border-radius: 20px !important;
+}
+
+.template-digital .ad-title {
+    color: #f5f7ff !important;
+}
+
+.template-digital .btn-secondary {
+    background: transparent !important;
+    color: #f5f7ff !important;
+    border: 1px solid rgba(139, 124, 255, 0.45) !important;
+    border-radius: 999px !important;
+}
+
+.template-digital .btn-secondary:hover {
+    border-color: #3ee0ff !important;
+    color: #3ee0ff !important;
+}
+
+.template-digital .mv-rank {
+    font-family: 'Space Grotesk', sans-serif !important;
+    color: #3ee0ff !important;
+    opacity: 1 !important;
+}
+
+.template-digital .full-content,
+.template-digital .article-body {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-size: 1.08rem !important;
+    line-height: 1.8 !important;
+}
+
+.template-digital .full-content-ar {
+    font-family: var(--font-ar) !important;
+}
+
+.template-digital .reader-newsletter {
+    background: linear-gradient(120deg, rgba(139, 124, 255, 0.12), rgba(62, 224, 255, 0.08)) !important;
+    border-color: rgba(139, 124, 255, 0.28) !important;
+}
+
+.template-digital .source-link {
+    color: #3ee0ff;
+    border-bottom-color: #3ee0ff;
+}
+
+.template-digital .card-when {
+    color: #d5dcf2;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+}
+
+.masthead-campus {
+    margin: 0.35rem 0 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+}
+
+.research-pill {
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent-secondary);
+    border: 1px solid var(--border-color);
+    padding: 0.05rem 0.4rem;
+}
+
+.wing-dek {
+    color: var(--text-muted);
+    margin: -0.5rem 0 1.25rem;
+    max-width: 46rem;
+}
+
+.classroom {
+    border: 1px solid var(--border-color);
+    border-inline-start: 3px solid var(--accent-primary);
+    padding: 1.1rem 1.25rem 1.2rem;
+    margin: 0 0 2.5rem;
+    background: var(--bg-card);
+}
+
+.classroom h2 {
+    font-family: var(--font-serif, 'Playfair Display', serif);
+    font-size: 1.45rem;
+    margin: 0.15rem 0 0.6rem;
+}
+
+.classroom-kicker {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+}
+
+.classroom-on,
+.classroom-why,
+.classroom-term,
+.classroom-ask {
+    margin: 0.35rem 0;
+}
+
+.classroom-on a {
+    color: inherit;
+}
+
+.classroom-ask {
+    font-weight: 600;
+}
+
+.campus-wing {
+    margin: 0 0 3rem;
+}
+
+.campus-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.campus-slot {
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    min-height: 8.5rem;
+    background: var(--bg-card);
+}
+
+.campus-kind {
+    margin: 0 0 0.45rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+}
+
+.campus-slot h3 {
+    font-size: 1.05rem;
+    margin: 0 0 0.4rem;
+}
+
+.campus-slot h3 a,
+.campus-row {
+    color: inherit;
+    text-decoration: none;
+}
+
+.campus-empty,
+.campus-meta {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.campus-week-count {
+    display: inline-block;
+    margin-inline-start: 0.5rem;
+    color: var(--accent-primary);
+}
+
+.campus-page-head {
+    padding: 1.5rem 0 0.5rem;
+}
+
+.campus-page-head h1 {
+    font-family: var(--font-serif, 'Playfair Display', serif);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin: 0.2rem 0 0.6rem;
+}
+
+.campus-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.campus-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    align-items: baseline;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.55rem;
+}
+
+.campus-row em {
+    color: var(--text-muted);
+    font-style: normal;
+}
+
+.question-list {
+    margin: 0.4rem 0 0;
+    padding-inline-start: 1.2rem;
+}
+
+.question-list li {
+    margin: 0.7rem 0;
+}
+
+.question-list a {
+    color: inherit;
+}
+
+.question-list span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.campus-composer {
+    display: grid;
+    grid-template-columns: 180px 1fr 220px;
+    gap: 0.6rem;
+}
+
+.department-form {
+    display: grid;
+    gap: 0.75rem;
+    max-width: 40rem;
+    margin-bottom: 1.75rem;
+}
+
+.department-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.department-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+.department-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.campus-composer textarea,
+.campus-composer button {
+    grid-column: 1 / -1;
+}
+
+.section-header .desk-more {
+    margin-inline-start: auto;
+    font-size: 0.85rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.25rem;
+}
+
+@media (max-width: 800px) {
+    .campus-grid,
+    .campus-composer {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .template-digital .majestic-masthead h1,
+    .template-digital .masthead-title,
+    .template-digital .sw-title {
+        letter-spacing: -0.03em !important;
+    }
+
+    .template-digital .majestic-masthead::before {
+        letter-spacing: 0.08em;
+        font-size: 0.58rem;
+    }
+}

@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block content %}
+<div class="dept-page" style="max-width:1100px;">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Department · project ideas', 'القسم · أفكار المشاريع') }}</p>
+            <h1>{{ t('Edit project idea', 'تعديل فكرة مشروع') if idea else t('New project idea', 'فكرة مشروع جديدة') }}</h1>
+            <p class="editor-dek">{{ t('Give students a starting point, not a finished project. The reference is the paper or product the idea comes from.', 'أعطِ الطلبة نقطة بداية لا مشروعًا جاهزًا. المرجع هو الورقة أو المنتج الذي جاءت منه الفكرة.') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('department_admin', _anchor='projects') }}">{{ t('Back to projects', 'العودة إلى المشاريع') }}</a>
+            {% if idea and idea.is_published %}
+            <a class="btn btn-secondary" href="{{ url_for('campus_projects') }}#idea-{{ idea.id }}" target="_blank" rel="noopener">{{ t('View on site', 'عرض في الموقع') }}</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="POST">
+        <div class="project-form-grid">
+            <div class="editor-main">
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-indigo"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+                        <div><h2>{{ t('The idea', 'الفكرة') }}</h2><p>{{ t('Short enough to read on a card, concrete enough to start.', 'قصيرة بما يكفي لقراءتها على بطاقة، ومحددة بما يكفي للبدء.') }}</p></div>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="title_en">{{ t('Title (English)', 'العنوان (إنجليزي)') }} <span class="req">*</span></label>
+                        <input id="title_en" type="text" name="title_en" maxlength="200" required value="{{ idea.title_en if idea else '' }}">
+                    </div>
+                    <div class="editor-field">
+                        <label for="title_ar">{{ t('Title (Arabic)', 'العنوان (عربي)') }}</label>
+                        <input id="title_ar" type="text" name="title_ar" maxlength="200" dir="rtl" class="is-ar" value="{{ idea.title_ar if idea else '' }}">
+                    </div>
+                    <div class="editor-field">
+                        <label for="summary_en">{{ t('One-line summary (English)', 'ملخص سطر واحد (إنجليزي)') }}</label>
+                        <input id="summary_en" type="text" name="summary_en" maxlength="300" value="{{ idea.summary_en if idea else '' }}">
+                    </div>
+                    <div class="editor-field">
+                        <label for="summary_ar">{{ t('One-line summary (Arabic)', 'ملخص سطر واحد (عربي)') }}</label>
+                        <input id="summary_ar" type="text" name="summary_ar" maxlength="300" dir="rtl" class="is-ar" value="{{ idea.summary_ar if idea else '' }}">
+                    </div>
+                    <div class="editor-field">
+                        <label for="body_en">{{ t('The brief (English)', 'الوصف (إنجليزي)') }}</label>
+                        <textarea id="body_en" name="body_en" rows="5">{{ idea.body_en if idea else '' }}</textarea>
+                    </div>
+                    <div class="editor-field">
+                        <label for="body_ar">{{ t('The brief (Arabic)', 'الوصف (عربي)') }}</label>
+                        <textarea id="body_ar" name="body_ar" rows="5" dir="rtl" class="is-ar">{{ idea.body_ar if idea else '' }}</textarea>
+                    </div>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-amber"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></span>
+                        <div><h2>{{ t('Reference', 'المرجع') }}</h2><p>{{ t('Where the idea comes from, or where it has been done before.', 'من أين جاءت الفكرة أو أين نُفذت سابقًا.') }}</p></div>
+                    </div>
+                    <div class="editor-field">
+                        <label for="reference_title">{{ t('Reference title', 'عنوان المرجع') }}</label>
+                        <input id="reference_title" type="text" name="reference_title" maxlength="200" value="{{ idea.reference_title if idea else '' }}" placeholder="Paper, dataset or shipped product">
+                    </div>
+                    <div class="editor-field">
+                        <label for="reference_url">{{ t('Reference URL', 'رابط المرجع') }}</label>
+                        <input id="reference_url" type="url" name="reference_url" value="{{ idea.reference_url if idea else '' }}" placeholder="https://arxiv.org/…">
+                    </div>
+                    <div class="editor-field">
+                        <label for="reference_note_en">{{ t('What is new for the student (English)', 'ما الجديد للطالب (إنجليزي)') }}</label>
+                        <textarea id="reference_note_en" name="reference_note_en" rows="2" maxlength="300">{{ idea.reference_note_en if idea else '' }}</textarea>
+                    </div>
+                    <div class="editor-field">
+                        <label for="reference_note_ar">{{ t('What is new for the student (Arabic)', 'ما الجديد للطالب (عربي)') }}</label>
+                        <textarea id="reference_note_ar" name="reference_note_ar" rows="2" maxlength="300" dir="rtl" class="is-ar">{{ idea.reference_note_ar if idea else '' }}</textarea>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="dept-compose-side">
+                <section class="editor-card">
+                    <div class="editor-card-head is-compact">
+                        <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-type"></use></svg></span>
+                        <div><h2>{{ t('Classify', 'التصنيف') }}</h2></div>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="track">{{ t('Track', 'المسار') }}</label>
+                        <select id="track" name="track">
+                            {% for key, labels in tracks.items() %}
+                            <option value="{{ key }}" {{ 'selected' if idea and idea.track == key else '' }}>{{ labels[1] if admin_ar else labels[0] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="editor-field">
+                        <label for="area">{{ t('Area', 'المجال') }}</label>
+                        <select id="area" name="area">
+                            {% for key, labels in areas.items() %}
+                            <option value="{{ key }}" {{ 'selected' if idea and idea.area == key else '' }}>{{ labels[1] if admin_ar else labels[0] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="editor-field">
+                        <label for="difficulty">{{ t('Difficulty', 'المستوى') }}</label>
+                        <select id="difficulty" name="difficulty">
+                            <option value="starter" {{ 'selected' if idea and idea.difficulty == 'starter' else '' }}>{{ t('Starter', 'تمهيدي') }}</option>
+                            <option value="intermediate" {{ 'selected' if not idea or idea.difficulty == 'intermediate' else '' }}>{{ t('Intermediate', 'متوسط') }}</option>
+                            <option value="advanced" {{ 'selected' if idea and idea.difficulty == 'advanced' else '' }}>{{ t('Advanced', 'متقدم') }}</option>
+                        </select>
+                    </div>
+                    <div class="editor-field">
+                        <label for="skills">{{ t('Skills (comma separated)', 'المهارات (مفصولة بفواصل)') }}</label>
+                        <input id="skills" type="text" name="skills" value="{{ idea.skills|join(', ') if idea and idea.skills else '' }}">
+                    </div>
+                    <div class="editor-field">
+                        <label for="tools">{{ t('Tools (comma separated)', 'الأدوات (مفصولة بفواصل)') }}</label>
+                        <input id="tools" type="text" name="tools" value="{{ idea.tools|join(', ') if idea and idea.tools else '' }}">
+                    </div>
+                    <div class="editor-field">
+                        <label for="sort_order">{{ t('Sort order', 'ترتيب العرض') }}</label>
+                        <input id="sort_order" type="number" name="sort_order" min="0" value="{{ idea.sort_order if idea else 0 }}">
+                    </div>
+
+                    <div class="switch-rows">
+                        <label class="switch-row">
+                            <input type="checkbox" name="featured" value="1" {% if idea and idea.featured %}checked{% endif %}>
+                            <span class="switch"></span>
+                            <span><b>{{ t('Featured on the department page', 'مميز في صفحة القسم') }}</b><small>{{ t('Shows in the three-card block.', 'يظهر في بطاقات القسم الثلاث.') }}</small></span>
+                        </label>
+                        <label class="switch-row">
+                            <input type="checkbox" name="is_published" value="1" {% if not idea or idea.is_published %}checked{% endif %}>
+                            <span class="switch"></span>
+                            <span><b>{{ t('Published', 'منشور') }}</b><small>{{ t('Visible to students on the public page.', 'ظاهر للطلبة في الصفحة العامة.') }}</small></span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary dept-submit">
+                        <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                        {{ t('Save project idea', 'حفظ فكرة المشروع') }}
+                    </button>
+                </section>
+            </aside>
+        </div>
+    </form>
+</div>
+{% endblock %}

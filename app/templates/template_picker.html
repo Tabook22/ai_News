@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .tpl-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .tpl-option {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 0.2s;
+    }
+
+    .tpl-option.is-active {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 2px var(--accent-primary);
+    }
+
+    /* The scaled live-CSS preview */
+    .tpl-frame {
+        height: 220px;
+        overflow: hidden;
+        position: relative;
+        background: #000;
+    }
+
+    .tpl-swatch {
+        width: 400%;
+        height: 400%;
+        transform: scale(0.25);
+        transform-origin: top left;
+        padding: 2rem;
+        font-family: 'Inter', sans-serif;
+        pointer-events: none;
+    }
+
+    .tpl-swatch .sw-title {
+        font-size: 3.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        font-weight: 900;
+    }
+
+    .tpl-swatch .sw-hero {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .tpl-swatch .sw-hero-img {
+        min-height: 260px;
+        background: linear-gradient(135deg, #64748b, #334155);
+    }
+
+    .tpl-swatch .sw-hero-content {
+        padding: 2.5rem;
+    }
+
+    .tpl-swatch .sw-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    .tpl-swatch .sw-card-img {
+        height: 140px;
+        background: linear-gradient(135deg, #94a3b8, #475569);
+    }
+
+    .tpl-swatch .sw-card-body {
+        padding: 1.25rem;
+    }
+
+    .tpl-body {
+        padding: 1.5rem;
+    }
+
+    .tpl-name {
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin-bottom: 0.4rem;
+    }
+
+    .tpl-desc {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+</style>
+
+<div class="dashboard-header">
+    <div>
+        <h1>🎨 Magazine Templates</h1>
+        <p style="color: var(--text-muted); margin: 0;">Pick a design for the public magazine — the masthead, hero,
+            and story cards restyle everywhere readers see them. Change it as often as you like.</p>
+    </div>
+    <a href="{{ url_for('magazine_view') }}" target="_blank" class="btn btn-secondary">👁️ Preview Live Site</a>
+</div>
+
+<div class="tpl-grid">
+    {% for tpl in [
+    {'id': 'slate', 'name': 'The Slate', 'desc': 'Premium dark tech briefing — glassmorphic cards, cyan/indigo accents, soft glow. Your current look.'},
+    {'id': 'broadsheet', 'name': 'The Broadsheet', 'desc': 'Classic black-and-white newspaper front page — serif nameplate, hairline rules, ink-on-paper feel.'},
+    {'id': 'wire', 'name': 'The Wire', 'desc': 'Bold, oversized modern tech-editorial — punchy gradients, chunky type, high-energy color blocks.'},
+    {'id': 'quarterly', 'name': 'The Quarterly', 'desc': 'Minimalist premium print magazine — warm cream palette, italic serif, generous whitespace.'},
+    {'id': 'bloom', 'name': 'The Bloom', 'desc': 'Vibrant, colorful lifestyle-magazine energy — pill badges, rounded photo cards, a floating overlap hero, waterfall grid.'},
+    {'id': 'circuit', 'name': 'The Circuit', 'desc': 'Clean AI-native dark UI — a terminal-window hero, glowing teal accents used sparingly, a dashboard-style indexed grid.'},
+    {'id': 'mission', 'name': 'Mission Control', 'desc': 'Futuristic AI command-center HUD — scanline texture, glowing cyan/amber telemetry panels, bracketed viewscreen hero, pulsing live indicator.'},
+    {'id': 'halo', 'name': 'The Halo', 'desc': 'Same robotic HUD language as Mission Control, in a clean light theme — crisp blue-bordered panels, bracketed viewscreen hero, pulsing live badge.'},
+    {'id': 'digital', 'name': 'Digital Era', 'desc': 'A modern AI newsroom — aurora light, geometric type, luminous glass panels, and a live signal across every desk. Built for the digital age.'},
+    ] %}
+    <div class="tpl-option {{ 'is-active' if (settings.magazine_template or 'slate') == tpl.id else '' }}">
+        <div class="tpl-frame">
+            <div class="tpl-swatch template-{{ tpl.id }}"
+                style="background: var(--bg-main); color: var(--text-main);">
+                <div class="sw-title" style="font-family: var(--font-serif);">NASSER AI NEWS</div>
+                <div class="sw-hero hero-card">
+                    <div class="sw-hero-img hero-visual"></div>
+                    <div class="sw-hero-content hero-content">
+                        <div class="hero-label"
+                            style="display:inline-block; padding: 0.4rem 0.8rem; margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; font-weight: 800;">
+                            Top Story</div>
+                        <div class="hero-title" style="font-size: 2rem; font-weight: 800; line-height: 1.15;">The
+                            future of agentic AI is arriving faster than anyone expected</div>
+                    </div>
+                </div>
+                <div class="sw-grid">
+                    <div class="secondary-card">
+                        <div class="sw-card-img card-image secondary-img"></div>
+                        <div class="sw-card-body">
+                            <div class="secondary-title" style="font-size: 1.1rem;">New model beats benchmarks</div>
+                        </div>
+                    </div>
+                    <div class="secondary-card">
+                        <div class="sw-card-img card-image secondary-img"></div>
+                        <div class="sw-card-body">
+                            <div class="secondary-title" style="font-size: 1.1rem;">Startups race to ship copilots
+                            </div>
+                        </div>
+                    </div>
+                    <div class="secondary-card">
+                        <div class="sw-card-img card-image secondary-img"></div>
+                        <div class="sw-card-body">
+                            <div class="secondary-title" style="font-size: 1.1rem;">Regulators eye new AI rules</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tpl-body">
+            <div class="tpl-name">{{ tpl.name }}{% if (settings.magazine_template or 'slate') == tpl.id %} <span
+                    style="color: var(--accent-primary); font-size: 0.9rem;">✓ Active</span>{% endif %}</div>
+            <div class="tpl-desc">{{ tpl.desc }}</div>
+            <form method="POST" action="{{ url_for('select_template') }}">
+                <input type="hidden" name="template" value="{{ tpl.id }}">
+                <button type="submit" class="btn {{ 'btn-secondary' if (settings.magazine_template or 'slate') == tpl.id else 'btn-primary' }}"
+                    style="width: 100%; justify-content: center;" {% if (settings.magazine_template or 'slate' )==tpl.id
+                    %}disabled{% endif %}>
+                    {{ 'Currently Active' if (settings.magazine_template or 'slate') == tpl.id else 'Use This Template' }}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

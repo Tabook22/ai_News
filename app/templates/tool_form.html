@@ -1,0 +1,388 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .tool-form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2.5rem;
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    .field-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .assist-box {
+        background: rgba(56, 189, 248, 0.06);
+        border: 1px dashed var(--accent-primary);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin: 1.5rem 0 2rem;
+    }
+
+    .assist-box textarea {
+        min-height: 100px;
+    }
+
+    .current-logo {
+        width: 90px;
+        height: 90px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin-top: 0.5rem;
+    }
+
+    .related-list {
+        max-height: 260px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.75rem;
+        background: var(--bg-main);
+    }
+
+    .related-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.45rem 0.25rem;
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .related-item:last-child {
+        border-bottom: none;
+    }
+
+    .related-item input {
+        width: auto;
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1>{% if mode == 'edit' %}✏️ Edit Tool{% else %}🧰 Add a Tool{% endif %}</h1>
+    <a href="{{ url_for('tools_list') }}" class="btn btn-secondary">← Back to Directory</a>
+</div>
+
+<div class="tool-form-card">
+    <form method="POST" enctype="multipart/form-data" id="tool-form">
+
+        <div class="assist-box">
+            <label style="margin-bottom: 0.5rem;">🧠 AI Assist — draft a description (optional)</label>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 0.75rem;">
+                Add the name and category below, optionally paste a few notes here, then draft an
+                educational description in both languages.
+            </p>
+            <textarea id="reference_notes" placeholder="Optional: paste notes about this tool for reference..."></textarea>
+            <button type="button" class="btn btn-secondary" style="margin-top: 0.75rem;" onclick="draftDescription()">
+                ✨ Draft Description
+            </button>
+            <span id="assist-status" style="margin-left: 1rem; font-size: 0.85rem; color: var(--text-muted);"></span>
+        </div>
+
+        <div class="form-group">
+            <label>Name *</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" name="name" id="name_en" required value="{{ item.name if item else '' }}"
+                    placeholder="e.g. ChatGPT" style="flex: 1;">
+                <button type="button" class="btn-icon" id="translate-name-btn" title="Translate to Arabic">🌐 ← ع</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Name (Arabic)</label>
+            <input type="text" name="name_ar" id="name_ar" dir="rtl" style="font-family: var(--font-ar); text-align: right;"
+                value="{{ item.name_ar if item else '' }}">
+        </div>
+
+        <div class="field-pair" style="margin-bottom: 1.5rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Category</label>
+                <select name="category" id="category">
+                    {% for key, label in categories %}
+                    <option value="{{ key }}" {% if item and item.category==key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Status</label>
+                <select name="is_published">
+                    <option value="1" {% if not item or item.is_published %}selected{% endif %}>✅ Published</option>
+                    <option value="" {% if item and not item.is_published %}selected{% endif %}>📝 Hidden</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Official Link</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="url" name="official_url" id="official_url"
+                    placeholder="https://..." style="flex: 1;" value="{{ item.official_url if item else '' }}">
+                <button type="button" class="btn btn-secondary" style="white-space: nowrap;"
+                    onclick="fetchLogo()">🔗 Fetch Logo</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Logo</label>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin: -0.25rem 0 0.5rem;">
+                Click "Fetch Logo" above to try grabbing one from the official link, paste a direct image link
+                below, or upload your own.
+            </p>
+            <span id="fetch-logo-status" style="font-size: 0.8rem; color: var(--text-muted); display:block; margin-bottom: 0.5rem;"></span>
+
+            <div class="file-drop-zone" onclick="document.querySelector('input[name=logo]').click()">
+                <span id="logo-label">🖼️ Click to upload a logo</span>
+                <input type="file" name="logo" accept="image/*" style="display:none;"
+                    onchange="document.getElementById('logo-label').innerText = '✅ ' + this.files[0].name; document.getElementById('logo-preview').style.display='none';">
+            </div>
+
+            <div style="margin-top: 0.75rem;">
+                <label style="font-size: 0.78rem;">Or paste a direct image link</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="url" id="direct-logo-url" placeholder="https://.../logo.png" style="flex: 1;">
+                    <button type="button" class="btn btn-secondary" style="white-space: nowrap;"
+                        onclick="useDirectLogoUrl()">Use This</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="fetched_logo" id="fetched_logo" value="">
+            {% if item and item.logo %}
+            <img src="{{ item.logo }}" class="current-logo" id="logo-preview">
+            {% else %}
+            <img src="" class="current-logo" id="logo-preview" style="display:none;">
+            {% endif %}
+        </div>
+
+        <div class="field-pair">
+            <div class="form-group">
+                <label>Description (English)</label>
+                <textarea name="description_en" id="description_en" rows="4"
+                    placeholder="What is this tool, and what's it for?">{{ item.description_en if item else '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Description (Arabic)</label>
+                <textarea name="description_ar" id="description_ar" rows="4" dir="rtl"
+                    style="font-family: var(--font-ar); text-align: right;"
+                    placeholder="ما هي هذه الأداة؟">{{ item.description_ar if item else '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="field-pair">
+            <div class="form-group">
+                <label>Short line (English)</label>
+                <input type="text" name="tagline_en" maxlength="200"
+                    placeholder="What it is in one sentence." value="{{ item.tagline_en if item else '' }}">
+            </div>
+            <div class="form-group">
+                <label>Short line (Arabic)</label>
+                <input type="text" name="tagline_ar" maxlength="200" dir="rtl"
+                    style="font-family: var(--font-ar); text-align: right;"
+                    placeholder="جملة واحدة عن الأداة." value="{{ item.tagline_ar if item else '' }}">
+            </div>
+        </div>
+
+        <div class="field-pair">
+            <div class="form-group">
+                <label>Pricing</label>
+                <select name="pricing">
+                    <option value="free" {% if item and item.pricing == 'free' %}selected{% endif %}>Free</option>
+                    <option value="freemium" {% if not item or item.pricing == 'freemium' %}selected{% endif %}>Free tier</option>
+                    <option value="paid" {% if item and item.pricing == 'paid' %}selected{% endif %}>Paid</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Best for</label>
+                <input type="text" name="best_for" maxlength="200"
+                    placeholder="e.g. Literature reviews" value="{{ item.best_for if item else '' }}">
+            </div>
+        </div>
+
+        <div class="field-pair">
+            <div class="form-group">
+                <label>Platforms (comma separated)</label>
+                <input type="text" name="platforms" maxlength="200"
+                    placeholder="Web, iOS, Android" value="{{ item.platforms|join(', ') if item and item.platforms else 'Web' }}">
+            </div>
+            <div class="form-group">
+                <label>Sort order</label>
+                <input type="number" name="sort_order" min="0" step="1" value="{{ item.sort_order if item else 0 }}">
+            </div>
+        </div>
+
+        <div class="field-pair">
+            <div class="form-group">
+                <label>Nasser AI score (0–5)</label>
+                <input type="number" name="rating" min="0" max="5" step="0.1"
+                    value="{{ item.rating if item and item.rating else 0 }}">
+            </div>
+            <div class="form-group">
+                <label>Reference URL for the score</label>
+                <input type="url" name="rating_source" maxlength="300"
+                    placeholder="https://www.g2.com/… or official docs"
+                    value="{{ item.rating_source if item else '' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Why this score</label>
+            <textarea name="rating_note" rows="2" maxlength="300"
+                placeholder="One sentence on the strength and the limitation.">{{ item.rating_note if item else '' }}</textarea>
+        </div>
+
+        <div class="form-group" style="display:flex; gap:1.25rem; flex-wrap:wrap; align-items:center; padding:0.75rem 0;">
+            <label style="display:flex; align-items:center; gap:0.5rem; font-weight:600; margin:0;">
+                <input type="checkbox" name="free_tier" value="1" {% if not item or item.free_tier %}checked{% endif %}>
+                Has a free tier
+            </label>
+            <label style="display:flex; align-items:center; gap:0.5rem; font-weight:600; margin:0;">
+                <input type="checkbox" name="arabic_support" value="1" {% if item and item.arabic_support %}checked{% endif %}>
+                Works in Arabic
+            </label>
+            <label style="display:flex; align-items:center; gap:0.5rem; font-weight:600; margin:0;">
+                <input type="checkbox" name="featured" value="1" {% if item and item.featured %}checked{% endif %}>
+                Featured pick
+            </label>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <label>Related Coverage — link articles this tool has appeared in</label>
+            <div class="related-list">
+                {% for article in recent_articles %}
+                <label class="related-item">
+                    <input type="checkbox" name="related_articles" value="{{ article.id }}"
+                        {% if item and article.id in item.related_article_ids %}checked{% endif %}>
+                    <span>{{ article.title }}</span>
+                </label>
+                {% else %}
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">No articles yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; padding: 1rem;">
+            {% if mode == 'edit' %}Save Changes{% else %}Add Tool{% endif %}
+        </button>
+    </form>
+</div>
+
+<script>
+    function draftDescription() {
+        const name = document.getElementById('name_en').value;
+        const category = document.getElementById('category').value;
+        const notes = document.getElementById('reference_notes').value;
+        const status = document.getElementById('assist-status');
+
+        if (!name) { alert('Add a name first.'); return; }
+
+        status.textContent = 'Drafting…';
+        fetch('/api/tools/draft_description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, category: category, reference_notes: notes })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('description_en').value = data.description_en || '';
+                    document.getElementById('description_ar').value = data.description_ar || '';
+                    status.textContent = '✅ Drafted — review before saving.';
+                } else {
+                    status.textContent = '';
+                    alert(data.message || 'Failed to draft description.');
+                }
+            })
+            .catch(() => {
+                status.textContent = '';
+                alert('Network error.');
+            });
+    }
+
+    document.getElementById('translate-name-btn').addEventListener('click', function () {
+        const nameEn = document.getElementById('name_en').value.trim();
+        if (!nameEn) { alert('Type the name first.'); return; }
+        fetch('/api/reels/translate_title', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: nameEn, target: 'ar' })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('name_ar').value = data.translated;
+                } else {
+                    alert(data.message || 'Translation failed.');
+                }
+            })
+            .catch(() => alert('Network error.'));
+    });
+
+    function applyFetchedLogo(url) {
+        document.getElementById('fetched_logo').value = url;
+        const preview = document.getElementById('logo-preview');
+        preview.src = url;
+        preview.style.display = 'block';
+        document.getElementById('logo-label').innerText = '🖼️ Click to upload a logo';
+    }
+
+    function fetchLogo() {
+        const url = document.getElementById('official_url').value.trim();
+        const status = document.getElementById('fetch-logo-status');
+        if (!url) { alert('Paste the official link first.'); return; }
+
+        status.textContent = 'Fetching logo…';
+        fetch('/api/reels/fetch_thumbnail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ source_url: url })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    applyFetchedLogo(data.thumbnail_url);
+                    status.textContent = '✅ Logo fetched.';
+                } else {
+                    status.textContent = '';
+                    alert(data.message || 'Could not fetch a logo. Try uploading one instead.');
+                }
+            })
+            .catch(() => {
+                status.textContent = '';
+                alert('Network error.');
+            });
+    }
+
+    function useDirectLogoUrl() {
+        const input = document.getElementById('direct-logo-url');
+        const url = input.value.trim();
+        const status = document.getElementById('fetch-logo-status');
+        if (!url) { alert('Paste an image link first.'); return; }
+
+        status.textContent = 'Fetching that image…';
+        fetch('/api/reels/fetch_thumbnail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ direct_image_url: url })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    applyFetchedLogo(data.thumbnail_url);
+                    status.textContent = '✅ Logo set from your link.';
+                } else {
+                    status.textContent = '';
+                    alert(data.message || 'Could not use that image link.');
+                }
+            })
+            .catch(() => {
+                status.textContent = '';
+                alert('Network error.');
+            });
+    }
+</script>
+{% endblock %}

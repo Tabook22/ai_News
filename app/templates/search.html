@@ -1,0 +1,584 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="search-page-header" style="margin-bottom: 3rem;">
+    <h1 class="magazine-title" style="font-size: 3rem; margin-bottom: 0.5rem; text-align: start;">{{ A('discovery') }}</h1>
+    <p class="subtitle" style="font-size: 1.1rem;">{{ A('disc_dek') }}</p>
+</div>
+
+<!-- Search Controls Container -->
+<div class="search-controls"
+    style="background: var(--bg-card); padding: 2rem; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 3rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+
+    <div class="tabs"
+        style="display: flex; gap: 2rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; padding-bottom: 1rem;">
+        <button onclick="switchMode('live')" id="tab-live" class="tab-btn"
+            style="background: none; border: none; font-size: 1.1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding-bottom: 0.5rem; transition: 0.2s;">
+            🌍 {{ A('live_web') }}
+        </button>
+        <button onclick="switchMode('archive')" id="tab-archive" class="tab-btn"
+            style="background: none; border: none; font-size: 1.1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding-bottom: 0.5rem; transition: 0.2s;">
+            💾 {{ A('local_archive') }}
+        </button>
+    </div>
+
+    <!-- Live Search Form -->
+    <div id="section-live">
+        <form id="liveSearchForm" action="{{ url_for('search_page') }}" method="get"
+            style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <input type="hidden" name="mode" value="live">
+            <div style="flex: 1; min-width: 300px; position: relative;">
+                <input type="text" name="q" value="{{ query if is_live else '' }}"
+                    placeholder="{{ A('search_ph') }}"
+                    style="width: 100%; padding: 1rem 1.2rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 1.1rem;">
+            </div>
+
+            <div class="engine-select"
+                style="display: flex; align-items: center; gap: 1rem; background: var(--bg-main); padding: 0 1rem; border-radius: 8px; border: 1px solid var(--border-color); height: 54px;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="radio" name="engine" value="google" {{ 'checked' if engine=='google' or not engine
+                        else '' }}>
+                    <span style="font-weight: 500;">Google</span>
+                </label>
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="radio" name="engine" value="ddg" {{ 'checked' if engine=='ddg' else '' }}>
+                    <span style="font-weight: 500;">DuckDuckGo</span>
+                </label>
+            </div>
+
+            <input type="hidden" name="t" id="timeFilterInput" value="{{ time_filter or 'week' }}">
+            <input type="hidden" name="type" id="typeFilterInput" value="{{ request.args.get('type', 'mixed') }}">
+            <button type="submit" class="btn btn-primary"
+                style="padding: 0 2rem; font-size: 1.1rem; height: 54px;">{{ A('search_btn') }}</button>
+        </form>
+
+        <!-- Time Filter Bar -->
+        <!-- Time Filter Bar -->
+        <div class="time-filters"
+            style="margin-top: 1.5rem; display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+
+            <!-- Video Toggle -->
+            {% set is_video = request.args.get('type') == 'video' %}
+            <button id="videoToggleBtn" onclick="toggleVideoOnly()"
+                class="filter-pill {{ 'active' if is_video else '' }}"
+                style="background: {{ '#ef4444' if is_video else 'var(--bg-main)' }}; 
+                        color: {{ '#fff' if is_video else 'var(--text-muted)' }}; 
+                        border: 1px solid {{ '#ef4444' if is_video else 'var(--border-color)' }};
+                        padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem;">
+                <span>▶</span> {{ A('videos_only') }}
+            </button>
+
+            <div style="width: 1px; background: var(--border-color); margin: 0 0.5rem;"></div>
+
+            {% set filters = [('today', A('f_today')), ('week', A('f_week')), ('month', A('f_month')), ('year', A('f_year')),
+            ('all', A('f_all_time'))] %}
+            {% for val, label in filters %}
+            <button onclick="applyTimeFilter('{{ val }}')"
+                class="filter-pill {{ 'active' if val == (time_filter or 'week') else '' }}" data-val="{{ val }}"
+                style="background: {{ 'var(--accent-primary)' if val == (time_filter or 'week') else 'var(--bg-main)' }}; 
+                        color: {{ '#fff' if val == (time_filter or 'week') else 'var(--text-muted)' }}; 
+                        border: 1px solid {{ 'var(--accent-primary)' if val == (time_filter or 'week') else 'var(--border-color)' }};
+                        padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;">
+                {{ label }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Archive Search Form -->
+    <div id="section-archive" style="display: none;">
+        <form action="{{ url_for('search_page') }}" method="get"
+            style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 300px;">
+                <input type="text" name="q" value="{{ query if not is_live else '' }}"
+                    placeholder="{{ A('filter_ph') }}"
+                    style="width: 100%; padding: 1rem 1.2rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 1.1rem;">
+            </div>
+
+            <div class="filter-group"
+                style="display: flex; gap: 1rem; background: var(--bg-main); padding: 0.8rem 1.2rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                <label style="cursor: pointer; color: var(--text-muted);"><input type="radio" name="time" value="all"
+                        {{ 'checked' if time_filter=='all' or not time_filter else '' }}> {{ A('f_all') }}</label>
+                <label style="cursor: pointer; color: var(--text-muted);"><input type="radio" name="time" value="today"
+                        {{ 'checked' if time_filter=='today' else '' }}> {{ A('f_today') }}</label>
+                <label
+                    style="cursor: pointer; color: var(--text-muted); margin-inline-start:10px; border-inline-start:1px solid #333; padding-inline-start:10px;"><input
+                        type="checkbox" name="lang" value="ar" {{ 'checked' if lang=='ar' else '' }}> {{ A('f_arabic') }}</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="padding: 0 2rem; font-size: 1.1rem;">{{ A('filter_btn') }}</button>
+        </form>
+    </div>
+
+</div>
+
+<!-- Manual Entry Toggle -->
+<div style="text-align: end; margin-bottom: 2rem;">
+    <button onclick="toggleManual()" class="btn"
+        style="background: transparent; border: 1px dashed var(--accent-primary); color: var(--accent-primary); padding: 0.5rem 1rem;">
+        + {{ A('add_av') }}
+    </button>
+</div>
+
+<!-- Manual Entry Form (Hidden) -->
+<div id="manualForm"
+    style="display: none; background: var(--bg-card); padding: 2rem; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 3rem;">
+    <h3 style="margin-top: 0;">{{ A('add_by_hand') }}</h3>
+    <div style="display: flex; gap: 1.5rem; margin-bottom: 1rem;">
+        <label style="display: flex; align-items: center; gap: 0.4rem; text-transform: none; color: var(--text-main); cursor: pointer;">
+            <input type="radio" name="m_kind" value="article" checked onchange="setManualKind('article')"> {{ A('kind_article') }}
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.4rem; text-transform: none; color: var(--text-main); cursor: pointer;">
+            <input type="radio" name="m_kind" value="video" onchange="setManualKind('video')"> {{ A('kind_video') }}
+        </label>
+    </div>
+    <p id="m_hint" hidden style="color: var(--text-muted); margin: 0 0 1rem;">{{ A('m_hint') }}</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+            <label id="m_title_label">{{ A('title_req') }}</label>
+            <input type="text" id="m_title" placeholder="{{ A('article_title_ph') }}">
+        </div>
+        <div>
+            <label>{{ A('source_label') }}</label>
+            <input type="text" id="m_source" placeholder="{{ A('source_ph') }}">
+        </div>
+    </div>
+    <div style="margin-bottom: 1.5rem;">
+        <label id="m_url_label">{{ A('url_opt') }}</label>
+        <input type="text" id="m_url" placeholder="https://...">
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+            <label>{{ A('sum_en') }}</label>
+            <textarea id="m_summary_en" rows="3" dir="ltr"></textarea>
+        </div>
+        <div>
+            <label>{{ A('sum_ar') }}</label>
+            <textarea id="m_summary_ar" rows="3" dir="rtl"></textarea>
+        </div>
+    </div>
+    {% include '_story_editor.html' %}
+    <p class="story-editor-note">{{ A('details_hint') }}</p>
+    {% if admin_ar %}
+    <div class="story-editor-wrap">
+        <label>{{ A('details_ar') }}</label>
+        <textarea id="m_full_ar"></textarea>
+    </div>
+    <div class="story-editor-wrap">
+        <label>{{ A('details_en') }}</label>
+        <textarea id="m_full_en"></textarea>
+    </div>
+    {% else %}
+    <div class="story-editor-wrap">
+        <label>{{ A('details_en') }}</label>
+        <textarea id="m_full_en"></textarea>
+    </div>
+    <div class="story-editor-wrap">
+        <label>{{ A('details_ar') }}</label>
+        <textarea id="m_full_ar"></textarea>
+    </div>
+    {% endif %}
+    <div style="margin-bottom: 1.5rem;">
+        <label>{{ A('image_label') }}</label>
+        <input type="text" id="m_image" placeholder="{{ A('image_ph') }}" style="margin-bottom: 0.5rem;">
+        <input type="file" id="m_image_file">
+    </div>
+    <button onclick="submitManual()" class="btn btn-primary">{{ A('save_archive') }}</button>
+</div>
+
+<!-- RESULTS SECTION -->
+<div id="live-results-section" style="display: none;">
+    <h3
+        style="margin-bottom: 1.5rem; color: var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+        <span>{{ A('global_results') }} <span style="font-weight: 400; font-size: 0.9rem;">({{ A('click_add') }})</span></span>
+        <span id="loadingIndicator" style="display:none; font-size: 0.9rem; color: var(--accent-primary);">{{ A('running_search') }}</span>
+    </h3>
+
+    <div class="news-grid" id="searchResultsContainer">
+        {% if is_live %}
+        {% include 'components/search_results.html' %}
+        {% endif %}
+    </div>
+</div>
+
+<div id="archive-results-section" style="display: none;">
+    <!-- ARCHIVE RESULTS LIST -->
+    {% if not is_live and results %}
+    <div
+        style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-hover); border-bottom: 1px solid var(--border-color);">
+                    <th style="text-align: start; padding: 1rem; width: 60%; color: var(--text-muted);">{{ A('col_article') }}</th>
+                    <th style="text-align: start; padding: 1rem; color: var(--text-muted);">{{ A('col_added') }}</th>
+                    <th style="padding: 1rem; color: var(--text-muted); text-align: center;">{{ A('col_action') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in results %}
+                <tr id="row-{{ loop.index }}" style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 1rem; vertical-align: top;">
+                        <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.3rem;">
+                            <a href="{{ url_for('edit_news', item_id=item.id) }}" style="color: var(--text-main);">{{ item.title }}</a>
+                            {% if item.url and not (item.url or '').startswith('manual-') %}
+                            <a href="{{ item.url }}" target="_blank" rel="noopener" title="{{ A('open_source') }}" style="margin-inline-start: 0.4rem; font-size: 0.85rem;">↗</a>
+                            {% endif %}
+                        </div>
+                        {% if item.title_ar %}
+                        <div
+                            style="font-family: var(--font-ar); color: var(--text-muted); direction: rtl; font-size: 1rem;">
+                            {{ item.title_ar }}</div>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; color: var(--text-muted); font-family: monospace;">
+                        {{ item.timestamp[:10] if item.timestamp else A('na') }}
+                    </td>
+                    <td style="padding: 1rem; text-align: center; white-space: nowrap;">
+                        <a href="{{ url_for('edit_news', item_id=item.id) }}" class="btn btn-primary"
+                            style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">{{ A('edit') }}</a>
+                        <button onclick="deleteItem('{{ item.url }}', 'row-{{ loop.index }}')" class="btn-icon danger"
+                            title="{{ A('delete_title') }}" style="border:none; cursor:pointer; background:none; font-size:1.2rem; margin-inline-start: 0.4rem;">
+                            🗑
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif not is_live and query %}
+    <div
+        style="text-align: center; padding: 4rem; opacity: 0.7; border: 2px dashed var(--border-color); border-radius: 12px;">
+        {{ A('no_archive') }}</div>
+    {% endif %}
+</div>
+
+<!-- SCRIPTS -->
+<script>
+    const SE = {{ {
+        'adding': A('se_adding'),
+        'fail_add': A('se_fail_add'),
+        'already': A('se_already'),
+        'added': A('se_added'),
+        'add_open': A('se_add_open'),
+        'failed': A('se_failed'),
+        'title_req': A('title_req'),
+        'title_plain': A('title_plain'),
+        'yt_link': A('yt_link'),
+        'url_opt': A('url_opt'),
+        'filled_link': A('filled_link'),
+        'article_title_ph': A('article_title_ph'),
+        'hint': A('m_hint'),
+        'reading': A('se_reading'),
+        'unread': A('se_unread'),
+        'filled': A('se_filled'),
+        'yt_down': A('se_yt_down'),
+        'paste': A('se_paste'),
+        'need_title': A('se_need_title'),
+        'saved': A('se_saved'),
+        'edit': A('edit'),
+        'nosave': A('se_nosave'),
+        'delete': A('se_delete')
+    }|tojson }};
+
+    // Tab Switching Logic
+    function switchMode(mode) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.style.borderBottom = 'none';
+            btn.style.color = 'var(--text-muted)';
+        });
+
+        const activeBtn = document.getElementById('tab-' + mode);
+        activeBtn.style.borderBottom = '2px solid var(--accent-primary)';
+        activeBtn.style.color = 'var(--text-main)';
+
+        document.getElementById('section-live').style.display = (mode === 'live') ? 'block' : 'none';
+        document.getElementById('section-archive').style.display = (mode === 'archive') ? 'block' : 'none';
+
+        document.getElementById('live-results-section').style.display = (mode === 'live') ? 'block' : 'none';
+        document.getElementById('archive-results-section').style.display = (mode === 'archive') ? 'block' : 'none';
+
+        // Update URL to reflect mode without reloading if just switching UI, 
+        // but if we want to be strict, we might want to reload? 
+        // For now, let's just update the URL state so refresh works.
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('mode', mode);
+        const newUrl = window.location.pathname + '?' + urlParams.toString();
+        window.history.pushState({ path: newUrl }, '', newUrl);
+    }
+
+    // Initialize text based on current mode
+    {% if mode == 'live' %}
+    switchMode('live');
+    {% else %}
+    switchMode('archive');
+    {% endif %}
+
+    // --- TEMPORAL & CONTENT FILTER LOGIC (AJAX) ---
+    async function applyTimeFilter(filterVal) {
+        updateFilterState('t', filterVal);
+        performAjaxSearch();
+    }
+
+    async function toggleVideoOnly() {
+        const btn = document.getElementById('videoToggleBtn');
+        const isVideo = btn.classList.contains('active');
+
+        // Toggle State
+        const newState = isVideo ? 'mixed' : 'video';
+
+        // Update UI
+        if (!isVideo) {
+            btn.classList.add('active');
+            btn.style.background = '#ef4444'; // Youtube Red
+            btn.style.color = '#fff';
+            btn.style.borderColor = '#ef4444';
+        } else {
+            btn.classList.remove('active');
+            btn.style.background = 'var(--bg-main)';
+            btn.style.color = 'var(--text-muted)';
+            btn.style.borderColor = 'var(--border-color)';
+        }
+
+        // Update URL State
+        updateFilterState('type', newState);
+        document.getElementById('typeFilterInput').value = newState;
+        performAjaxSearch();
+    }
+
+    function updateFilterState(key, val) {
+        // UI Update for Time Filters
+        if (key === 't') {
+            document.querySelectorAll('.filter-pill').forEach(btn => {
+                btn.style.background = 'var(--bg-main)';
+                btn.style.color = 'var(--text-muted)';
+                btn.style.borderColor = 'var(--border-color)';
+
+                if (btn.dataset.val === val) {
+                    btn.classList.add('active');
+                    btn.style.background = 'var(--accent-primary)';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = 'var(--accent-primary)';
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            document.getElementById('timeFilterInput').value = val;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set(key, val);
+        const newUrl = window.location.pathname + '?' + urlParams.toString();
+        window.history.pushState({ path: newUrl }, '', newUrl);
+    }
+
+    document.addEventListener('submit', async function (event) {
+        const form = event.target;
+        if (!form.classList || !form.classList.contains('js-add-result')) return;
+        event.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        if (!button || button.disabled) return;
+        const original = button.textContent;
+        button.disabled = true;
+        button.textContent = SE.adding;
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            if (!response.ok || data.status !== 'success') {
+                button.disabled = false;
+                button.textContent = original;
+                alert(data.message || SE.fail_add);
+                return;
+            }
+            if (data.edit_url) {
+                const link = document.createElement('a');
+                link.href = data.edit_url;
+                link.className = 'btn btn-primary';
+                link.style.cssText = 'padding: 0.5rem 1rem; font-size: 0.8rem;';
+                link.textContent = SE.edit;
+                button.replaceWith(link);
+            } else {
+                button.textContent = data.already ? SE.already : SE.added;
+            }
+        } catch (err) {
+            button.disabled = false;
+            button.textContent = original;
+            alert(SE.add_open);
+        }
+    });
+
+    async function performAjaxSearch() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('q');
+        if (!query) return;
+
+        const engine = urlParams.get('engine') || 'google';
+        const t = urlParams.get('t') || 'week';
+        const type = urlParams.get('type') || 'mixed';
+
+        const loading = document.getElementById('loadingIndicator');
+        const container = document.getElementById('searchResultsContainer');
+
+        loading.style.display = 'inline';
+        container.style.opacity = '0.5';
+
+        try {
+            const response = await fetch(`/search?mode=live&q=${encodeURIComponent(query)}&engine=${engine}&t=${t}&type=${type}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const html = await response.text();
+            container.innerHTML = html;
+        } catch (err) {
+            console.error(err);
+            alert(SE.failed);
+        } finally {
+            loading.style.display = 'none';
+            container.style.opacity = '1';
+        }
+    }
+
+    // Manual Form Logic
+    let manualEditorsReady = false;
+    function toggleManual() {
+        const form = document.getElementById('manualForm');
+        const open = form.style.display === 'none';
+        form.style.display = open ? 'block' : 'none';
+        if (open && !manualEditorsReady && typeof mountStoryEditor === 'function') {
+            mountStoryEditor('m_full_ar', { rtl: true, height: '320px' });
+            mountStoryEditor('m_full_en', { rtl: false, height: '320px' });
+            manualEditorsReady = true;
+        }
+    }
+
+    function manualKind() {
+        const picked = document.querySelector('input[name="m_kind"]:checked');
+        return picked ? picked.value : 'article';
+    }
+
+    function setManualKind(kind) {
+        const titleLabel = document.getElementById('m_title_label');
+        const urlLabel = document.getElementById('m_url_label');
+        const hint = document.getElementById('m_hint');
+        const title = document.getElementById('m_title');
+        const url = document.getElementById('m_url');
+        if (kind === 'video') {
+            titleLabel.textContent = SE.title_plain;
+            urlLabel.textContent = SE.yt_link;
+            title.placeholder = SE.filled_link;
+            url.placeholder = 'https://www.youtube.com/watch?v=...';
+            hint.hidden = false;
+        } else {
+            titleLabel.textContent = SE.title_req;
+            urlLabel.textContent = SE.url_opt;
+            title.placeholder = SE.article_title_ph;
+            url.placeholder = 'https://...';
+            hint.hidden = true;
+        }
+    }
+
+    let lastFetchedUrl = '';
+    let previewTimer = null;
+
+    async function fillFromYouTube(url) {
+        const hint = document.getElementById('m_hint');
+        if (!url || !/youtu\.?be|youtube\.com/i.test(url)) {
+            hint.textContent = SE.hint;
+            return false;
+        }
+        if (url === lastFetchedUrl) return true;
+        hint.textContent = SE.reading;
+        try {
+            const res = await fetch('/api/youtube/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+            const data = await res.json();
+            if (data.status !== 'success') {
+                hint.textContent = data.message || SE.unread;
+                return false;
+            }
+            document.getElementById('m_title').value = data.title || '';
+            document.getElementById('m_source').value = data.source || 'YouTube';
+            document.getElementById('m_summary_en').value = data.summary || '';
+            document.getElementById('m_image').value = data.image || '';
+            lastFetchedUrl = url;
+            hint.textContent = SE.filled;
+            return true;
+        } catch (e) {
+            hint.textContent = SE.yt_down;
+            return false;
+        }
+    }
+
+    document.getElementById('m_url').addEventListener('input', function () {
+        const url = this.value.trim();
+        if (/youtu\.?be|youtube\.com/i.test(url)) {
+            document.querySelector('input[name="m_kind"][value="video"]').checked = true;
+            setManualKind('video');
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(function () { fillFromYouTube(url); }, 400);
+        }
+    });
+
+    async function submitManual() {
+        const url = document.getElementById('m_url').value.trim();
+        const kind = (/youtu\.?be|youtube\.com/i.test(url)) ? 'video' : manualKind();
+        if (kind === 'video') {
+            document.querySelector('input[name="m_kind"][value="video"]').checked = true;
+            setManualKind('video');
+            if (!url) return alert(SE.paste);
+            await fillFromYouTube(url);
+        } else if (!document.getElementById('m_title').value.trim()) {
+            return alert(SE.need_title);
+        }
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('m_title').value);
+        formData.append('source', document.getElementById('m_source').value);
+        formData.append('url', url);
+        formData.append('summary_en', document.getElementById('m_summary_en').value);
+        formData.append('summary_ar', document.getElementById('m_summary_ar').value);
+        formData.append('full_content', typeof storyEditorHtml === 'function' ? storyEditorHtml('m_full_en') : '');
+        formData.append('full_content_ar', typeof storyEditorHtml === 'function' ? storyEditorHtml('m_full_ar') : '');
+        formData.append('image_url', document.getElementById('m_image').value);
+        formData.append('kind', kind);
+
+        const file = document.getElementById('m_image_file').files[0];
+        if (file) formData.append('image_file', file);
+
+        const button = document.querySelector('#manualForm .btn-primary');
+        button.disabled = true;
+        try {
+            const res = await fetch('/add_manual_news', { method: 'POST', body: formData });
+            const d = await res.json();
+            if (d.status === 'success') {
+                if (d.edit_url) window.location = d.edit_url;
+                else alert(d.already ? d.message : SE.saved);
+            } else {
+                alert(d.message || SE.nosave);
+            }
+        } catch (e) { alert(e); }
+        finally { button.disabled = false; }
+    }
+
+    async function deleteItem(url, rowId) {
+        if (!confirm(SE.delete)) return;
+        try {
+            const res = await fetch('/remove_item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+            const d = await res.json();
+            if (d.status === 'success') document.getElementById(rowId).remove();
+            else alert(d.message);
+        } catch (e) { console.error(e); }
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,591 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .subtitle {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin: 0.35rem 0 0;
+    }
+
+    /* --- Stats strip --- */
+    .dash-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 1.75rem 0 2.5rem;
+    }
+
+    .dash-stat {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 130px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .dash-stat-num {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1;
+    }
+
+    .dash-stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 600;
+    }
+
+    .dash-stat-hidden {
+        border-color: var(--accent-warning);
+        cursor: pointer;
+    }
+
+    .dash-stat-hidden:hover {
+        background: var(--bg-hover);
+        transform: translateY(-2px);
+    }
+
+    .dash-stat-hidden .dash-stat-num {
+        color: var(--accent-warning);
+    }
+
+    /* --- Section containers --- */
+    .dash-section {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.75rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .dash-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--section-accent, var(--border-color));
+    }
+
+    .dash-section-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .dash-section-count {
+        background: var(--bg-hover);
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+
+    .dash-empty-slot {
+        grid-column: 1 / -1;
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .dash-empty-slot a {
+        color: var(--accent-primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    /* --- Card polish --- */
+    .news-card {
+        position: relative;
+    }
+
+    .drag-handle-card {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(4px);
+        color: #fff;
+        cursor: grab;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .card-actions-split {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--border-color);
+    }
+
+    .card-actions-left {
+        display: flex;
+        gap: 0.35rem;
+    }
+
+    .live-toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .live-toggle-label {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 700;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px;
+        flex-shrink: 0;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        inset: 0;
+        background: var(--bg-hover);
+        border: 1px solid var(--border-color);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .slider::before {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        left: 2px;
+        top: 2px;
+        background: var(--text-muted);
+        border-radius: 50%;
+        transition: 0.2s;
+    }
+
+    .switch input:checked+.slider {
+        background: var(--accent-primary);
+        border-color: var(--accent-primary);
+    }
+
+    .switch input:checked+.slider::before {
+        transform: translateX(17px);
+        background: #fff;
+    }
+
+    .sortable-ghost {
+        opacity: 0.15;
+        background: var(--accent-primary);
+        border: 2px dashed var(--accent-secondary);
+    }
+
+    .news-grid {
+        min-height: 100px;
+    }
+
+    .dash-section .news-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: 1.25rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 1.4rem 0.5rem 1.8rem;
+        scroll-behavior: auto;
+        scrollbar-width: thin;
+    }
+
+    .dash-section .news-grid .news-card {
+        flex: 0 0 280px;
+        width: 280px;
+        height: auto;
+        transition: transform 0.28s ease, box-shadow 0.28s ease;
+    }
+
+    .dash-section .news-grid .news-card.is-zoomed {
+        transform: scale(1.06);
+        z-index: 4;
+        box-shadow: var(--shadow-md), var(--shadow-glow);
+        border-color: var(--accent-primary);
+    }
+
+    .dash-section .dash-empty-slot {
+        flex: 1 0 100%;
+    }
+
+    .dashboard-header .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        justify-content: flex-end;
+    }
+
+    .campus-composer input,
+    .campus-composer select,
+    .campus-composer textarea {
+        width: 100%;
+    }
+</style>
+
+<div class="dashboard-header">
+    <div>
+        <h1>{{ A('world') }}</h1>
+        <p class="subtitle">{{ date }} &bull; <span style="color: var(--accent-primary); font-weight: 700;">{{ total }}</span> {{ A('world_count') }}</p>
+    </div>
+    <div class="actions">
+        <form method="POST" action="{{ url_for('refresh_youtube_desk') }}" style="display: inline;">
+            <button type="submit" class="btn btn-secondary">{{ A('yt_refresh') }}</button>
+        </form>
+        <form method="POST" action="{{ url_for('run_daily_brief') }}" style="display: inline;">
+            <button type="submit" class="btn btn-secondary" title="{{ A('today_top_tip') }}">
+                🌍 {{ A('today_top') }}
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('classroom_note') }}" style="display: inline;">
+            <button type="submit" class="btn btn-secondary" title="{{ A('classroom_tip') }}">
+                {{ A('classroom') }}
+            </button>
+        </form>
+        <a href="{{ url_for('search_page') }}" class="btn btn-secondary">🔍 {{ A('discovery') }}</a>
+        <a href="{{ url_for('add_news') }}" class="btn btn-primary" style="box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);">
+            <span style="font-size: 1.2rem; margin-inline-end: 0.5rem;">+</span> {{ A('new_story') }}
+        </a>
+        <a href="{{ url_for('news_photos_admin') }}" class="btn btn-secondary">{{ A('np_nav') }}</a>
+        <a href="{{ url_for('magazine_view') }}" class="btn btn-secondary" target="_blank">
+            👁️ {{ A('view_magazine') }}
+        </a>
+    </div>
+</div>
+
+<div class="dash-stats">
+    <div class="dash-stat">
+        <span class="dash-stat-num">🌟 {{ grouped_items.top|length }}</span>
+        <span class="dash-stat-label">{{ A('top_highlights') }}</span>
+    </div>
+    <div class="dash-stat">
+        <span class="dash-stat-num">📰 {{ grouped_items.second|length }}</span>
+        <span class="dash-stat-label">{{ A('latest_news') }}</span>
+    </div>
+    <div class="dash-stat">
+        <span class="dash-stat-num">📌 {{ grouped_items.sidebar|length }}</span>
+        <span class="dash-stat-label">{{ A('sidebar') }}</span>
+    </div>
+    <div class="dash-stat">
+        <span class="dash-stat-num">📢 {{ grouped_items.ads|length }}</span>
+        <span class="dash-stat-label">{{ A('ads') }}</span>
+    </div>
+    {% if hidden_count %}
+    <a href="{{ url_for('archive_page', desk='world') }}" class="dash-stat dash-stat-hidden" title="Hidden world stories live in the Archive">
+        <span class="dash-stat-num">🙈 {{ hidden_count }}</span>
+        <span class="dash-stat-label">{{ A('hidden_archive') }}</span>
+    </a>
+    {% endif %}
+</div>
+
+{# --- MACRO: News Card --- #}
+{% macro render_card(item) %}
+<div class="card news-card" data-id="{{ item.id }}">
+    <!-- Drag Handle -->
+    <div class="drag-handle-card" title="Drag to reorder / move section">⠿</div>
+
+    <div class="card-image">
+        {% if item.image %}
+        <img src="{{ item.image }}" alt="News Image" loading="lazy">
+        {% else %}
+        <div class="placeholder-icon">📰</div>
+        {% endif %}
+        <span class="badge {{ 'top' if item.category == 'top' else 'sidebar' }}">
+            {{ item.category|upper if item.category else 'NEWS' }}
+        </span>
+    </div>
+
+    <div class="card-content">
+        <div class="meta">
+            <span class="source" style="font-weight: 600; color: var(--accent-secondary);">{{ item.source }}</span>
+            <span class="date">{{ item.timestamp[:10] }}</span>
+        </div>
+
+        <h3 class="title-en" style="margin-bottom: 0.2rem;">{{ item.title }}</h3>
+
+        {% if item.title_ar %}
+        <h3 class="title-ar" dir="rtl" style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1rem;">
+            {{ item.title_ar }}
+        </h3>
+        {% endif %}
+
+        <p
+            style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+            {{ item.summary if item.summary else 'No summary available.' }}
+        </p>
+
+        <div class="card-actions-split">
+            <div class="card-actions-left">
+                <a href="{{ url_for('edit_news', item_id=item.id) }}" class="btn btn-secondary" title="{{ A('edit') }}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">{{ A('edit') }}</a>
+
+                {% if item.video_id or item.content_format == 'video' %}
+                <button onclick="openVideoModal('{{ item.video_id }}')" class="btn-icon" title="Play Video"
+                    style="cursor: pointer; background: none; border: none; color: #ef4444; font-size: 1.2rem;">▶</button>
+                {% endif %}
+
+                <a href="{{ item.url }}" target="_blank" class="btn-icon" title="Original Link">🔗</a>
+                <form method="post" action="{{ url_for('archive_news', item_id=item.id) }}" style="display:inline; margin:0;"
+                    onsubmit="return confirm('Move this story to the archive? It leaves the live magazine and stays saved. You can publish it again from Archive.')">
+                    <button type="submit" class="btn-icon" title="Move to archive"
+                        style="background:none; border:none; cursor:pointer; font:inherit; padding:0;">🗄️</button>
+                </form>
+                <form method="post" action="{{ url_for('delete_news', item_id=item.id) }}" style="display:inline; margin:0;"
+                    onsubmit="return confirm('Delete this story permanently? It will be removed from the magazine and the database.')">
+                    <button type="submit" class="btn-icon danger" title="Delete permanently"
+                        style="background:none; border:none; cursor:pointer; font:inherit; padding:0;">🗑</button>
+                </form>
+            </div>
+
+            <div class="live-toggle-wrap">
+                <span class="live-toggle-label">Live</span>
+                <label class="switch">
+                    <input type="checkbox" onchange="togglePublish('{{ item.id }}', this)" {% if item.is_published
+                        %}checked{% endif %}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{# --- SECTIONS --- #}
+
+{% if total > 0 %}
+
+<!-- 1. TOP HIGHLIGHTS -->
+<section class="dash-section" style="--section-accent: var(--accent-warning);">
+    <div class="dash-section-header">
+        <h2>🌟 {{ A('top_highlights') }}</h2>
+        <span class="dash-section-count">{{ grouped_items.top|length }}</span>
+    </div>
+    <div class="news-grid" data-group="top" data-category="top">
+        {% for item in grouped_items.top %}
+        {{ render_card(item) }}
+        {% endfor %}
+        {% if not grouped_items.top %}
+        <div class="dash-empty-slot">Nothing here yet — drag a story in, or <a href="{{ url_for('add_news') }}">add
+                one</a>.</div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- 2. SECONDARY STORIES -->
+<section class="dash-section" style="--section-accent: var(--accent-secondary);">
+    <div class="dash-section-header">
+        <h2>📰 {{ A('latest_news') }}</h2>
+        <span class="dash-section-count">{{ grouped_items.second|length }}</span>
+    </div>
+    <div class="news-grid" data-group="second" data-category="second">
+        {% for item in grouped_items.second %}
+        {{ render_card(item) }}
+        {% endfor %}
+        {% if not grouped_items.second %}
+        <div class="dash-empty-slot">Nothing here yet — drag a story in, or <a href="{{ url_for('add_news') }}">add
+                one</a>.</div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- 3. SIDEBAR / GENERAL -->
+<section class="dash-section" style="--section-accent: var(--text-muted);">
+    <div class="dash-section-header">
+        <h2>📌 {{ A('sidebar') }}</h2>
+        <span class="dash-section-count">{{ grouped_items.sidebar|length }}</span>
+    </div>
+    <div class="news-grid" data-group="sidebar" data-category="sidebar">
+        {% for item in grouped_items.sidebar %}
+        {{ render_card(item) }}
+        {% endfor %}
+        {% if not grouped_items.sidebar %}
+        <div class="dash-empty-slot">Nothing here yet — drag a story in, or <a href="{{ url_for('add_news') }}">add
+                one</a>.</div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- 4. ADVERTISEMENTS -->
+{% if grouped_items.ads %}
+<section class="dash-section" style="--section-accent: #10b981;">
+    <div class="dash-section-header">
+        <h2>📢 {{ A('ads') }}</h2>
+        <span class="dash-section-count">{{ grouped_items.ads|length }}</span>
+    </div>
+    <div class="news-grid" data-group="ads" data-category="ads">
+        {% for item in grouped_items.ads %}
+        {{ render_card(item) }}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% else %}
+<div class="empty-state"
+    style="text-align: center; padding: 5rem 2rem; background: var(--bg-card); border-radius: 16px; border: 2px dashed var(--border-color); margin-top: 2rem;">
+    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;">📭</div>
+    <h2 style="margin-bottom: 0.5rem;">{{ A('no_stories') }}</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Your magazine is empty. Use the discovery engine to
+        find news.</p>
+    <a href="{{ url_for('search_page') }}" class="btn btn-primary">{{ A('go_discovery') }}</a>
+</div>
+{% endif %}
+
+
+<script>
+    function togglePublish(itemId, checkbox) {
+        fetch(`/toggle_publish/${itemId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Visual feedback
+                    const slider = checkbox.nextElementSibling;
+                    slider.style.boxShadow = "0 0 10px var(--accent-primary)";
+                    setTimeout(() => slider.style.boxShadow = "none", 500);
+                } else {
+                    alert('Error updating status');
+                    checkbox.checked = !checkbox.checked;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Network error');
+                checkbox.checked = !checkbox.checked;
+            });
+    }
+</script>
+<!-- SortableJS -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+    // Apply Sortable to ALL news grids
+    const grids = document.querySelectorAll('.news-grid');
+    grids.forEach(grid => {
+        // All grids belong to the same 'news' group to allow dragging between ANY section
+        const groupName = 'news';
+
+        new Sortable(grid, {
+            animation: 150,
+            handle: '.drag-handle-card',
+            ghostClass: 'sortable-ghost',
+            group: groupName,
+            delay: 120,
+            delayOnTouchOnly: true,
+            onStart: function () {
+                grid.classList.add('is-dragging');
+            },
+            onEnd: function (evt) {
+                grid.classList.remove('is-dragging');
+                const item = evt.item;
+                const newCategory = evt.to.dataset.category;
+                const itemId = item.getAttribute('data-id');
+
+                // 1. If moved to a different list, update category
+                if (evt.from !== evt.to) {
+                    fetch('/api/update_category', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ item_id: itemId, new_category: newCategory })
+                    }).then(res => res.json())
+                        .then(data => {
+                            if (data.status !== 'success') alert('Failed to move item');
+                        });
+                }
+
+                // 2. Always update global order (or local order if we wanted per-list)
+                // Since we use a global order ID system, we just send the new order of ALL visible cards relative to each other?
+                // Actually, our backend just takes a list of IDs and sets 0..N index.
+                // If we have multiple lists, we should grab IDs from ALL lists in visual order and send that.
+
+                const allCards = document.querySelectorAll('.news-card');
+                const orderedIds = Array.from(allCards).map(card => card.getAttribute('data-id'));
+
+                fetch('/api/reorder_news', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ordered_ids: orderedIds })
+                });
+            }
+        });
+    });
+
+    document.querySelectorAll('.dash-section .news-grid').forEach(grid => {
+        let paused = false;
+
+        function zoomCard(card) {
+            grid.querySelectorAll('.news-card.is-zoomed').forEach(other => {
+                if (other !== card) other.classList.remove('is-zoomed');
+            });
+            if (card) {
+                paused = true;
+                card.classList.add('is-zoomed');
+            }
+        }
+
+        function frame() {
+            const canScroll = grid.scrollWidth > grid.clientWidth + 12;
+            if (!paused && !grid.classList.contains('is-dragging') && canScroll) {
+                grid.scrollLeft += 0.45;
+                if (grid.scrollLeft >= grid.scrollWidth - grid.clientWidth - 1) {
+                    grid.scrollLeft = 0;
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+
+        grid.addEventListener('pointerover', (event) => {
+            zoomCard(event.target.closest('.news-card'));
+        });
+        grid.addEventListener('pointerdown', (event) => {
+            const card = event.target.closest('.news-card');
+            if (card) zoomCard(card);
+        });
+        grid.addEventListener('pointerleave', () => {
+            paused = false;
+            grid.querySelectorAll('.news-card.is-zoomed').forEach(card => card.classList.remove('is-zoomed'));
+        });
+    });
+</script>
+{% endblock %}

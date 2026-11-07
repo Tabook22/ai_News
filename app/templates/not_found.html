@@ -1,0 +1,21 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'الصفحة غير موجودة' if ar else 'Page not found' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_meta %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block content %}
+<div class="wrap">
+<section class="search-page">
+    <p class="eyebrow">{{ 'خطأ ٤٠٤' if ar else 'Error 404' }}</p>
+    <h1>{{ 'هذه الصفحة غير موجودة' if ar else 'This page is not here' }}</h1>
+    <p class="lede" style="max-width:56ch;">
+        {{ 'ربما نُقلت القصة أو أن الرابط قديم. العدد الحالي وكل القصص من هنا.' if ar else 'The story may have moved, or the link is old. The current issue and every story are one tap away.' }}
+    </p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:22px;">
+        <a class="btn btn-primary" href="{{ url_for('magazine_view') }}">{{ 'العدد الحالي' if ar else 'The current issue' }}</a>
+        <a class="btn btn-ghost" href="{{ url_for('find_stories') }}">{{ 'كل القصص' if ar else 'All stories' }}</a>
+    </div>
+</section>
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+{% macro cat_name(label) %}{{ label.split(' ', 1)[1] if ' ' in label else label }}{% endmacro %}
+{% set cat_ar = {'chatbot': 'المحادثة', 'coding': 'البرمجة', 'image': 'الصور', 'video': 'الفيديو', 'video_edit': 'المونتاج', 'presentations': 'العروض', 'writing': 'الكتابة', 'research': 'البحث', 'productivity': 'الإنتاجية', 'voice': 'الصوت', 'design': 'التصميم', 'education': 'التعلّم', 'agents': 'الوكلاء', 'platforms': 'المنصات', 'other': 'أخرى'} %}
+
+{% block page_title %}{{ (tool.name_ar or tool.name) if ar else tool.name }} — {{ 'دليل الأدوات' if ar else 'AI Tools Directory' }}{% endblock %}
+{% block page_desc %}{{ (tool.tagline_ar or tool.tagline_en) if ar else (tool.tagline_en or tool.tagline_ar) }}{% endblock %}
+
+{% block content %}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="tool-i-arrow" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m13 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="tool-i-external" viewBox="0 0 24 24"><path d="M14 4h6v6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 4 10 14" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+</svg>
+
+<div class="wrap">
+    <nav class="tool-crumb" aria-label="{{ 'مسار التصفح' if ar else 'Breadcrumb' }}">
+        <a href="{{ url_for('tools_directory') }}">{{ 'دليل الأدوات' if ar else 'AI tools' }}</a>
+        <span aria-hidden="true">/</span>
+        <a href="{{ url_for('tools_directory', category=tool.category) }}">{{ cat_ar.get(tool.category, tool.category) if ar else cat_name(tool.category_label) }}</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ tool.name }}</span>
+    </nav>
+
+    <header class="tool-profile tool-cat-{{ tool.category }}">
+        <div class="tool-profile-main">
+            <span class="tool-logo is-xl">
+                {% if tool.logo %}<img src="{{ tool.logo }}" alt="">
+                {% else %}{{ (tool.name_ar or tool.name)[:1] if ar else tool.name[:1] }}{% endif %}
+            </span>
+            <div class="tool-profile-copy">
+                <span class="tool-category">{{ cat_ar.get(tool.category, tool.category) if ar else cat_name(tool.category_label) }}</span>
+                <h1>{{ (tool.name_ar or tool.name) if ar else tool.name }}</h1>
+                {% if ar and tool.name %}<p class="tool-alt-name" dir="ltr">{{ tool.name }}</p>
+                {% elif not ar and tool.name_ar %}<p class="tool-alt-name" dir="rtl">{{ tool.name_ar }}</p>{% endif %}
+                <p class="tool-profile-tagline">{{ (tool.tagline_ar or tool.tagline_en) if ar else (tool.tagline_en or tool.tagline_ar) }}</p>
+                <div class="tool-badges">
+                    <span class="price-badge is-{{ tool.pricing }}">{{ tool.pricing_label_ar if ar else tool.pricing_label_en }}</span>
+                    {% if tool.rating %}<span class="rating-badge">★ {{ '%.1f'|format(tool.rating) }} / 5</span>{% endif %}
+                    {% if tool.free_tier and tool.pricing != 'free' %}<span class="platform-badge">{{ 'خطة مجانية متاحة' if ar else 'Free plan available' }}</span>{% endif %}
+                    {% if tool.arabic_support %}<span class="lang-badge">{{ 'يدعم العربية' if ar else 'Arabic support' }}</span>{% endif %}
+                    {% for platform in tool.platforms %}<span class="platform-badge">{{ platform }}</span>{% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="tool-profile-actions">
+            {% if tool.official_url %}
+            <a class="btn btn-primary" href="{{ tool.official_url }}" target="_blank" rel="noopener noreferrer">
+                {{ 'افتح الموقع الرسمي' if ar else 'Visit the official site' }}
+                <svg class="icon" aria-hidden="true"><use href="#tool-i-external"></use></svg>
+            </a>
+            {% endif %}
+            <a class="btn btn-ghost" href="{{ url_for('tools_directory') }}">
+                <svg class="icon" aria-hidden="true"><use href="#tool-i-arrow" style="transform:rotate(180deg)"></use></svg>
+                {{ 'كل الأدوات' if ar else 'All tools' }}
+            </a>
+        </div>
+    </header>
+
+    <div class="tool-detail-grid">
+        <article class="tool-detail-main">
+            <section class="tool-section">
+                <h2>{{ 'ما هي' if ar else 'What it is' }}</h2>
+                {% set primary = (tool.description_ar or tool.description_en) if ar else (tool.description_en or tool.description_ar) %}
+                <p class="tool-description">{{ primary }}</p>
+                {% if ar and tool.description_en %}
+                <details class="tool-alt-lang">
+                    <summary>{{ 'English version' }}</summary>
+                    <p dir="ltr">{{ tool.description_en }}</p>
+                </details>
+                {% elif not ar and tool.description_ar %}
+                <details class="tool-alt-lang">
+                    <summary>النسخة العربية</summary>
+                    <p dir="rtl">{{ tool.description_ar }}</p>
+                </details>
+                {% endif %}
+            </section>
+
+            {% if tool.best_for %}
+            <section class="tool-callout">
+                <span>{{ 'الأفضل لـ' if ar else 'Best for' }}</span>
+                <b>{{ tool.best_for }}</b>
+            </section>
+            {% endif %}
+
+            <section class="tool-section">
+                <h2>{{ 'في لمحة' if ar else 'At a glance' }}</h2>
+                <dl class="tool-facts">
+                    <div>
+                        <dt>{{ 'السعر' if ar else 'Pricing' }}</dt>
+                        <dd>{{ tool.pricing_label_ar if ar else tool.pricing_label_en }}</dd>
+                    </div>
+                    <div>
+                        <dt>{{ 'خطة مجانية' if ar else 'Free tier' }}</dt>
+                        <dd>{{ ('نعم' if ar else 'Yes') if tool.free_tier else ('لا' if ar else 'No') }}</dd>
+                    </div>
+                    <div>
+                        <dt>{{ 'العربية' if ar else 'Arabic' }}</dt>
+                        <dd>{{ ('مدعومة' if ar else 'Supported') if tool.arabic_support else ('غير مؤكدة' if ar else 'Not confirmed') }}</dd>
+                    </div>
+                    <div>
+                        <dt>{{ 'المنصات' if ar else 'Platforms' }}</dt>
+                        <dd>{{ tool.platforms|join(', ') }}</dd>
+                    </div>
+                    <div>
+                        <dt>{{ 'آخر تحقق' if ar else 'Last checked' }}</dt>
+                        <dd>{{ tool.last_checked or date }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            {% if related %}
+            <section class="tool-section">
+                <h2>{{ 'في المجلة' if ar else 'In the magazine' }}</h2>
+                <div class="tool-related-grid">
+                    {% for story in related %}
+                    <a class="tool-related-card" href="{{ url_for('magazine_detail', item_id=story.id) }}">
+                        <span class="tool-related-media">
+                            {% if story.image %}<img src="{{ story.image }}" alt="" loading="lazy">{% endif %}
+                        </span>
+                        <span>
+                            <b>{{ (story.title_ar or story.title) if ar else story.title }}</b>
+                            <small>{{ story.published_ar if ar else story.published_en }} · {{ story.source }}</small>
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </article>
+
+        <aside class="tool-detail-side">
+            <div class="tool-side-card is-accent">
+                <h3>{{ 'جرّبها بنفسك' if ar else 'Try it yourself' }}</h3>
+                <p>{{ 'Open the official site, not a mirror. A free plan or trial is enough to judge whether it fits your workflow.' if not ar else 'افتح الموقع الرسمي لا نسخة وسيطة. خطة مجانية أو تجربة تكفي للحكم على ملاءمتها لعملك.' }}</p>
+                {% if tool.official_url %}
+                <a class="btn btn-primary" href="{{ tool.official_url }}" target="_blank" rel="noopener noreferrer">
+                    {{ 'اذهب إلى' if ar else 'Go to' }} {{ tool.name }}
+                    <svg class="icon" aria-hidden="true"><use href="#tool-i-external"></use></svg>
+                </a>
+                {% endif %}
+                <small>{{ 'تم التحقق' if ar else 'Checked' }} {{ tool.last_checked or date }}</small>
+            </div>
+
+            {% if alternatives %}
+            <div class="tool-side-card">
+                <h3>{{ 'بدائل قريبة' if ar else 'Close alternatives' }}</h3>
+                <div class="tool-alt-list">
+                    {% for alt in alternatives %}
+                    <a href="{{ url_for('tool_detail', tool_id=alt.id) }}">
+                        <span class="tool-logo is-small">{{ (alt.name_ar or alt.name)[:1] if ar else alt.name[:1] }}</span>
+                        <span>
+                            <b>{{ (alt.name_ar or alt.name) if ar else alt.name }}</b>
+                            <small>{{ alt.pricing_label_ar if ar else alt.pricing_label_en }}</small>
+                        </span>
+                        <svg class="icon" aria-hidden="true"><use href="#tool-i-arrow"></use></svg>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="tool-side-card is-note">
+                <h3>{{ 'ملاحظة تحريرية' if ar else 'Editorial note' }}</h3>
+                <p>{{ 'No one pays to be in this directory. We add tools we would recommend to a student, and we remove them when they stop being useful.' if not ar else 'لا أحد يدفع مقابل الإدراج في هذا الدليل. نضيف أدوات ننصح بها طالبًا، ونزيلها عندما تتوقف عن الفائدة.' }}</p>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

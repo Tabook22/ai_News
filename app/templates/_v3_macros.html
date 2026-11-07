@@ -1,0 +1,18 @@
+{% macro media(story, ratio='16x9', eager=False, klass='') -%}
+<div class="media media-{{ ratio }} {{ klass }}{% if not story.image %} is-empty{% endif %}">
+    {% if story.image %}
+    <img src="{{ story.image }}" alt="" width="800" height="450"
+        {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
+        onerror="this.closest('.media').classList.add('is-empty'); this.remove();">
+    {% endif %}
+    <span class="media-fallback" aria-hidden="true">N</span>
+</div>
+{%- endmacro %}
+
+{% macro title(story, ar) -%}
+{{ (story.title_ar | reader_line or story.title) if ar else story.title }}
+{%- endmacro %}
+
+{% macro desk(story, ar) -%}
+{{ story.desk_ar if ar else story.desk_en }}
+{%- endmacro %}

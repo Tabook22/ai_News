@@ -1,0 +1,395 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .reel-form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2.5rem;
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    .field-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .assist-box {
+        background: rgba(56, 189, 248, 0.06);
+        border: 1px dashed var(--accent-primary);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin: 1.5rem 0 2rem;
+    }
+
+    .assist-box textarea {
+        min-height: 140px;
+    }
+
+    .current-thumb {
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        object-fit: cover;
+        margin-top: 0.5rem;
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1>{% if mode == 'edit' %}✏️ Edit Reel{% else %}🎬 Add a Reel{% endif %}</h1>
+    <a href="{{ url_for('reels_list') }}" class="btn btn-secondary">← Back to List</a>
+</div>
+
+<div class="reel-form-card">
+    <form method="POST" enctype="multipart/form-data" id="reel-form">
+
+        <div class="assist-box">
+            <label style="margin-bottom: 0.5rem;">🧠 AI Assist — draft an original summary (optional)</label>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 0.75rem;">
+                You can just write the Summary fields below yourself — or paste the transcript/caption here, or
+                upload a transcript file, as <strong>private reference notes only</strong>. Notes are never saved or
+                shown on the site; the AI describes what the video covers in its own words for your review, not a
+                copy or reword of the source text.
+            </p>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <button type="button" class="btn-icon" style="width:auto; padding: 0.4rem 0.8rem;"
+                    onclick="document.getElementById('transcript_file_upload').click()">
+                    📄 Upload transcript file (.txt / .json)
+                </button>
+                <input type="file" id="transcript_file_upload" accept=".txt,.json" style="display:none;"
+                    onchange="loadTranscriptFile(this)">
+                <span id="transcript-file-status" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+            </div>
+            <textarea id="reference_notes" placeholder="Paste transcript / caption here for reference..."></textarea>
+            <button type="button" class="btn btn-secondary" style="margin-top: 0.75rem;" onclick="draftSummary()">
+                ✨ Draft Summary
+            </button>
+            <span id="assist-status" style="margin-left: 1rem; font-size: 0.85rem; color: var(--text-muted);"></span>
+        </div>
+
+        <div class="form-group">
+            <label>Video Title *</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" name="title" id="title_en" required value="{{ item.title if item else '' }}"
+                    placeholder="e.g. How PagedAttention saves GPU memory" style="flex: 1;">
+                <button type="button" class="btn-icon" id="translate-to-ar-btn" title="Translate to Arabic">🌐
+                    ← ع</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Title (Arabic)</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" name="title_ar" id="title_ar" dir="rtl"
+                    style="font-family: var(--font-ar); text-align: right; flex: 1;"
+                    value="{{ item.title_ar if item else '' }}">
+                <button type="button" class="btn-icon" id="translate-to-en-btn" title="Translate to English">🌐
+                    → EN</button>
+            </div>
+            <span id="title-translate-status" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+        </div>
+
+        <div class="field-pair" style="margin-bottom: 1.5rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Creator Name</label>
+                <input type="text" name="creator_name" placeholder="e.g. Shirin Khosravi Jam"
+                    value="{{ item.creator_name if item else '' }}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Creator Handle</label>
+                <input type="text" name="creator_handle" placeholder="e.g. jam.with.ai"
+                    value="{{ item.creator_handle if item else '' }}">
+            </div>
+        </div>
+
+        <div class="field-pair" style="margin-bottom: 1.5rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Platform</label>
+                <select name="platform">
+                    {% for p in ['instagram', 'tiktok', 'youtube_short', 'other'] %}
+                    <option value="{{ p }}" {% if item and item.platform==p %}selected{% endif %}>{{ p | replace('_',
+                        ' ') | title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Status</label>
+                <select name="status">
+                    {% set current_status = item.status if item and item.status else 'published' %}
+                    <option value="published" {% if current_status=='published' %}selected{% endif %}>✅ Published
+                        — shows on the magazine &amp; Watch page</option>
+                    <option value="draft" {% if current_status=='draft' %}selected{% endif %}>📝 Draft — hidden,
+                        still editable</option>
+                    <option value="archived" {% if current_status=='archived' %}selected{% endif %}>🗄️ Archived —
+                        retired, kept for reference</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Link to Original Post *</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="url" name="source_url" id="source_url" required
+                    placeholder="https://www.instagram.com/reel/..." style="flex: 1;"
+                    value="{{ item.source_url if item else '' }}">
+                <button type="button" class="btn btn-secondary" style="white-space: nowrap;"
+                    onclick="fetchThumbnail()">🔗 Fetch Image</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Cover Thumbnail</label>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin: -0.25rem 0 0.5rem;">
+                We try to auto-grab a preview as soon as you leave the link field above. If that doesn't work
+                (common for Instagram), paste a direct image link below, or upload your own.
+            </p>
+            <span id="fetch-thumb-status" style="font-size: 0.8rem; color: var(--text-muted); display:block; margin-bottom: 0.5rem;"></span>
+
+            <div class="file-drop-zone" onclick="document.querySelector('input[name=thumbnail]').click()">
+                <span id="thumb-label">🖼️ Click to upload a preview image</span>
+                <input type="file" name="thumbnail" accept="image/*" style="display:none;"
+                    onchange="document.getElementById('thumb-label').innerText = '✅ ' + this.files[0].name; document.getElementById('thumb-preview').style.display='none';">
+            </div>
+
+            <div style="margin-top: 0.75rem;">
+                <label style="font-size: 0.78rem;">Or paste a direct image link</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="url" id="direct-thumb-url" placeholder="https://.../image.jpg" style="flex: 1;">
+                    <button type="button" class="btn btn-secondary" style="white-space: nowrap;"
+                        onclick="useDirectImageUrl()">Use This</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="fetched_thumbnail" id="fetched_thumbnail" value="">
+            {% if item and item.thumbnail %}
+            <img src="{{ item.thumbnail }}" class="current-thumb" id="thumb-preview">
+            {% else %}
+            <img src="" class="current-thumb" id="thumb-preview" style="display:none;">
+            {% endif %}
+        </div>
+
+        <div class="field-pair">
+            <div class="form-group">
+                <label>Summary (English) *</label>
+                <textarea name="summary_en" id="summary_en" rows="4" required
+                    placeholder="What's this video about, in your own words?">{{ item.summary_en if item else '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Summary (Arabic)</label>
+                <textarea name="summary_ar" id="summary_ar" rows="4" dir="rtl"
+                    style="font-family: var(--font-ar); text-align: right;"
+                    placeholder="نفس الفكرة بالعربية...">{{ item.summary_ar if item else '' }}</textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 1rem;">
+            {% if mode == 'edit' %}Save Changes{% else %}Add Reel{% endif %}
+        </button>
+    </form>
+</div>
+
+<script>
+    function draftSummary() {
+        const title = document.querySelector('input[name="title"]').value;
+        const notes = document.getElementById('reference_notes').value;
+        const creator = document.querySelector('input[name="creator_name"]').value;
+        const status = document.getElementById('assist-status');
+
+        if (!title) { alert('Add a title first.'); return; }
+        if (!notes.trim()) { alert('Paste some reference notes (transcript/caption) first.'); return; }
+
+        status.textContent = 'Drafting…';
+        fetch('/api/reels/draft_summary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, reference_notes: notes, creator_name: creator })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('summary_en').value = data.summary_en || '';
+                    document.getElementById('summary_ar').value = data.summary_ar || '';
+                    status.textContent = '✅ Drafted — review before saving.';
+                } else {
+                    status.textContent = '';
+                    alert(data.message || 'Failed to draft summary.');
+                }
+            })
+            .catch(() => {
+                status.textContent = '';
+                alert('Network error.');
+            });
+    }
+
+    function loadTranscriptFile(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const status = document.getElementById('transcript-file-status');
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            let text = e.target.result;
+            if (file.name.toLowerCase().endsWith('.json')) {
+                try {
+                    const parsed = JSON.parse(text);
+                    text = parsed.full_text || parsed.text || parsed.transcript || JSON.stringify(parsed, null, 2);
+                } catch (err) {
+                    // not valid JSON — fall back to raw text
+                }
+            }
+            document.getElementById('reference_notes').value = text;
+            status.textContent = '✅ Loaded ' + file.name + ' (not saved — reference only)';
+        };
+        reader.onerror = function () {
+            status.textContent = 'Could not read that file.';
+        };
+        reader.readAsText(file);
+    }
+
+    function applyFetchedThumbnail(url) {
+        document.getElementById('fetched_thumbnail').value = url;
+        const preview = document.getElementById('thumb-preview');
+        preview.src = url;
+        preview.style.display = 'block';
+        document.getElementById('thumb-label').innerText = '🖼️ Click to upload a preview image';
+    }
+
+    function fetchThumbnail(opts) {
+        opts = opts || {};
+        const url = document.getElementById('source_url').value.trim();
+        const status = document.getElementById('fetch-thumb-status');
+        if (!url) {
+            if (!opts.silent) alert('Paste the link first.');
+            return;
+        }
+
+        status.textContent = 'Fetching preview image…';
+        fetch('/api/reels/fetch_thumbnail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ source_url: url })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    applyFetchedThumbnail(data.thumbnail_url);
+                    status.textContent = '✅ Preview fetched automatically.';
+                } else if (opts.silent) {
+                    // Auto-attempt failed quietly (common for Instagram) — point at the fallbacks, no popup.
+                    status.textContent = "⚠️ Couldn't auto-fetch a preview — paste an image link below or upload one.";
+                } else {
+                    status.textContent = '';
+                    alert(data.message || 'Could not fetch a preview image.');
+                }
+            })
+            .catch(() => {
+                if (opts.silent) {
+                    status.textContent = "⚠️ Couldn't auto-fetch a preview — paste an image link below or upload one.";
+                } else {
+                    status.textContent = '';
+                    alert('Network error.');
+                }
+            });
+    }
+
+    function useDirectImageUrl() {
+        const input = document.getElementById('direct-thumb-url');
+        const url = input.value.trim();
+        const status = document.getElementById('fetch-thumb-status');
+        if (!url) { alert('Paste an image link first.'); return; }
+
+        status.textContent = 'Fetching that image…';
+        fetch('/api/reels/fetch_thumbnail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ direct_image_url: url })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    applyFetchedThumbnail(data.thumbnail_url);
+                    status.textContent = '✅ Thumbnail set from your link.';
+                } else {
+                    status.textContent = '';
+                    alert(data.message || 'Could not use that image link.');
+                }
+            })
+            .catch(() => {
+                status.textContent = '';
+                alert('Network error.');
+            });
+    }
+
+    // Auto-attempt a thumbnail fetch as soon as the user leaves the link field —
+    // silent on failure since Instagram links very often can't be auto-fetched.
+    document.getElementById('source_url').addEventListener('blur', function () {
+        if (this.value.trim() && !document.getElementById('fetched_thumbnail').value) {
+            fetchThumbnail({ silent: true });
+        }
+    });
+
+    // --- Live EN <-> AR title translation ---
+    function doTranslateTitle(text, target, targetInput, opts) {
+        opts = opts || {};
+        const status = document.getElementById('title-translate-status');
+        if (!text) return;
+        status.textContent = 'Translating…';
+        fetch('/api/reels/translate_title', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, target: target })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    targetInput.value = data.translated;
+                    status.textContent = '✅ Translated — feel free to edit.';
+                    setTimeout(() => { status.textContent = ''; }, 3000);
+                } else if (opts.silent) {
+                    status.textContent = '⚠️ ' + (data.message || "Couldn't auto-translate — type it yourself.");
+                } else {
+                    status.textContent = '';
+                    alert(data.message || 'Translation failed.');
+                }
+            })
+            .catch(() => {
+                if (opts.silent) {
+                    status.textContent = "⚠️ Couldn't auto-translate — type it yourself.";
+                } else {
+                    status.textContent = '';
+                    alert('Network error.');
+                }
+            });
+    }
+
+    const titleEn = document.getElementById('title_en');
+    const titleAr = document.getElementById('title_ar');
+
+    // Auto-fill the other language on blur, but only if it's still empty —
+    // never silently overwrite something the admin already typed. Quiet on
+    // failure (no popup) since this fires on every field blur.
+    titleEn.addEventListener('blur', function () {
+        if (this.value.trim() && !titleAr.value.trim()) {
+            doTranslateTitle(this.value.trim(), 'ar', titleAr, { silent: true });
+        }
+    });
+    titleAr.addEventListener('blur', function () {
+        if (this.value.trim() && !titleEn.value.trim()) {
+            doTranslateTitle(this.value.trim(), 'en', titleEn, { silent: true });
+        }
+    });
+
+    // Manual re-translate buttons — force it even if the other side already has text,
+    // and speak up clearly if it fails since this was an explicit click.
+    document.getElementById('translate-to-ar-btn').addEventListener('click', function () {
+        if (!titleEn.value.trim()) { alert('Type the English title first.'); return; }
+        doTranslateTitle(titleEn.value.trim(), 'ar', titleAr);
+    });
+    document.getElementById('translate-to-en-btn').addEventListener('click', function () {
+        if (!titleAr.value.trim()) { alert('Type the Arabic title first.'); return; }
+        doTranslateTitle(titleAr.value.trim(), 'en', titleEn);
+    });
+</script>
+{% endblock %}

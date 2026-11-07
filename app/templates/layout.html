@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="{{ 'ar' if admin_ar else 'en' }}" dir="{{ 'rtl' if admin_ar else 'ltr' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ settings.magazine_title if settings else 'Nasser AI News' }} · {{ {'settings_page': A('settings'), 'subscribers_page': A('subscribers'), 'search_page': A('find_news'), 'archive_page': A('archive'), 'newsroom': A('newsroom'), 'dashboard': A('world'), 'department_admin': A('department'), 'reels_list': A('reels'), 'tools_list': A('ai_tools'), 'qr_page': A('qr'), 'template_picker': A('look'), 'add_news': A('new_story'), 'edit_news': A('new_story'), 'add_project_idea': 'New project idea', 'edit_project_idea': 'Edit project idea', 'digest_preview': 'Weekly digest'}.get(request.endpoint, 'Control room' if not admin_ar else 'غرفة التحكم') }}</title>
+    <link rel="icon" type="image/svg+xml"
+        href="{{ settings.logo_path if settings and settings.logo_path else url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/templates.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-desks.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-v3.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@500;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap"
+        rel="stylesheet">
+    {% if settings and (settings.custom_text_color or settings.custom_accent_color) %}
+    <style>
+        :root {
+            {% if settings.custom_text_color %}--text-main: {{ settings.custom_text_color }} !important;{% endif %}
+            {% if settings.custom_accent_color %}--accent-primary: {{ settings.custom_accent_color }} !important;{% endif %}
+        }
+    </style>
+    {% endif %}
+</head>
+
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% set page_titles = {
+    'admin_dashboard': t('Control room', 'غرفة التحكم'),
+    'newsroom': A('newsroom'),
+    'dashboard': A('world'),
+    'department_admin': A('department'),
+    'settings_page': A('settings'),
+    'subscribers_page': A('subscribers'),
+    'search_page': A('find_news'),
+    'archive_page': A('archive'),
+    'news_photos_admin': A('np_nav'),
+    'photo_archive_admin': A('ph_nav'),
+    'reels_list': A('reels'),
+    'reels_archive': A('reels'),
+    'add_reel': A('reels'),
+    'edit_reel': A('reels'),
+    'tools_list': A('ai_tools'),
+    'add_tool': A('ai_tools'),
+    'edit_tool': A('ai_tools'),
+    'add_news': A('new_story'),
+    'edit_news': A('new_story'),
+    'digest_preview': t('Weekly digest', 'الملخص الأسبوعي'),
+    'qr_page': A('qr'),
+    'template_picker': A('look'),
+    'author_info': t('Author profile', 'ملف المؤلف')
+} %}
+
+<body class="admin-v3 theme-{{ settings.theme if settings else 'light' }}" data-endpoint="{{ request.endpoint or '' }}">
+
+    <!-- icon sprite -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <symbol id="i-dashboard" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></symbol>
+        <symbol id="i-newspaper" viewBox="0 0 24 24"><path d="M4 4h13a2 2 0 0 1 2 2v13H6a2 2 0 0 1-2-2z"></path><path d="M19 8h2v9a2 2 0 0 1-2 2"></path><path d="M8 8h6M8 12h6M8 16h4"></path></symbol>
+        <symbol id="i-building" viewBox="0 0 24 24"><path d="M4 21V5l7-3v19"></path><path d="M11 8h8v13"></path><path d="M7 7h1M7 11h1M7 15h1M14 12h2M14 16h2"></path></symbol>
+        <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.5 3.5 5.5 3.5 9S14.5 18.5 12 21c-2.5-2.5-3.5-5.5-3.5-9S9.5 5.5 12 3z"></path></symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></symbol>
+        <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m10 9 5 3-5 3z"></path></symbol>
+        <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5 5L4 17l3 3 5.7-5.7a4 4 0 0 0 5-5l-2.5 2.5-2.5-2.5z"></path></symbol>
+        <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="m4 18 5-5 4 4 3-3 4 4"></path></symbol>
+        <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"></path><path d="M16 5a3 3 0 0 1 0 6M17 14c2.5.4 4 2.3 4 5"></path></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.5 7 8.5 6 8.5-6"></path></symbol>
+        <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"></path></symbol>
+        <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6"></path><path d="M20 4 11 13"></path><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></symbol>
+        <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-1.9 0-.5-.2-.9-.5-1.2-.3-.3-.5-.8-.5-1.2 0-1 .9-1.9 1.9-1.9H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"></path><circle cx="7.5" cy="10.5" r="1"></circle><circle cx="11.5" cy="7.5" r="1"></circle><circle cx="15.5" cy="9.5" r="1"></circle></symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3v-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3.1V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.1v4h-.1a1.7 1.7 0 0 0-1.5 1z"></path></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></symbol>
+        <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"></path><path d="M10 20a2 2 0 0 0 4 0"></path></symbol>
+        <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-.9.7-1.5 1.2-1.5 2.3"></path><path d="M12 17h.01"></path></symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"></path></symbol>
+        <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19z"></path><path d="M12 9v5M12 17h.01"></path></symbol>
+        <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></symbol>
+        <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"></path><path d="m3 13 9 5 9-5"></path></symbol>
+        <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"></path></symbol>
+        <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"></circle><path d="m11 12 9-9M17 6l3 3M14 9l2 2"></path></symbol>
+        <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 6V4h16v2M12 4v16M8 20h8"></path></symbol>
+        <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6 3h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2z"></path></symbol>
+    </svg>
+
+    <div class="admin-shell" id="admin-shell">
+        <aside class="admin-sidebar" aria-label="{{ 'قائمة التحكم' if admin_ar else 'Control navigation' }}">
+            <a class="admin-brand" href="{{ url_for('admin_dashboard') }}">
+                {% if settings and settings.logo_path %}
+                <img src="{{ settings.logo_path }}" alt="">
+                {% else %}
+                <span class="admin-brand-mark">N</span>
+                {% endif %}
+                <span>
+                    <b>{{ settings.magazine_title if settings else 'Nasser AI' }}</b>
+                    <span>{{ 'غرفة التحكم' if admin_ar else 'Control room' }}</span>
+                </span>
+            </a>
+
+            <div class="admin-nav">
+                <div class="admin-nav-group">
+                    <span class="admin-nav-label">{{ t('Overview', 'نظرة عامة') }}</span>
+                    <a href="{{ url_for('admin_dashboard') }}"
+                        class="{{ 'is-active' if request.endpoint == 'admin_dashboard' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-dashboard"></use></svg>
+                        {{ t('Control room', 'غرفة التحكم') }}
+                    </a>
+                    <a href="{{ url_for('newsroom') }}"
+                        class="{{ 'is-active' if request.endpoint == 'newsroom' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-newspaper"></use></svg>
+                        {{ A('newsroom') }}
+                    </a>
+                    <a href="{{ url_for('dashboard') }}"
+                        class="{{ 'is-active' if request.endpoint == 'dashboard' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-globe"></use></svg>
+                        {{ A('world') }}
+                    </a>
+                    <a href="{{ url_for('department_admin') }}"
+                        class="{{ 'is-active' if request.endpoint == 'department_admin' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-building"></use></svg>
+                        {{ A('department') }}
+                    </a>
+                </div>
+
+                <div class="admin-nav-group">
+                    <span class="admin-nav-label">{{ t('Content', 'المحتوى') }}</span>
+                    <a href="{{ url_for('add_news') }}"
+                        class="{{ 'is-active' if request.endpoint in ['add_news', 'edit_news'] else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                        {{ A('new_story') }}
+                    </a>
+                    <a href="{{ url_for('search_page') }}"
+                        class="{{ 'is-active' if request.endpoint == 'search_page' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+                        {{ A('find_news') }}
+                    </a>
+                    <a href="{{ url_for('reels_list') }}"
+                        class="{{ 'is-active' if request.endpoint in ['reels_list', 'reels_archive', 'add_reel', 'edit_reel'] else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-video"></use></svg>
+                        {{ A('reels') }}
+                        {% if reels_count %}<span class="count">{{ reels_count }}</span>{% endif %}
+                    </a>
+                    <a href="{{ url_for('tools_list') }}"
+                        class="{{ 'is-active' if request.endpoint in ['tools_list', 'add_tool', 'edit_tool'] else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>
+                        {{ A('ai_tools') }}
+                        {% if tools_count %}<span class="count">{{ tools_count }}</span>{% endif %}
+                    </a>
+                    <a href="{{ url_for('news_photos_admin') }}"
+                        class="{{ 'is-active' if request.endpoint == 'news_photos_admin' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+                        {{ A('np_nav') }}
+                    </a>
+                    <a href="{{ url_for('photo_archive_admin') }}"
+                        class="{{ 'is-active' if request.endpoint == 'photo_archive_admin' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+                        {{ A('ph_nav') }}
+                    </a>
+                    <a href="{{ url_for('archive_page', desk='world') }}"
+                        class="{{ 'is-active' if request.endpoint == 'archive_page' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg>
+                        {{ A('archive') }}
+                    </a>
+                </div>
+
+                <div class="admin-nav-group">
+                    <span class="admin-nav-label">{{ t('Audience', 'الجمهور') }}</span>
+                    <a href="{{ url_for('subscribers_page') }}"
+                        class="{{ 'is-active' if request.endpoint == 'subscribers_page' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>
+                        {{ A('subscribers') }}
+                        {% if subscriber_count %}<span class="count">{{ subscriber_count }}</span>{% endif %}
+                    </a>
+                    <a href="{{ url_for('digest_preview') }}"
+                        class="{{ 'is-active' if request.endpoint == 'digest_preview' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg>
+                        {{ t('Weekly digest', 'الملخص الأسبوعي') }}
+                    </a>
+                    <a href="{{ url_for('qr_page') }}"
+                        class="{{ 'is-active' if request.endpoint == 'qr_page' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg>
+                        {{ A('qr') }}
+                    </a>
+                </div>
+
+                <div class="admin-nav-group">
+                    <span class="admin-nav-label">{{ t('Design', 'التصميم') }}</span>
+                    <a href="{{ url_for('magazine_view') }}" target="_blank" rel="noopener">
+                        <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                        {{ A('issue') }}
+                        <svg class="icon" style="margin-inline-start:auto;width:14px;height:14px" aria-hidden="true"><use href="#i-external"></use></svg>
+                    </a>
+                    <a href="{{ url_for('template_picker') }}"
+                        class="{{ 'is-active' if request.endpoint in ['template_picker', 'select_template'] else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-palette"></use></svg>
+                        {{ A('look') }}
+                    </a>
+                    <a href="{{ url_for('settings_page') }}"
+                        class="{{ 'is-active' if request.endpoint == 'settings_page' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg>
+                        {{ A('settings') }}
+                    </a>
+                </div>
+
+                <div class="admin-nav-group">
+                    <span class="admin-nav-label">{{ t('Account', 'الحساب') }}</span>
+                    <a href="{{ url_for('author_info') }}"
+                        class="{{ 'is-active' if request.endpoint == 'author_info' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg>
+                        {{ t('Author profile', 'ملف المؤلف') }}
+                    </a>
+                    <a href="{{ url_for('logout') }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-logout"></use></svg>
+                        {{ t('Sign out', 'خروج') }}
+                    </a>
+                </div>
+            </div>
+
+            <div class="admin-sidebar-foot">
+                <a class="admin-view-site" href="{{ url_for('magazine_view') }}" target="_blank" rel="noopener">
+                    <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg>
+                    {{ t('Open the public issue', 'افتح العدد للقراء') }}
+                </a>
+                <div class="admin-user">
+                    {% if settings and settings.author_image %}
+                    <img src="{{ settings.author_image }}" alt="">
+                    {% else %}
+                    <span class="avatar-fallback">{{ ((settings.author_name if settings else 'N') or 'N')[:1] }}</span>
+                    {% endif %}
+                    <span>
+                        <b>{{ (settings.author_name_ar if admin_ar and settings.author_name_ar else settings.author_name) if settings else 'Editor' }}</b>
+                        <span>{{ t('Editor in chief', 'رئيس التحرير') }}</span>
+                    </span>
+                    <a href="{{ url_for('logout') }}" title="{{ t('Sign out', 'خروج') }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-logout"></use></svg>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <div class="admin-main">
+            <header class="admin-topbar">
+                <button class="admin-menu-btn" type="button" id="admin-menu-btn"
+                    aria-label="{{ t('Open navigation', 'افتح القائمة') }}" aria-expanded="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+                </button>
+
+                <div class="admin-crumbs">
+                    <span class="hide-sm">{{ t('Admin', 'الإدارة') }}</span>
+                    <span class="hide-sm" aria-hidden="true">/</span>
+                    <b>{% block page_title %}{{ page_titles.get(request.endpoint, t('Control room', 'غرفة التحكم')) }}{% endblock %}</b>
+                </div>
+
+                <div class="admin-top-actions">
+                    <a class="admin-icon-btn" href="{{ url_for('search_page') }}"
+                        title="{{ t('Search and import', 'البحث والاستيراد') }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+                    </a>
+                    <div class="admin-lang" role="group" aria-label="{{ t('Language', 'اللغة') }}">
+                        <a href="{{ url_for('set_admin_language', lang='en', next=request.full_path) }}"
+                            class="{{ 'active' if not admin_ar else '' }}">EN</a>
+                        <a href="{{ url_for('set_admin_language', lang='ar', next=request.full_path) }}"
+                            class="{{ 'active' if admin_ar else '' }}"
+                            style="font-family: var(--font-ar);">ع</a>
+                    </div>
+                    <a class="admin-icon-btn wide hide-sm" href="{{ url_for('magazine_view') }}" target="_blank" rel="noopener">
+                        <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                        {{ t('View issue', 'العدد') }}
+                    </a>
+                    <button class="admin-icon-btn" type="button" data-help="overview"
+                        title="{{ t('Help', 'مساعدة') }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-help"></use></svg>
+                    </button>
+                    <a href="{{ url_for('author_info') }}">
+                        {% if settings and settings.author_image %}
+                        <img class="admin-avatar" src="{{ settings.author_image }}" alt="">
+                        {% else %}
+                        <span class="admin-avatar avatar-fallback"
+                            style="display:grid;place-items:center;background:#eef2f7;">{{ ((settings.author_name if settings else 'N') or 'N')[:1] }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </header>
+
+            <div class="admin-content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash {{ category }}" role="status">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <div class="help-drawer-backdrop" id="help-backdrop"></div>
+    <aside class="help-drawer" id="help-drawer" aria-hidden="true" aria-label="{{ t('Help', 'مساعدة') }}">
+        <div class="help-drawer-head">
+            <svg class="icon" aria-hidden="true"><use href="#i-help"></use></svg>
+            <b id="help-title">{{ t('Help', 'مساعدة') }}</b>
+            <button type="button" id="help-close" aria-label="{{ t('Close', 'إغلاق') }}">&times;</button>
+        </div>
+        <div class="help-drawer-body" id="help-body"></div>
+    </aside>
+
+    <div id="video-modal"
+        style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="position: relative; width: 80%; max-width: 900px; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden;">
+            <button onclick="closeVideoModal()"
+                style="position: absolute; top: -40px; right: -10px; color: #fff; background: transparent; border: none; font-size: 2rem; cursor: pointer;">&times;</button>
+            <iframe id="video-frame" width="100%" height="100%" src="" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+        <div style="position: absolute; inset: 0; z-index: -1;" onclick="closeVideoModal()"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin-v3.js') }}"></script>
+    <script>
+        function openVideoModal(videoId) {
+            if (!videoId) return;
+            document.getElementById('video-frame').src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+            document.getElementById('video-modal').style.display = 'flex';
+        }
+        function closeVideoModal() {
+            document.getElementById('video-modal').style.display = 'none';
+            document.getElementById('video-frame').src = '';
+        }
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeVideoModal();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,747 @@
+{% extends "public.html" %}
+
+{% block content %}
+{% set author_name_display = (settings.author_name_ar or settings.author_name) if lang_pref == 'ar' else settings.author_name %}
+{% set author_bio_display = (settings.author_bio_ar or settings.author_bio) if lang_pref == 'ar' else settings.author_bio %}
+{% set author_intro_display = (settings.author_intro_ar or settings.author_intro) if lang_pref == 'ar' else settings.author_intro %}
+
+<!-- MASTHEAD (Branding) -->
+<header class="majestic-masthead"
+    style="text-align: center; margin-bottom: 4rem; padding: 2rem 0; border-bottom: 1px solid var(--border-color);">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+        {% if settings.logo_path %}
+        <img src="{{ settings.logo_path }}" alt="Logo" style="height: 80px;">
+        {% endif %}
+        <h1
+            style="font-family: 'Playfair Display', serif; font-size: 3.5rem; margin: 0; text-transform: uppercase; letter-spacing: -1px;">
+            {{ settings.magazine_title }}
+        </h1>
+    </div>
+    <div
+        style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; border-top: 4px double var(--border-color); padding-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 1rem; width: 80%; margin-left: auto; margin-right: auto;">
+        <span>{{ date }}</span>
+        <span>&bull;</span>
+        <span>{{ settings.version }}</span>
+        <span>&bull;</span>
+        <span style="border-bottom: 1px dotted var(--text-muted); color: var(--text-main);">{{ author_name_display
+            }}</span>
+    </div>
+</header>
+
+
+<div class="author-page-container">
+
+    <!-- Hero Section -->
+    <div class="author-hero">
+        <div class="author-card">
+            <div class="profile-image-container">
+                {% if settings.author_image %}
+                <img src="{{ settings.author_image }}" alt="{{ author_name_display }}" class="profile-image">
+                {% else %}
+                <div class="profile-placeholder">👤</div>
+                {% endif %}
+            </div>
+
+            <h1 class="author-name" {% if lang_pref=='ar' %}dir="rtl" style="font-family: var(--font-ar);" {% endif %}>
+                {{ author_name_display }}</h1>
+            {% if lang_pref == 'both' and settings.author_name_ar and settings.author_name_ar != settings.author_name %}
+            <p class="author-role" dir="rtl" style="font-family: var(--font-ar); margin-bottom: 0;">
+                {{ settings.author_name_ar }}</p>
+            {% endif %}
+            <p class="author-role" {% if lang_pref=='ar' %}dir="rtl" style="font-family: var(--font-ar);" {% endif %}>
+                {{ author_bio_display }}</p>
+            {% if lang_pref == 'both' and settings.author_bio_ar and settings.author_bio_ar != settings.author_bio %}
+            <p class="author-role" dir="rtl" style="font-family: var(--font-ar); font-size: 1rem; opacity: 0.85;">
+                {{ settings.author_bio_ar }}</p>
+            {% endif %}
+            {% if settings.author_workplace %}
+            <p class="author-workplace">🏢 {{ settings.author_workplace }}</p>
+            {% endif %}
+
+            <div class="social-links">
+                {% if settings.social_twitter %}
+                <a href="{{ settings.social_twitter }}" target="_blank" class="social-btn twitter"
+                    title="Twitter/X">𝕏</a>
+                {% endif %}
+                {% if settings.social_linkedin %}
+                <a href="{{ settings.social_linkedin }}" target="_blank" class="social-btn linkedin"
+                    title="LinkedIn">in</a>
+                {% endif %}
+                {% if settings.social_facebook %}
+                <a href="{{ settings.social_facebook }}" target="_blank" class="social-btn facebook"
+                    title="Facebook">f</a>
+                {% endif %}
+                {% if settings.social_instagram %}
+                <a href="{{ settings.social_instagram }}" target="_blank" class="social-btn instagram"
+                    title="Instagram">📸</a>
+                {% endif %}
+            </div>
+
+            <!-- Enhanced: Intro & CV -->
+            {% if author_intro_display %}
+            <div class="author-bio-content" {% if lang_pref=='ar' %}dir="rtl" style="font-family: var(--font-ar);"
+                {% else %}dir="auto" {% endif %}>
+                {{ author_intro_display | clean_html }}
+            </div>
+            {% endif %}
+            {% if lang_pref == 'both' and settings.author_intro_ar and settings.author_intro_ar != settings.author_intro %}
+            <div class="author-bio-content" dir="rtl" style="font-family: var(--font-ar); margin-top: 1.5rem;">
+                {{ settings.author_intro_ar | clean_html }}
+            </div>
+            {% endif %}
+
+            {% if settings.author_cv %}
+            <div style="margin-top: 1.5rem;">
+                <a href="{{ settings.author_cv }}" target="_blank" class="btn btn-secondary"
+                    style="border-radius: 50px; padding: 0.8rem 2rem;">
+                    📄 Download Curriculum Vitae
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Contact Details -->
+    <div class="contact-section">
+        <div class="contact-grid">
+            {% if settings.author_email %}
+            <div class="contact-item">
+                <div class="icon">✉️</div>
+                <div class="details">
+                    <span class="label">Email</span>
+                    <a href="mailto:{{ settings.author_email }}" class="value">{{ settings.author_email }}</a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if settings.author_phone %}
+            <div class="contact-item">
+                <div class="icon">📞</div>
+                <div class="details">
+                    <span class="label">Phone</span>
+                    <span class="value">{{ settings.author_phone }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if settings.author_address %}
+            <div class="contact-item">
+                <div class="icon">📍</div>
+                <div class="details">
+                    <span class="label">Location</span>
+                    <span class="value">{{ settings.author_address }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Gallery Section -->
+    {% if settings.gallery_list %}
+    <div style="margin-bottom: 5rem;">
+        <h3
+            style="text-align: center; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 2px; font-size: 1rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); display: inline-block; padding-bottom: 0.5rem; left: 50%; position: relative; transform: translateX(-50%);">
+            Life & Portfolio
+        </h3>
+        <div class="gallery-grid">
+            {% for item in settings.gallery_list %}
+            <div class="gallery-item" onclick="openLightbox({{ loop.index0 }})">
+                <img src="{{ item.path }}" loading="lazy" alt="{{ item.title }}">
+                <div class="overlay">
+                    {% if item.title %}
+                    <div class="gallery-item-title">{{ item.title }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <span class="close-btn" onclick="closeLightbox(event)">&times;</span>
+
+        <!-- Navigation Arrows -->
+        <div class="nav-btn prev" onclick="changeSlide(-1, event)">&#10094;</div>
+        <div class="nav-btn next" onclick="changeSlide(1, event)">&#10095;</div>
+
+        <div class="lightbox-container">
+            <img class="lightbox-content" id="lightbox-img">
+
+            <div id="lightbox-caption" class="lightbox-caption-container" style="display: none;">
+                <h3 id="lb-title" class="lightbox-title"></h3>
+                <p id="lb-desc" class="lightbox-desc"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var galleryItems = {{ settings.gallery_list | tojson | safe }};
+        var currentIndex = 0;
+        var lightbox = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            lightbox = document.getElementById('lightbox');
+        });
+
+        function openLightbox(index) {
+            currentIndex = index;
+            if (!lightbox) lightbox = document.getElementById('lightbox');
+            lightbox.style.display = "flex";
+            // Trigger reflow
+            void lightbox.offsetWidth;
+            lightbox.classList.add('show');
+
+            updateLightboxContent();
+            document.body.style.overflow = 'hidden'; // Prevent scrolling bg
+            document.addEventListener('keydown', handleKeyboard);
+        }
+
+        function closeLightbox(e) {
+            if (e) {
+                // Allow closing if clicking background or close button
+                const isImg = e.target.classList.contains('lightbox-content');
+                const isNav = e.target.closest('.nav-btn');
+                const isCaption = e.target.closest('.lightbox-caption-container');
+                if (isImg || isNav || isCaption) return;
+            }
+
+            if (!lightbox) return;
+            lightbox.classList.remove('show');
+            setTimeout(() => {
+                lightbox.style.display = "none";
+                document.body.style.overflow = ''; // Restore scrolling
+            }, 300);
+
+            document.removeEventListener('keydown', handleKeyboard);
+        }
+
+        function changeSlide(n, e) {
+            if (e) e.stopPropagation();
+            currentIndex += n;
+            if (currentIndex >= galleryItems.length) currentIndex = 0;
+            if (currentIndex < 0) currentIndex = galleryItems.length - 1;
+            updateLightboxContent();
+        }
+
+        function updateLightboxContent() {
+            var item = galleryItems[index = currentIndex];
+            var img = document.getElementById('lightbox-img');
+            var titleEl = document.getElementById('lb-title');
+            var descEl = document.getElementById('lb-desc');
+            var captionContainer = document.getElementById('lightbox-caption');
+
+            // Fade out image slightly before switching (optional polish)
+            img.style.opacity = 0.8;
+            setTimeout(() => img.style.opacity = 1, 150);
+
+            img.src = item.path;
+
+            const hasTitle = item.title && item.title.trim() !== "";
+            const hasDesc = item.desc && item.desc.trim() !== "";
+
+            if (hasTitle || hasDesc) {
+                captionContainer.style.display = 'block';
+                titleEl.textContent = item.title || "";
+                titleEl.style.display = hasTitle ? 'block' : 'none';
+
+                descEl.textContent = item.desc || "";
+                descEl.style.display = hasDesc ? 'block' : 'none';
+            } else {
+                captionContainer.style.display = 'none';
+            }
+        }
+
+        function handleKeyboard(e) {
+            if (lightbox && lightbox.style.display === "flex") {
+                if (e.key === "ArrowLeft") changeSlide(-1);
+                if (e.key === "ArrowRight") changeSlide(1);
+                if (e.key === "Escape") closeLightbox();
+            }
+        }
+    </script>
+
+    <style>
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            aspect-ratio: 1 / 1;
+            /* Square thumbnails */
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Ensure images fill the square without distortion */
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .gallery-item .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: flex-end;
+            padding: 1rem;
+        }
+
+        .gallery-item:hover .overlay {
+            opacity: 1;
+        }
+
+        .gallery-item-title {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Lightbox Modal */
+        .lightbox {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(15, 23, 42, 0.95);
+            /* Deep dark blue/slate */
+            backdrop-filter: blur(10px);
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lightbox.show {
+            opacity: 1;
+        }
+
+        .lightbox-container {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-content {
+            max-width: 100%;
+            max-height: 80vh;
+            /* Leave room for caption */
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            object-fit: contain;
+        }
+
+        .lightbox-caption-container {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: #f1f5f9;
+            max-width: 800px;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .lightbox-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .lightbox-desc {
+            font-size: 1rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #94a3b8;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+            z-index: 10002;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #f1f5f9;
+            transform: rotate(90deg);
+        }
+
+        .nav-btn {
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            width: 50px;
+            height: 50px;
+            margin-top: -25px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+            font-size: 24px;
+            transition: 0.3s ease;
+            border-radius: 50%;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10001;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .prev {
+            left: 30px;
+        }
+
+        .next {
+            right: 30px;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                /* 2 columns on mobile */
+                gap: 1rem;
+            }
+
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .prev {
+                left: 10px;
+            }
+
+            .next {
+                right: 10px;
+            }
+
+            .lightbox-title {
+                font-size: 1.2rem;
+            }
+
+            .lightbox-desc {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+    {% endif %}
+
+    <div class="action-footer">
+        <a href="{{ url_for('magazine_view') }}" class="btn btn-primary">📖 Return to Magazine</a>
+    </div>
+
+</div>
+
+<!-- FOOTER WITH ADMIN LINKS -->
+<footer
+    style="margin-top: 5rem; border-top: 1px solid var(--border-color); background: var(--overlay-chrome); backdrop-filter: blur(10px); padding: 3rem 0;">
+    <div
+        style="max-width: 1400px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
+        <div>
+            <div
+                style="font-weight: 900; font-size: 1.2rem; margin-bottom: 0.5rem; background: linear-gradient(to right, var(--text-main), var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                {{ settings.magazine_title }}
+            </div>
+            <div style="color: var(--text-muted); font-size: 0.9rem;" {% if lang_pref=='ar' %}dir="rtl" {% endif %}>
+                {% if lang_pref == 'ar' %}بواسطة {{ author_name_display }}{% else %}Curated by {{ author_name_display }}{% endif %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 2rem; align-items: center;">
+            <nav style="background: none; border: none; padding: 0; box-shadow: none; backdrop-filter: none;">
+                <div class="links" style="gap: 1.5rem; display: flex;">
+                    <a href="{{ url_for('magazine_view') }}"
+                        style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none;">Public Reader</a>
+                    <!-- EXPOSED ADMIN LINKS -->
+                    {% if session.get('logged_in') %}
+                    <a href="{{ url_for('dashboard') }}"
+                        style="font-size: 0.85rem; color: var(--accent-primary); font-weight: bold; text-decoration: none;">Dashboard</a>
+                    <a href="{{ url_for('settings_page') }}"
+                        style="font-size: 0.85rem; color: var(--accent-primary); text-decoration: none;">Settings</a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}"
+                        style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none;">Admin Login</a>
+                    {% endif %}
+                </div>
+            </nav>
+            <div style="height: 20px; width: 1px; background: var(--border-color);"></div>
+            <div style="color: var(--text-muted); font-size: 0.85rem; font-family: monospace;">
+                &copy;
+                <script>document.write(new Date().getFullYear())</script>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* Scoped Styles for Author Page */
+    .author-page-container {
+        max-width: 800px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .author-hero {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .profile-image {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--accent-primary);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-placeholder {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: #334155;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        margin: 0 auto 1.5rem auto;
+        border: 4px solid var(--accent-primary);
+    }
+
+    .author-name {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, var(--text-main) 0%, var(--accent-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1.2;
+    }
+
+    .author-role {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .author-workplace {
+        font-size: 1rem;
+        color: var(--accent-secondary);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .social-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        text-decoration: none;
+        color: var(--text-main);
+        transition: all 0.2s ease;
+    }
+
+    .social-btn:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent-primary);
+        background: var(--accent-primary);
+        color: #fff;
+    }
+
+    /* Author Bio Rich Text Styles */
+    .author-bio-content {
+        margin-top: 2rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+        color: var(--text-muted);
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        overflow-wrap: break-word;
+        text-align: start;
+        /* Supports both LTR and RTL based on dir */
+    }
+
+    .author-bio-content p {
+        margin-bottom: 0.8rem;
+    }
+
+    .author-bio-content p:last-child {
+        margin-bottom: 0;
+    }
+
+    .author-bio-content ul,
+    .author-bio-content ol {
+        margin-bottom: 1rem;
+        padding-inline-start: 1.5rem;
+        /* Supports both LTR and RTL */
+    }
+
+    .author-bio-content li {
+        margin-bottom: 0.4rem;
+    }
+
+    .author-bio-content h1,
+    .author-bio-content h2,
+    .author-bio-content h3,
+    .author-bio-content h4 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.8rem;
+        color: var(--text-main);
+        font-weight: 700;
+    }
+
+    .author-bio-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .author-bio-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .author-bio-content h3 {
+        font-size: 1.15rem;
+    }
+
+    .author-bio-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+        display: block;
+    }
+
+    .contact-section {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 3rem;
+    }
+
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .contact-item .icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(56, 189, 248, 0.1);
+        color: var(--accent-primary);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .contact-item .details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .contact-item .label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+        margin-bottom: 0.2rem;
+    }
+
+    .contact-item .value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        text-decoration: none;
+    }
+
+    .contact-item .value:hover {
+        color: var(--accent-primary);
+    }
+
+    .action-footer {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+</style>
+{% endblock %}

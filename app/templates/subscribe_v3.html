@@ -1,0 +1,80 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'اشترك في النشرة' if ar else 'Subscribe to the newsletter' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_desc %}{{ 'بريد واحد كل أحد: ملخص الأسبوع في الذكاء الاصطناعي، بالعربية والإنجليزية.' if ar else 'One email on Sunday: the week in AI, in Arabic and English.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <div class="masthead" style="text-align:start; padding-bottom: 6px;">
+        <span class="eyebrow">{{ 'النشرة الأسبوعية' if ar else 'The weekly newsletter' }}</span>
+        <h1 class="wordmark" style="text-align:start; font-size: clamp(2rem, 5vw, 3.2rem);">
+            {{ 'بريد واحد كل أحد.' if ar else 'One email on Sunday.' }}</h1>
+        <p class="sub-lede">
+            {{ 'أسبوع الذكاء الاصطناعي، بالعربية والإنجليزية: الملخص، وقصة الغلاف، وما هو قادم في القسم. مجانًا، وبلا ضجيج.' if ar else 'The week in AI, in Arabic and English: the brief, the cover story, and what is coming up in the department. Free, and no noise.' }}
+        </p>
+    </div>
+
+    <div class="subscribe-page">
+        <div>
+            <div class="aside-box" style="border-top:2px solid var(--ink);">
+                <h3>{{ 'ما يصلك' if ar else "What you'll get" }}</h3>
+                <ol class="sub-list">
+                    <li><span aria-hidden="true">01</span>
+                        <p>{{ 'الملخص في ٩٠ ثانية: خمسة أشياء حدثت هذا الأسبوع.' if ar else 'The 90-second brief: five things that happened this week.' }}</p>
+                    </li>
+                    <li><span aria-hidden="true">02</span>
+                        <p>{{ 'قصة غلاف واحدة تستحق خمس دقائق، مع ما يعنيه ذلك في القاعة.' if ar else 'One cover story worth five minutes, with what it means in class.' }}</p>
+                    </li>
+                    <li><span aria-hidden="true">03</span>
+                        <p>{{ 'مواعيد القسم: الورش والاختبارات والمناسبات.' if ar else 'The department diary: workshops, exams, and occasions.' }}</p>
+                    </li>
+                </ol>
+                <p class="sub-fine">
+                    {{ 'نحفظ بريدك فقط لإرسال النشرة. رابط إلغاء الاشتراك في كل عدد، وبلا أدوات تتبّع.' if ar else 'We store your email only to send the digest. Unsubscribe in every issue, and no tracking pixels.' }}
+                </p>
+            </div>
+        </div>
+
+        <div>
+            {% if subscribed %}
+            <div class="tldr" style="border-top-color: var(--campus);">
+                <h2 style="color: var(--campus);">{{ 'تم الاشتراك' if ar else 'You are subscribed' }}</h2>
+                <p>{{ 'وصلتنا بياناتك. ستصلك أول نشرة يوم الأحد، ويمكنك إلغاء الاشتراك في أي وقت من أسفل أي رسالة.' if ar else 'You are on the list. The next issue arrives on Sunday, and you can leave in one click from any email.' }}</p>
+                <p style="margin-top:14px;"><a class="btn btn-ghost" href="{{ url_for('magazine_view') }}">{{ 'اقرأ العدد الحالي' if ar else 'Read the current issue' }}</a></p>
+            </div>
+            {% elif unsubscribed %}
+            <div class="tldr">
+                <h2>{{ 'تم إلغاء الاشتراك' if ar else 'You have unsubscribed' }}</h2>
+                <p>{{ 'لم تعد على القائمة. يمكنك الاشتراك مرة أخرى في أي وقت من هذه الصفحة.' if ar else 'You are off the list. You can join again at any time from this page.' }}</p>
+            </div>
+            {% else %}
+            <form action="{{ url_for('subscribe') }}" method="POST" class="sub-form">
+                <input type="hidden" name="source" value="{{ source_hint or 'web' }}">
+                <div class="field">
+                    <label class="lbl" for="sub-name">{{ 'الاسم (اختياري)' if ar else 'Name (optional)' }}</label>
+                    <input id="sub-name" type="text" name="name" autocomplete="name" maxlength="100">
+                </div>
+                <div class="field">
+                    <label class="lbl" for="sub-email">{{ 'البريد الإلكتروني' if ar else 'Email address' }}</label>
+                    <input id="sub-email" type="email" name="email" required autocomplete="email"
+                        placeholder="{{ 'بريدك@du.edu.om' if ar else 'you@du.edu.om' }}">
+                </div>
+                <fieldset class="field" style="border:0; padding:0; margin:0;">
+                    <legend class="lbl">{{ 'لغة النشرة' if ar else 'Newsletter language' }}</legend>
+                    <div class="radios">
+                        <label><input type="radio" name="language_pref" value="ar" {{ 'checked' if ar }}> {{ 'العربية' if ar else 'Arabic' }}</label>
+                        <label><input type="radio" name="language_pref" value="en" {{ 'checked' if not ar }}> {{ 'الإنجليزية' if ar else 'English' }}</label>
+                        <label><input type="radio" name="language_pref" value="both"> {{ 'الاثنتان' if ar else 'Both' }}</label>
+                    </div>
+                </fieldset>
+                <button class="btn btn-primary" type="submit">{{ 'اشترك' if ar else 'Subscribe' }}</button>
+                <p class="sub-fine">{{ 'بالاشتراك أنت توافق على استلام رسالة أسبوعية. يمكنك الانصراف بنقرة.' if ar else 'By subscribing you agree to receive one weekly email. You can leave in one click.' }}</p>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block pre_footer %}{% endblock %}

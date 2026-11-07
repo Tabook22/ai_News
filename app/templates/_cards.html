@@ -1,0 +1,51 @@
+{% macro story_card(item, lang_pref, date) %}
+{% set is_video = item.content_format == 'video' or item.article_type == 'video' or item.source == 'YouTube' %}
+{% set display_title = (item.title_ar|reader_line or item.title) if lang_pref == 'ar' else item.title %}
+{% set display_summary = (item.summary_ar|reader_line or item.summary) if lang_pref == 'ar' else item.summary %}
+{% set href = url_for('magazine_detail', item_id=item.id) %}
+<article class="secondary-card">
+    <a class="card-media" href="{{ '#' if is_video else href }}"
+        {% if is_video %}onclick="openVideoModal('{{ item.video_id }}'); return false;"{% endif %}>
+        {% if item.image %}
+        <img src="{{ item.image }}" class="secondary-img" alt="">
+        {% else %}
+        <div class="card-fallback">{{ (item.desk_en or 'N')[:1] }}</div>
+        {% endif %}
+        {% if is_video %}
+        <div class="card-play" aria-hidden="true">▶</div>
+        {% endif %}
+        {% if item.timestamp and date and item.timestamp[:10] == date %}
+        <span class="fresh-pill">{{ 'اليوم' if lang_pref == 'ar' else 'Today' }}</span>
+        {% endif %}
+    </a>
+    <div class="secondary-content">
+        <div class="meta-row">
+            <span class="desk-kicker">{{ item.desk_ar if lang_pref == 'ar' else item.desk_en }}</span>
+            {% if item.wing == 'research' %}
+            <span class="research-pill">{{ 'مجتمع علمي' if lang_pref == 'ar' else 'Research' }}</span>
+            {% endif %}
+            {% if item.url and not item.url.startswith('manual-') %}
+            <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.source or ('المصدر' if lang_pref == 'ar' else 'Source') }} ↗</a>
+            {% elif item.source %}
+            <span>{{ item.source }}</span>
+            {% endif %}
+            <span>{{ item.reading_minutes or 1 }} {{ 'د' if lang_pref == 'ar' else 'min' }}</span>
+        </div>
+        {% set published_label = item.published_ar if lang_pref == 'ar' else item.published_en %}
+        {% if published_label %}
+        <p class="card-when" {% if lang_pref == 'ar' %}dir="rtl"{% endif %}>{{ published_label }}</p>
+        {% endif %}
+        <a href="{{ '#' if is_video else href }}"
+            {% if is_video %}onclick="openVideoModal('{{ item.video_id }}'); return false;"{% endif %}
+            style="text-decoration: none; color: inherit;">
+            <h3 class="secondary-title" {% if lang_pref == 'ar' %}dir="rtl" style="font-family: var(--font-ar);"{% endif %}>{{ display_title }}</h3>
+        </a>
+        {% if lang_pref == 'both' and item.title_ar and item.title_ar != item.title %}
+        <h4 class="card-ar-sub" dir="rtl">{{ item.title_ar }}</h4>
+        {% endif %}
+        {% if display_summary %}
+        <p class="card-dek" {% if lang_pref == 'ar' %}dir="rtl"{% endif %}>{{ display_summary | plain_dek | truncate(140) }}</p>
+        {% endif %}
+    </div>
+</article>
+{% endmacro %}

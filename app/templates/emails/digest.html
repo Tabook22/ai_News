@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="{{ 'ar' if lang == 'ar' else 'en' }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+</head>
+
+<body
+    style="margin:0; padding:0; background:#0f172a; font-family: {{ 'Tahoma, Arial, sans-serif' if lang=='ar' else 'Segoe UI, Arial, sans-serif' }};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;">
+        <tr>
+            <td align="center" style="padding: 2rem 1rem;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                    style="max-width:560px; background:#1e293b; border-radius:16px; overflow:hidden;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 2rem; text-align:center; border-bottom: 1px solid #334155;">
+                            {% if logo_url %}
+                            <img src="{{ logo_url }}" alt="Logo" style="height:56px; margin-bottom: 0.75rem;">
+                            {% endif %}
+                            <div style="color:#f1f5f9; font-size:1.5rem; font-weight:800; letter-spacing:1px;">
+                                {{ settings.magazine_title }}</div>
+                            <div
+                                style="color:#94a3b8; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-top:0.4rem;">
+                                {{ 'نشرة الذكاء الاصطناعي الأسبوعية' if lang=='ar' else 'Weekly AI Briefing' }}
+                                — {{ date }}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- AI-written intro -->
+                    {% if intro_text %}
+                    <tr>
+                        <td
+                            style="padding: 1.5rem 2rem 0.5rem; color:#cbd5e1; font-size:0.95rem; line-height:1.7; text-align: {{ 'right' if lang=='ar' else 'left' }};">
+                            {{ intro_text }}
+                        </td>
+                    </tr>
+                    {% endif %}
+
+                    <!-- Articles -->
+                    {% for a in articles %}
+                    <tr>
+                        <td style="padding: 1.25rem 2rem; border-top: 1px solid #334155;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    {% if a.image %}
+                                    <td width="80"
+                                        style="vertical-align:top; padding-{{ 'left' if lang=='ar' else 'right' }}: 1rem;">
+                                        <img src="{{ a.image }}" width="80" height="80"
+                                            style="border-radius:8px; object-fit:cover; display:block;">
+                                    </td>
+                                    {% endif %}
+                                    <td style="vertical-align:top; text-align: {{ 'right' if lang=='ar' else 'left' }};">
+                                        <a href="{{ a.url }}"
+                                            style="color:#f1f5f9; font-weight:700; font-size:1rem; text-decoration:none; line-height:1.35;">{{
+                                            a.title }}</a>
+                                        <div style="color:#94a3b8; font-size:0.85rem; margin-top:0.4rem; line-height:1.5;">
+                                            {{ a.summary }}</div>
+                                        <a href="{{ a.url }}"
+                                            style="display:inline-block; margin-top:0.6rem; color:#38bdf8; font-size:0.8rem; text-decoration:none; font-weight:600;">
+                                            {{ 'اقرأ المزيد' if lang=='ar' else 'Read more' }} {{ '←' if lang=='ar' else '→' }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- CTA -->
+                    <tr>
+                        <td style="padding: 1.75rem 2rem; text-align:center;">
+                            <a href="{{ magazine_url }}"
+                                style="display:inline-block; background:#38bdf8; color:#0f172a; font-weight:700; padding:0.8rem 2rem; border-radius:8px; text-decoration:none; font-size:0.9rem;">
+                                {{ 'زيارة المجلة' if lang=='ar' else 'Visit the Magazine' }} {{ '←' if lang=='ar' else '→' }}
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="padding: 1.25rem 2rem; border-top:1px solid #334155; text-align:center; color:#64748b; font-size:0.75rem;">
+                            {{ settings.magazine_title }} &middot;
+                            <a href="{{ unsubscribe_url }}" style="color:#64748b;">
+                                {{ 'إلغاء الاشتراك' if lang=='ar' else 'Unsubscribe' }}
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

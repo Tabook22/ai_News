@@ -1,0 +1,286 @@
+{% extends "layout.html" %}
+{% import "_platform_icons.html" as icons %}
+
+{% block content %}
+<style>
+    .reel-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .reel-row.is-draggable {
+        cursor: grab;
+    }
+
+    .reel-row.sortable-ghost {
+        opacity: 0.4;
+    }
+
+    .reel-thumb {
+        width: 70px;
+        height: 70px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: var(--bg-hover);
+    }
+
+    .reel-thumb-placeholder {
+        width: 70px;
+        height: 70px;
+        border-radius: 8px;
+        background: var(--bg-hover);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .reel-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .reel-title {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .reel-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .reel-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .reel-status-select {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        width: auto;
+        border-radius: 6px;
+    }
+
+    .drag-handle {
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        cursor: grab;
+        padding: 0 0.5rem;
+    }
+
+    .drag-handle.disabled {
+        opacity: 0.25;
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .reels-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .filter-tab:hover {
+        border-color: var(--accent-primary);
+        color: var(--text-main);
+    }
+
+    .filter-tab.active {
+        background: var(--accent-primary);
+        border-color: var(--accent-primary);
+        color: #fff;
+    }
+
+    .sort-toggle {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .sort-toggle a {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .sort-toggle a.active {
+        background: var(--bg-hover);
+        color: var(--text-main);
+        border-color: var(--accent-primary);
+    }
+
+    .sort-hint {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin: -1rem 0 1rem;
+    }
+</style>
+
+<div class="dashboard-header">
+    <div>
+        <h1>🎬 Worth Watching (Reels)</h1>
+        <p style="color: var(--text-muted); margin: 0;">Curated pointers to Instagram/short-form videos — title,
+            thumbnail, your own summary, and a link out. We never host the source video.</p>
+    </div>
+    <div class="actions" style="display: flex; gap: 0.75rem;">
+        <a href="{{ url_for('reels_archive') }}" class="btn btn-secondary">🗄️ Archive ({{ counts.archived }})</a>
+        <a href="{{ url_for('add_reel') }}" class="btn btn-primary">➕ Add Reel</a>
+    </div>
+</div>
+
+<div class="reels-toolbar">
+    <div class="filter-tabs">
+        <a href="{{ url_for('reels_list', status='all', sort=sort_mode) }}"
+            class="filter-tab {{ 'active' if status_filter == 'all' else '' }}">All ({{ counts.all }})</a>
+        <a href="{{ url_for('reels_list', status='published', sort=sort_mode) }}"
+            class="filter-tab {{ 'active' if status_filter == 'published' else '' }}">✅ Published ({{ counts.published }})</a>
+        <a href="{{ url_for('reels_list', status='draft', sort=sort_mode) }}"
+            class="filter-tab {{ 'active' if status_filter == 'draft' else '' }}">📝 Draft ({{ counts.draft }})</a>
+    </div>
+    <div class="sort-toggle">
+        Sort:
+        <a href="{{ url_for('reels_list', status=status_filter, sort='manual') }}"
+            class="{{ 'active' if sort_mode == 'manual' else '' }}">🔀 Manual order</a>
+        <a href="{{ url_for('reels_list', status=status_filter, sort='date') }}"
+            class="{{ 'active' if sort_mode == 'date' else '' }}">🕒 Date added</a>
+    </div>
+</div>
+<p class="sort-hint" style="margin-top: -0.5rem;">This list only shows what's Published or still a Draft. Reels you
+    archive move to the <a href="{{ url_for('reels_archive') }}" style="color: var(--accent-primary);">Archive</a>,
+    organized by year and month.</p>
+
+{% if sort_mode == 'date' %}
+<p class="sort-hint">Sorted by date added (newest first) — drag-to-reorder is off while sorting this way. Switch to
+    "Manual order" to control what comes first on the site.</p>
+{% else %}
+<p class="sort-hint">Drag ⠿ to control what shows first on the site. This order only applies within each status —
+    only <strong>Published</strong> reels appear on the magazine and the Watch page.</p>
+{% endif %}
+
+{% if reels %}
+<div id="reels-sortable">
+    {% for reel in reels %}
+    <div class="reel-row {{ 'is-draggable' if sort_mode == 'manual' else '' }}" data-id="{{ reel.id }}"
+        style="{{ 'opacity:0.55;' if reel.status != 'published' else '' }}">
+        <span class="drag-handle {{ 'disabled' if sort_mode == 'date' else '' }}">⠿</span>
+        {% if reel.thumbnail %}
+        <img src="{{ reel.thumbnail }}" class="reel-thumb">
+        {% else %}
+        <div class="reel-thumb-placeholder">🎬</div>
+        {% endif %}
+        <div class="reel-info">
+            <div class="reel-title">{{ reel.title }}</div>
+            <div class="reel-meta" style="display: flex; align-items: center; gap: 0.4rem;">
+                {{ icons.platform_badge(reel.platform, 16) }}
+                {% if reel.creator_handle %}@{{ reel.creator_handle }}{% elif reel.creator_name %}{{ reel.creator_name }}{% endif %}
+                &bull; {{ reel.platform | replace('_', ' ') | title }}
+                &bull; Added {{ reel.created_at }}
+            </div>
+        </div>
+        <div class="reel-actions">
+            <a href="{{ reel.source_url }}" target="_blank" rel="noopener" class="btn-icon" title="Open source">↗</a>
+            <select class="reel-status-select" onchange="setReelStatus({{ reel.id }}, this.value)">
+                <option value="published" {% if reel.status=='published' %}selected{% endif %}>✅ Published</option>
+                <option value="draft" {% if reel.status=='draft' %}selected{% endif %}>📝 Draft</option>
+                <option value="archived" {% if reel.status=='archived' %}selected{% endif %}>🗄️ Archived</option>
+            </select>
+            <a href="{{ url_for('edit_reel', reel_id=reel.id) }}" class="btn-icon" title="Edit">✏️</a>
+            <form method="POST" action="{{ url_for('delete_reel', reel_id=reel.id) }}"
+                onsubmit="return confirm('Remove this reel?');">
+                <button type="submit" class="btn-icon danger" title="Delete">🗑️</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h3>No reels {{ 'in ' + status_filter if status_filter != 'all' else 'yet' }}</h3>
+    <p>Add your first "worth watching" pointer — a title, a thumbnail, your own summary, and a link to the original
+        post.</p>
+    <a href="{{ url_for('add_reel') }}" class="btn btn-primary">➕ Add Reel</a>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+    const reelsContainer = document.getElementById('reels-sortable');
+    if (reelsContainer && {{ 'true' if sort_mode == 'manual' else 'false' }}) {
+        new Sortable(reelsContainer, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            onEnd: function () {
+                const orderedIds = Array.from(reelsContainer.querySelectorAll('.reel-row'))
+                    .map(row => row.getAttribute('data-id'));
+                fetch('/api/reels/reorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ordered_ids: orderedIds })
+                });
+            }
+        });
+    }
+
+    function setReelStatus(id, status) {
+        fetch(`/api/reels/set_status/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: status })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to update.');
+                }
+            });
+    }
+</script>
+{% endblock %}

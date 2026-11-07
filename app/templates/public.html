@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="{{ 'ar' if lang_pref == 'ar' else 'en' }}" dir="{{ 'rtl' if lang_pref == 'ar' else 'ltr' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block page_title %}{{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}</title>
+
+    <link rel="icon" type="image/svg+xml"
+        href="{{ settings.logo_path if settings and settings.logo_path else url_for('static', filename='favicon.svg') }}">
+    <link rel="apple-touch-icon"
+        href="{{ settings.logo_path if settings and settings.logo_path else url_for('static', filename='favicon.svg') }}">
+
+    {% set meta_title = self.page_title()|trim %}
+    {% set meta_desc = "The AI magazine of Computer Science at Dhofar University. Department life and world AI news, in English and Arabic." %}
+    {% set meta_image = settings.logo_path if settings and settings.logo_path else '' %}
+    {% block meta %}
+    <meta name="description" content="{{ meta_desc }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ settings.magazine_title if settings else 'Nasser AI News' }}">
+    <meta property="og:title" content="{{ meta_title }}">
+    <meta property="og:description" content="{{ meta_desc }}">
+    <meta property="og:url" content="{{ request.url }}">
+    {% if meta_image %}<meta property="og:image" content="{{ meta_image | replace('/static', request.url_root.rstrip('/') + '/static') if meta_image.startswith('/static') else meta_image }}">{% endif %}
+    <meta name="twitter:card" content="{{ 'summary_large_image' if meta_image else 'summary' }}">
+    <meta name="twitter:title" content="{{ meta_title }}">
+    <meta name="twitter:description" content="{{ meta_desc }}">
+    {% endblock %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/templates.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/issue.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600;900&family=Playfair+Display:wght@400;600;700;900&family=Archivo+Black&family=Georgia&display=swap"
+        rel="stylesheet">
+    {% if settings and (settings.custom_text_color or settings.custom_accent_color) %}
+    <style>
+        :root {
+            {% if settings.custom_text_color %}--text-main: {{ settings.custom_text_color }} !important;{% endif %}
+            {% if settings.custom_accent_color %}--accent-primary: {{ settings.custom_accent_color }} !important;{% endif %}
+        }
+    </style>
+    {% endif %}
+</head>
+
+<body class="theme-{{ settings.theme if settings else 'slate' }} template-{{ settings.magazine_template if settings and settings.magazine_template else 'slate' }}">
+    {% block reader_chrome %}
+    {% set ep = request.endpoint %}
+    <header class="reader-bar">
+        <a class="reader-brand" href="{{ url_for('magazine_view') }}">
+            {% if settings and settings.logo_path %}
+            <img src="{{ settings.logo_path }}" alt="">
+            {% endif %}
+            <span>{{ settings.magazine_title if settings else 'Nasser AI News' }}</span>
+        </a>
+        <nav class="reader-links" aria-label="{{ 'أقسام الصحيفة' if lang_pref == 'ar' else 'Sections' }}">
+            <a href="{{ url_for('magazine_view') }}" class="{{ 'active' if ep in ['magazine_view', 'magazine_detail'] else '' }}">{{ 'العدد' if lang_pref == 'ar' else 'The issue' }}</a>
+            <a href="{{ url_for('campus_weekly') }}" class="{{ 'active' if ep == 'campus_weekly' else '' }}">{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</a>
+            <a href="{{ url_for('campus_photos') }}" class="{{ 'active' if ep == 'campus_photos' else '' }}">{{ 'صور القسم' if lang_pref == 'ar' else 'Dept photos' }}</a>
+            <a href="{{ url_for('news_photos') }}" class="{{ 'active' if ep == 'news_photos' else '' }}">{{ 'صور الأخبار' if lang_pref == 'ar' else 'News photos' }}</a>
+            <a href="{{ url_for('watch_page') }}" class="{{ 'active' if ep == 'watch_page' else '' }}">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a>
+            <a href="{{ url_for('youtube_desk') }}" class="{{ 'active' if ep == 'youtube_desk' else '' }}">{{ 'يوتيوب' if lang_pref == 'ar' else 'YouTube' }}</a>
+            <a href="{{ url_for('tools_directory') }}" class="{{ 'active' if ep in ['tools_directory', 'tool_detail'] else '' }}">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a>
+            <a href="{{ url_for('author_info') }}" class="{{ 'active' if ep == 'author_info' else '' }}">{{ 'المحرر' if lang_pref == 'ar' else 'Editor' }}</a>
+            <a href="{{ url_for('subscribe') }}" class="reader-subscribe {{ 'active' if ep == 'subscribe' else '' }}">{{ 'اشترك' if lang_pref == 'ar' else 'Subscribe' }}</a>
+        </nav>
+        <div class="reader-lang" aria-label="{{ 'اللغة' if lang_pref == 'ar' else 'Language' }}">
+            <a href="{{ url_for('set_language', lang='en', next=request.full_path.rstrip('?')) }}" class="{{ 'active' if lang_pref == 'en' else '' }}">EN</a>
+            <a href="{{ url_for('set_language', lang='ar', next=request.full_path.rstrip('?')) }}" class="{{ 'active' if lang_pref == 'ar' else '' }}" style="font-family: var(--font-ar);">ع</a>
+            <a href="{{ url_for('set_language', lang='both', next=request.full_path.rstrip('?')) }}" class="{{ 'active' if lang_pref == 'both' else '' }}">EN+ع</a>
+        </div>
+    </header>
+    {% endblock %}
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block overlays %}{% endblock %}
+
+    {% block newsletter_cta %}
+    <section class="issue-subscribe reader-newsletter">
+        <p class="issue-university">{{ 'جامعة ظفار · قسم علوم الحاسوب' if lang_pref == 'ar' else 'Dhofar University · Computer Science' }}</p>
+        <h2>{{ 'الجهتان في بريدك' if lang_pref == 'ar' else 'Both desks, in your inbox' }}</h2>
+        <p>{{ 'أخبار القسم وأخبار الذكاء الاصطناعي في العالم، بالعربية والإنجليزية. مجاناً.' if lang_pref == 'ar' else 'Department life and the world’s AI news, in English and Arabic. Free.' }}</p>
+        <form id="footer-subscribe-form" action="{{ url_for('subscribe') }}" method="POST">
+            <input type="hidden" name="source" value="web">
+            <input type="email" name="email" required placeholder="you@email.com">
+            <button type="submit" class="btn btn-primary">{{ 'اشترك' if lang_pref == 'ar' else 'Subscribe' }}</button>
+        </form>
+        <p id="footer-subscribe-msg" style="margin-top: 0.75rem; font-size: 0.85rem; min-height: 1.2em;"></p>
+    </section>
+    <script>
+        (function () {
+            var form = document.getElementById('footer-subscribe-form');
+            if (!form) return;
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var msg = document.getElementById('footer-subscribe-msg');
+                var btn = form.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: new FormData(form)
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        btn.disabled = false;
+                        msg.textContent = data.message || '';
+                        msg.style.color = data.status === 'success' ? '#34d399' : '#f87171';
+                        if (data.status === 'success') { form.reset(); }
+                    })
+                    .catch(function () {
+                        btn.disabled = false;
+                        msg.textContent = 'Network error — please try again.';
+                        msg.style.color = '#f87171';
+                    });
+            });
+        })();
+    </script>
+    {% endblock %}
+
+    <!-- Global Footer -->
+    <footer class="reader-footer"
+        style="margin-top: auto; border-top: 1px solid var(--border-color); background: var(--overlay-chrome); backdrop-filter: blur(10px); padding: 3rem 0;">
+        <div class="reader-footer-inner">
+            <div>
+                <div class="reader-footer-brand">{{ settings.magazine_title if settings else 'Nasser AI' }}</div>
+                <div class="reader-footer-place">
+                    {{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب في جامعة ظفار.' if lang_pref == 'ar' else 'The AI magazine of Computer Science at Dhofar University.' }}
+                </div>
+            </div>
+
+            <div class="reader-footer-links">
+                <nav style="background: none; border: none; padding: 0; box-shadow: none; backdrop-filter: none;">
+                    <div class="links" style="gap: 1.5rem;">
+                        <a href="{{ url_for('magazine_view') }}" style="font-size: 0.85rem;">{{ 'العدد' if lang_pref == 'ar' else 'The issue' }}</a>
+                        <a href="{{ url_for('campus_weekly') }}" style="font-size: 0.85rem;">{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</a>
+                        <a href="{{ url_for('watch_page') }}" style="font-size: 0.85rem;">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a>
+                        <a href="{{ url_for('youtube_desk') }}" style="font-size: 0.85rem;">{{ 'يوتيوب' if lang_pref == 'ar' else 'YouTube' }}</a>
+                        <a href="{{ url_for('tools_directory') }}" style="font-size: 0.85rem;">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a>
+                        <a href="{{ url_for('subscribe') }}" style="font-size: 0.85rem;">{{ 'اشترك' if lang_pref == 'ar' else 'Subscribe' }}</a>
+                        <a href="{{ url_for('author_info') }}" style="font-size: 0.85rem;">{{ 'المحرر' if lang_pref == 'ar' else 'Editor' }}</a>
+                    </div>
+                </nav>
+                <div style="height: 20px; width: 1px; background: var(--border-color);"></div>
+                <div style="color: var(--text-muted); font-size: 0.85rem; font-family: monospace;">
+                    v2.4.0 &copy;
+                    <script>document.write(new Date().getFullYear())</script>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Global Source Modal — most publishers block being shown inside another site's page
+         (VentureBeat, MSN, etc. all refused to embed when we tested this), so instead of a
+         frame that's blank 9 times out of 10, this shows a preview card built from what we
+         already stored about the article, with one unmissable button to actually open it. -->
+    <div id="source-modal"
+        style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 2100; align-items: center; justify-content: center; padding: 2rem;">
+        <div
+            style="position: relative; width: 100%; max-width: 520px; max-height: 90vh; background: var(--bg-main); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; border: 1px solid var(--border-color);">
+
+            <!-- Header: magazine logo/brand + the article's own title -->
+            <div
+                style="display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 1rem; background: var(--bg-card); border-bottom: 1px solid var(--border-color); flex-shrink: 0;">
+                {% if settings and settings.logo_path %}
+                <img src="{{ settings.logo_path }}" alt="Logo" style="height: 28px; width: 28px; object-fit: contain; border-radius: 6px; flex-shrink: 0;">
+                {% else %}
+                <span style="font-size: 1.3rem; flex-shrink: 0;">📡</span>
+                {% endif %}
+                <div style="min-width: 0; flex: 1;">
+                    <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700;">
+                        {{ settings.magazine_title if settings else 'Nasser AI News' }}
+                    </div>
+                    <div id="source-modal-title"
+                        style="font-size: 0.9rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    </div>
+                </div>
+                <button onclick="closeSourceModal()"
+                    style="flex-shrink: 0; color: var(--text-muted); background: transparent; border: none; font-size: 1.6rem; cursor: pointer; line-height: 1; padding: 0 0.2rem;">&times;</button>
+            </div>
+
+            <!-- Body: a preview card built from data we already have — never a blank page -->
+            <div style="flex: 1; overflow-y: auto; padding: 1.75rem; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1.1rem;">
+                <img id="source-modal-image" src="" alt=""
+                    style="display:none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px;">
+                <div>
+                    <div id="source-modal-source"
+                        style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-primary); font-weight: 700; margin-bottom: 0.5rem;">
+                    </div>
+                    <div id="source-modal-headline" style="font-size: 1.25rem; font-weight: 700; line-height: 1.35; margin-bottom: 0.6rem;">
+                    </div>
+                    <p id="source-modal-summary" style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin: 0;">
+                    </p>
+                </div>
+                <a id="source-modal-newtab" href="#" target="_blank" rel="noopener" class="btn btn-primary"
+                    style="width: 100%; padding: 1rem; font-size: 1rem; justify-content: center;">
+                    Open Original Article ↗
+                </a>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">
+                    Most publishers don't allow their pages to be shown inside another site, so this opens in a new
+                    tab.
+                </p>
+            </div>
+        </div>
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"
+            onclick="closeSourceModal()"></div>
+    </div>
+
+    <script>
+        function openSourceModal(url, title, image, summary, source) {
+            if (!url) return;
+            document.getElementById('source-modal-title').textContent = title || '';
+            document.getElementById('source-modal-headline').textContent = title || '';
+            document.getElementById('source-modal-source').textContent = source ? ('From ' + source) : 'From the original source';
+            document.getElementById('source-modal-summary').textContent = summary || '';
+            document.getElementById('source-modal-newtab').href = url;
+
+            const imgEl = document.getElementById('source-modal-image');
+            if (image) {
+                imgEl.src = image;
+                imgEl.style.display = 'block';
+            } else {
+                imgEl.style.display = 'none';
+            }
+
+            document.getElementById('source-modal').style.display = 'flex';
+        }
+
+        function closeSourceModal() {
+            document.getElementById('source-modal').style.display = 'none';
+        }
+
+        // Delegate clicks so any current or future ".js-open-source" link uses the modal
+        document.addEventListener('click', function (event) {
+            const trigger = event.target.closest('.js-open-source');
+            if (!trigger) return;
+            event.preventDefault();
+            openSourceModal(trigger.dataset.url, trigger.dataset.title, trigger.dataset.image,
+                trigger.dataset.summary, trigger.dataset.source);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === "Escape") {
+                closeSourceModal();
+            }
+        });
+    </script>
+
+    {% block ask_companion %}
+    <!-- Ask the Magazine — floating AI reading companion, grounded only in this magazine's own stories -->
+    <style>
+        #ask-bubble {
+            position: fixed;
+            bottom: 1.5rem;
+            {{ 'left' if lang_pref=='ar' else 'right' }}: 1.5rem;
+            z-index: 1800;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.45);
+            transition: transform 0.2s;
+            border: none;
+            color: #fff;
+        }
+
+        #ask-bubble:hover {
+            transform: scale(1.08);
+        }
+
+        #ask-panel {
+            display: none;
+            position: fixed;
+            bottom: 5.6rem;
+            {{ 'left' if lang_pref=='ar' else 'right' }}: 1.5rem;
+            z-index: 1800;
+            width: 380px;
+            max-width: calc(100vw - 2rem);
+            height: 540px;
+            max-height: 75vh;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #ask-panel.open {
+            display: flex;
+        }
+
+        .ask-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 1rem 1.1rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .ask-header .ask-title {
+            flex: 1;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .ask-header .ask-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .ask-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .ask-msg {
+            max-width: 85%;
+            padding: 0.7rem 0.9rem;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        .ask-msg.user {
+            align-self: {{ 'flex-start' if lang_pref=='ar' else 'flex-end' }};
+            background: var(--accent-primary);
+            color: #fff;
+        }
+
+        .ask-msg.bot {
+            align-self: {{ 'flex-end' if lang_pref=='ar' else 'flex-start' }};
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .ask-msg .ask-sources {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .ask-msg .ask-sources a {
+            font-size: 0.78rem;
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .ask-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            padding: 0 1rem 1rem;
+            flex-shrink: 0;
+        }
+
+        .ask-suggestion-chip {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .ask-suggestion-chip:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-main);
+        }
+
+        .ask-input-row {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-card);
+            flex-shrink: 0;
+        }
+
+        .ask-input-row input {
+            flex: 1;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.88rem;
+        }
+
+        .ask-input-row button {
+            flex-shrink: 0;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            border: none;
+            background: var(--accent-primary);
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        .ask-typing {
+            align-self: {{ 'flex-end' if lang_pref=='ar' else 'flex-start' }};
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        @media (max-width: 720px) {
+            #ask-bubble {
+                width: 46px;
+                height: 46px;
+                bottom: 0.85rem;
+                {{ 'left' if lang_pref=='ar' else 'right' }}: 0.85rem;
+                font-size: 1.15rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #ask-panel {
+                width: calc(100vw - 1.5rem);
+                {{ 'left' if lang_pref=='ar' else 'right' }}: 0.75rem;
+                bottom: 4.6rem;
+            }
+        }
+    </style>
+
+    <button id="ask-bubble" onclick="toggleAskPanel()" title="{{ 'اسأل المجلة' if lang_pref == 'ar' else 'Ask the Magazine' }}">💬</button>
+
+    <div id="ask-panel" {% if lang_pref == 'ar' %}dir="rtl"{% endif %}>
+        <div class="ask-header">
+            {% if settings and settings.logo_path %}
+            <img src="{{ settings.logo_path }}" alt="Logo" style="height: 28px; width: 28px; object-fit: contain; border-radius: 6px;">
+            {% else %}
+            <span style="font-size: 1.3rem;">🤖</span>
+            {% endif %}
+            <div class="ask-title">
+                {{ 'اسأل المجلة' if lang_pref == 'ar' else 'Ask the Magazine' }}
+                <div class="ask-sub">{{ 'إجابات من قصص المجلة فقط' if lang_pref == 'ar' else "Answers from this magazine's own coverage" }}</div>
+            </div>
+            <button onclick="toggleAskPanel()" style="background:none; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+
+        <div class="ask-messages" id="ask-messages">
+            <div class="ask-msg bot">
+                {{ 'مرحبًا! اسألني عن أي شيء غطته المجلة مؤخرًا.' if lang_pref == 'ar' else "Hi! Ask me anything this magazine has covered recently." }}
+            </div>
+        </div>
+
+        <div class="ask-suggestions" id="ask-suggestions">
+            <span class="ask-suggestion-chip" onclick="askSuggested(this)">{{ 'ما آخر أخبار الذكاء الاصطناعي؟' if lang_pref == 'ar' else "What's the latest in AI?" }}</span>
+            <span class="ask-suggestion-chip" onclick="askSuggested(this)">{{ 'لخّص هذا الأسبوع' if lang_pref == 'ar' else 'Summarize this week' }}</span>
+        </div>
+
+        <div class="ask-input-row">
+            <input type="text" id="ask-input" placeholder="{{ 'اكتب سؤالك...' if lang_pref == 'ar' else 'Type your question...' }}"
+                onkeydown="if(event.key==='Enter') sendAskQuestion();">
+            <button onclick="sendAskQuestion()" title="{{ 'إرسال' if lang_pref == 'ar' else 'Send' }}">{{ '←' if lang_pref == 'ar' else '→' }}</button>
+        </div>
+    </div>
+
+    <script>
+        const ASK_LANG = "{{ 'ar' if lang_pref == 'ar' else 'en' }}";
+
+        function toggleAskPanel() {
+            document.getElementById('ask-panel').classList.toggle('open');
+            if (document.getElementById('ask-panel').classList.contains('open')) {
+                document.getElementById('ask-input').focus();
+            }
+        }
+
+        function askSuggested(el) {
+            document.getElementById('ask-input').value = el.textContent;
+            sendAskQuestion();
+        }
+
+        function appendAskMessage(text, role, sources) {
+            const wrap = document.getElementById('ask-messages');
+            const div = document.createElement('div');
+            div.className = 'ask-msg ' + role;
+            div.textContent = text;
+            if (sources && sources.length) {
+                const srcWrap = document.createElement('div');
+                srcWrap.className = 'ask-sources';
+                sources.forEach(s => {
+                    const a = document.createElement('a');
+                    a.href = s.url;
+                    a.textContent = (ASK_LANG === 'ar' ? '📄 ' : '📄 ') + s.title;
+                    srcWrap.appendChild(a);
+                });
+                div.appendChild(srcWrap);
+            }
+            wrap.appendChild(div);
+            wrap.scrollTop = wrap.scrollHeight;
+        }
+
+        function sendAskQuestion() {
+            const input = document.getElementById('ask-input');
+            const question = input.value.trim();
+            if (!question) return;
+
+            const suggestions = document.getElementById('ask-suggestions');
+            if (suggestions) suggestions.style.display = 'none';
+
+            appendAskMessage(question, 'user');
+            input.value = '';
+            input.disabled = true;
+
+            const wrap = document.getElementById('ask-messages');
+            const typing = document.createElement('div');
+            typing.className = 'ask-typing';
+            typing.id = 'ask-typing-indicator';
+            typing.textContent = ASK_LANG === 'ar' ? 'يكتب...' : 'Thinking...';
+            wrap.appendChild(typing);
+            wrap.scrollTop = wrap.scrollHeight;
+
+            fetch('/api/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question, lang: ASK_LANG })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    const indicator = document.getElementById('ask-typing-indicator');
+                    if (indicator) indicator.remove();
+                    input.disabled = false;
+                    input.focus();
+                    if (data.status === 'success') {
+                        appendAskMessage(data.answer, 'bot', data.sources);
+                    } else {
+                        appendAskMessage(data.message || (ASK_LANG === 'ar' ? 'حدث خطأ ما.' : 'Something went wrong.'), 'bot');
+                    }
+                })
+                .catch(() => {
+                    const indicator = document.getElementById('ask-typing-indicator');
+                    if (indicator) indicator.remove();
+                    input.disabled = false;
+                    appendAskMessage(ASK_LANG === 'ar' ? 'خطأ في الشبكة.' : 'Network error.', 'bot');
+                });
+        }
+    </script>
+    {% endblock %}
+
+    <!-- Global Video Modal -->
+    <div id="video-modal"
+        style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center;">
+        <div
+            style="position: relative; width: 80%; max-width: 900px; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.5);">
+            <button onclick="closeVideoModal()"
+                style="position: absolute; top: -40px; right: -10px; color: #fff; background: transparent; border: none; font-size: 2rem; cursor: pointer;">&times;</button>
+            <iframe id="video-frame" width="100%" height="100%" src="" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"
+            onclick="closeVideoModal()"></div>
+    </div>
+
+    <script>
+        function openVideoModal(videoId) {
+            if (!videoId) return;
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            document.getElementById('video-frame').src = embedUrl;
+            document.getElementById('video-modal').style.display = 'flex';
+        }
+
+        function closeVideoModal() {
+            document.getElementById('video-modal').style.display = 'none';
+            document.getElementById('video-frame').src = ''; // Stop audio
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function (event) {
+            if (event.key === "Escape") {
+                closeVideoModal();
+            }
+        });
+    </script>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+
+</html>

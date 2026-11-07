@@ -1,0 +1,1848 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .dashboard-header p {
+        color: var(--text-muted);
+        margin: 0.35rem 0 0;
+        font-weight: 400;
+        font-size: 0.95rem;
+    }
+
+    .settings-shell {
+        display: flex;
+        align-items: flex-start;
+        gap: 2rem;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    /* --- Left nav --- */
+    .settings-nav {
+        flex: 0 0 230px;
+        position: sticky;
+        top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .settings-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+        width: 100%;
+        text-align: left;
+        padding: 0.8rem 1rem;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+
+    .settings-nav-item .tab-icon {
+        font-size: 1.1rem;
+        margin-right: 0.4rem;
+    }
+
+    .settings-nav-item small {
+        font-size: 0.72rem;
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--text-muted);
+        opacity: 0.75;
+    }
+
+    .settings-nav-item:hover {
+        background: var(--bg-hover);
+        color: var(--text-main);
+    }
+
+    .settings-nav-item.active {
+        background: var(--bg-card);
+        border-color: var(--accent-primary);
+        color: var(--accent-primary);
+        box-shadow: 0 0 0 1px var(--accent-primary) inset;
+    }
+
+    .settings-nav-item.active small {
+        color: var(--accent-primary);
+        opacity: 0.8;
+    }
+
+    /* --- Main column --- */
+    .settings-main {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .settings-panel {
+        display: none;
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        animation: settingsFadeIn 0.25s ease;
+    }
+
+    .settings-panel.active {
+        display: block;
+    }
+
+    @keyframes settingsFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .settings-panel-header {
+        margin-bottom: 1.75rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .settings-panel-header h2 {
+        margin: 0 0 0.35rem;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .settings-panel-header p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 400;
+    }
+
+    .settings-subheader {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 2rem 0 0.25rem;
+        padding-top: 1.5rem;
+        border-top: 1px dashed var(--border-color);
+    }
+
+    .settings-subheader:first-of-type {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+
+    .settings-hint {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin: -0.5rem 0 1.25rem;
+    }
+
+    .field-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* --- Bilingual pair rows --- */
+    .bilingual-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        padding: 1.1rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .bilingual-pair .lang-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--accent-primary);
+        margin-bottom: 0.4rem;
+    }
+
+    .bilingual-pair .form-group {
+        margin-bottom: 0;
+    }
+
+    /* --- Choice cards (theme / language) --- */
+    .choice-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .choice-card {
+        position: relative;
+        cursor: pointer;
+        display: block;
+    }
+
+    .choice-card input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .choice-card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 2px solid var(--border-color);
+        background: var(--bg-main);
+        transition: all 0.2s ease;
+    }
+
+    .choice-card input:checked+.choice-card-body {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+
+    .choice-card:hover .choice-card-body {
+        border-color: var(--accent-primary);
+    }
+
+    .swatch-row {
+        display: flex;
+        gap: 0.3rem;
+    }
+
+    .swatch-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+    }
+
+    .choice-card-label {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--text-main);
+    }
+
+    /* --- Toggle switch --- */
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 26px;
+        flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        inset: 0;
+        background: var(--bg-hover);
+        border: 1px solid var(--border-color);
+        border-radius: 999px;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+
+    .toggle-slider::before {
+        content: "";
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        left: 3px;
+        top: 2px;
+        background: var(--text-muted);
+        border-radius: 50%;
+        transition: 0.2s;
+    }
+
+    .toggle-switch input:checked+.toggle-slider {
+        background: var(--accent-primary);
+        border-color: var(--accent-primary);
+    }
+
+    .toggle-switch input:checked+.toggle-slider::before {
+        transform: translateX(20px);
+        background: #fff;
+    }
+
+    /* --- Advanced colors --- */
+    .advanced-colors {
+        margin-top: 1.5rem;
+        border: 1px dashed var(--border-color);
+        border-radius: 12px;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .advanced-colors summary {
+        cursor: pointer;
+        padding: 1rem 1.25rem;
+        font-weight: 700;
+        color: var(--text-main);
+        list-style: none;
+    }
+
+    .advanced-colors summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .advanced-colors summary::before {
+        content: "▸ ";
+        color: var(--accent-primary);
+    }
+
+    .advanced-colors[open] summary::before {
+        content: "▾ ";
+    }
+
+    .advanced-colors-body {
+        padding: 0 1.25rem 1.25rem;
+    }
+
+    .color-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .color-swatch-input label {
+        font-size: 0.75rem;
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .color-swatch-input input[type="color"] {
+        width: 100%;
+        height: 38px;
+        padding: 0;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        cursor: pointer;
+        background: var(--bg-main);
+    }
+
+    /* --- Media previews --- */
+    .media-preview-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .media-preview-row img {
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    /* --- Save bar --- */
+    .settings-save-bar {
+        position: sticky;
+        bottom: 1rem;
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        background: var(--overlay-chrome);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .settings-save-bar .btn-primary {
+        padding: 0.7rem 2rem;
+    }
+
+    /* --- Gallery --- */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .gallery-card {
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    /* --- API Keys --- */
+    .apikey-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .apikey-card {
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .apikey-card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .apikey-icon {
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    .apikey-card-title-wrap {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .apikey-title {
+        font-weight: 700;
+        color: var(--text-main);
+        font-size: 1rem;
+    }
+
+    .apikey-help {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-top: 0.15rem;
+    }
+
+    .apikey-status {
+        flex-shrink: 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.3rem 0.6rem;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .apikey-status.is-set {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .apikey-status.is-unset {
+        background: rgba(148, 163, 184, 0.15);
+        color: var(--text-muted);
+    }
+
+    .apikey-field-row {
+        margin-bottom: 0.75rem;
+    }
+
+    .apikey-field-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .apikey-field-row label {
+        font-size: 0.72rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .apikey-input {
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+    }
+
+    .apikey-toggle-visibility {
+        flex-shrink: 0;
+    }
+
+    .apikey-card-footer {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding-top: 0.25rem;
+        border-top: 1px dashed var(--border-color);
+    }
+
+    .apikey-save-btn {
+        padding: 0.5rem 1.2rem;
+        font-size: 0.85rem;
+    }
+
+    .apikey-save-status {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+
+    .apikey-add-custom {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px dashed var(--border-color);
+    }
+
+    .cover-set {
+        border: 1px solid var(--border-color);
+        margin: 0 0 1.25rem;
+        padding: 0.85rem;
+        max-height: 28rem;
+        overflow: auto;
+    }
+
+    .cover-set legend {
+        font-weight: 800;
+        padding: 0 0.4rem;
+        color: #0f172a;
+    }
+
+    .cover-pick {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.55rem 0.4rem;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+    }
+
+    .cover-pick img {
+        width: 72px;
+        height: 48px;
+        object-fit: cover;
+        flex: 0 0 auto;
+        background: #0f172a;
+    }
+
+    .cover-pick strong {
+        display: block;
+        color: #0f172a;
+        font-size: 0.92rem;
+        line-height: 1.35;
+    }
+
+    .cover-pick em {
+        color: var(--text-muted);
+        font-style: normal;
+        font-size: 0.75rem;
+    }
+
+    .cover-empty {
+        color: var(--text-muted);
+        margin: 0.4rem;
+    }
+
+    @media (max-width: 900px) {
+        .settings-shell {
+            flex-direction: column;
+        }
+
+        .settings-nav {
+            position: static;
+            flex-direction: row;
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 0.5rem;
+        }
+
+        .settings-nav-item {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .bilingual-pair {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard-header">
+    <div>
+        <h1><svg class="icon" style="width:24px;height:24px;color:#0f766e" aria-hidden="true"><use href="#i-settings"></use></svg> {{ A('set_title') }}</h1>
+        <p>{{ A('set_dek') }}</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+        <svg class="icon" style="width:16px;height:16px" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        {{ 'Control room' if not admin_ar else 'غرفة التحكم' }}
+    </a>
+</div>
+
+<div class="settings-shell">
+    <nav class="settings-nav" id="settings-nav">
+        <button type="button" class="settings-nav-item active" data-tab="general">
+            <span><span class="tab-icon">🏠</span>{{ A('tab_general') }}</span>
+            <small>{{ A('tab_general_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="covers">
+            <span><span class="tab-icon">📰</span>{{ A('tab_covers') }}</span>
+            <small>{{ A('tab_covers_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="appearance">
+            <span><span class="tab-icon">🎨</span>{{ A('tab_look') }}</span>
+            <small>{{ A('tab_look_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="sections">
+            <span><span class="tab-icon">🏷️</span>{{ A('tab_sections') }}</span>
+            <small>{{ A('tab_sections_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="content">
+            <span><span class="tab-icon">🎬</span>{{ A('tab_content') }}</span>
+            <small>{{ A('tab_content_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="author">
+            <span><span class="tab-icon">👤</span>{{ A('tab_author') }}</span>
+            <small>{{ A('tab_author_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="contact">
+            <span><span class="tab-icon">📞</span>{{ A('tab_contact') }}</span>
+            <small>{{ A('tab_contact_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="gallery">
+            <span><span class="tab-icon">🖼️</span>{{ A('tab_gallery') }}</span>
+            <small>{{ A('tab_gallery_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="aimodels">
+            <span><span class="tab-icon">🤖</span>{{ A('tab_ai') }}</span>
+            <small>{{ A('tab_ai_s') }}</small>
+        </button>
+        <button type="button" class="settings-nav-item" data-tab="apikeys">
+            <span><span class="tab-icon">🔑</span>{{ A('tab_keys') }}</span>
+            <small>{{ A('tab_keys_s') }}</small>
+        </button>
+    </nav>
+
+    <div class="settings-main">
+        <form method="POST" enctype="multipart/form-data" id="settings-form" novalidate>
+        <div class="settings-panels">
+
+            <!-- ========================= GENERAL ========================= -->
+            <section class="settings-panel active" data-panel="general">
+                <div class="settings-panel-header">
+                    <h2>🏠 {{ A('gen_h') }}</h2>
+                    <p>{{ A('gen_p') }}</p>
+                </div>
+
+                <div class="field-grid">
+                    <div class="form-group">
+                        <label>{{ A('mag_title') }}</label>
+                        <input type="text" name="magazine_title" value="{{ settings.magazine_title }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>{{ A('edition') }}</label>
+                        <input type="text" name="version" value="{{ settings.version or '' }}"
+                            placeholder="e.g. Vol 1. - Jan 2026">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ A('logo') }}</label>
+                    {% if settings.logo_path %}
+                    <div class="media-preview-row">
+                        <img src="{{ settings.logo_path }}" style="height: 60px;">
+                    </div>
+                    {% endif %}
+                    <input type="file" name="logo" accept="image/*">
+                </div>
+            </section>
+
+            <!-- ========================= COVERS ========================= -->
+            <section class="settings-panel" data-panel="covers">
+                <div class="settings-panel-header">
+                    <h2>📰 {{ A('covers_h') }}</h2>
+                    <p>{{ A('covers_p') }}</p>
+                </div>
+
+                <fieldset class="cover-set">
+                    <legend>{{ A('cover_campus_h') }}</legend>
+                    <label class="cover-pick">
+                        <input type="radio" name="cover_campus_id" value=""
+                            {% if not settings.cover_campus_id %}checked{% endif %}>
+                        <span>{{ A('cover_auto_campus') }}</span>
+                    </label>
+                    {% for item in cover_campus %}
+                    <label class="cover-pick">
+                        <input type="radio" name="cover_campus_id" value="{{ item.id }}"
+                            {% if settings.cover_campus_id == item.id %}checked{% endif %}>
+                        {% if item.image %}<img src="{{ item.image }}" alt="">{% endif %}
+                        <span>
+                            <strong>{{ (item.title_ar|reader_line or item.title) if admin_ar else (item.title or item.title_ar) }}</strong>
+                            {% if item.source %}<em>{{ item.source }}</em>{% endif %}
+                        </span>
+                    </label>
+                    {% else %}
+                    <p class="cover-empty">{{ A('cover_empty_campus') }}</p>
+                    {% endfor %}
+                </fieldset>
+
+                <fieldset class="cover-set">
+                    <legend>{{ A('cover_world_h') }}</legend>
+                    <label class="cover-pick">
+                        <input type="radio" name="cover_world_id" value=""
+                            {% if not settings.cover_world_id %}checked{% endif %}>
+                        <span>{{ A('cover_auto_world') }}</span>
+                    </label>
+                    {% for item in cover_world %}
+                    <label class="cover-pick">
+                        <input type="radio" name="cover_world_id" value="{{ item.id }}"
+                            {% if settings.cover_world_id == item.id %}checked{% endif %}>
+                        {% if item.image %}<img src="{{ item.image }}" alt="">{% endif %}
+                        <span>
+                            <strong>{{ (item.title_ar|reader_line or item.title) if admin_ar else (item.title or item.title_ar) }}</strong>
+                            {% if item.source %}<em>{{ item.source }}</em>{% endif %}
+                        </span>
+                    </label>
+                    {% else %}
+                    <p class="cover-empty">{{ A('cover_empty_world') }}</p>
+                    {% endfor %}
+                </fieldset>
+            </section>
+
+            <!-- ========================= APPEARANCE ========================= -->
+            <section class="settings-panel" data-panel="appearance">
+                <div class="settings-panel-header">
+                    <h2>🎨 {{ A('look_h') }}</h2>
+                    <p>{{ A('look_p') }}</p>
+                </div>
+
+                <div class="settings-subheader">Language Layout</div>
+                <div class="choice-cards">
+                    <label class="choice-card">
+                        <input type="radio" name="language_mode" value="bilingual"
+                            {{ 'checked' if settings.language_mode=='bilingual' or not settings.language_mode else '' }}>
+                        <span class="choice-card-body">
+                            <span style="font-size:1.4rem;">🌍</span>
+                            <span class="choice-card-label">Bilingual</span>
+                            <span style="font-size:0.78rem; color:var(--text-muted);">English &amp; Arabic</span>
+                        </span>
+                    </label>
+                    <label class="choice-card">
+                        <input type="radio" name="language_mode" value="en"
+                            {{ 'checked' if settings.language_mode=='en' else '' }}>
+                        <span class="choice-card-body">
+                            <span style="font-size:1.4rem;">🇬🇧</span>
+                            <span class="choice-card-label">English Only</span>
+                        </span>
+                    </label>
+                    <label class="choice-card">
+                        <input type="radio" name="language_mode" value="ar"
+                            {{ 'checked' if settings.language_mode=='ar' else '' }}>
+                        <span class="choice-card-body">
+                            <span style="font-size:1.4rem;">🇸🇦</span>
+                            <span class="choice-card-label">Arabic Only</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="settings-subheader">Visual Theme</div>
+                <div class="choice-cards">
+                    <label class="choice-card">
+                        <input type="radio" name="theme" value="slate"
+                            {{ 'checked' if settings.theme=='slate' or not settings.theme else '' }}>
+                        <span class="choice-card-body">
+                            <span class="swatch-row">
+                                <span class="swatch-dot" style="background:#0f172a;"></span>
+                                <span class="swatch-dot" style="background:#38bdf8;"></span>
+                                <span class="swatch-dot" style="background:#f1f5f9;"></span>
+                            </span>
+                            <span class="choice-card-label">🌑 Slate</span>
+                            <span style="font-size:0.78rem; color:var(--text-muted);">Default dark navy</span>
+                        </span>
+                    </label>
+                    <label class="choice-card">
+                        <input type="radio" name="theme" value="light" {{ 'checked' if settings.theme=='light' else ''
+                            }}>
+                        <span class="choice-card-body">
+                            <span class="swatch-row">
+                                <span class="swatch-dot" style="background:#f8fafc;"></span>
+                                <span class="swatch-dot" style="background:#0284c7;"></span>
+                                <span class="swatch-dot" style="background:#0f172a;"></span>
+                            </span>
+                            <span class="choice-card-label">☀️ Light</span>
+                            <span style="font-size:0.78rem; color:var(--text-muted);">Clean paper</span>
+                        </span>
+                    </label>
+                    <label class="choice-card">
+                        <input type="radio" name="theme" value="midnight" {{ 'checked' if settings.theme=='midnight'
+                            else '' }}>
+                        <span class="choice-card-body">
+                            <span class="swatch-row">
+                                <span class="swatch-dot" style="background:#000000;"></span>
+                                <span class="swatch-dot" style="background:#a78bfa;"></span>
+                                <span class="swatch-dot" style="background:#f5f5f7;"></span>
+                            </span>
+                            <span class="choice-card-label">🌌 Midnight</span>
+                            <span style="font-size:0.78rem; color:var(--text-muted);">True black OLED</span>
+                        </span>
+                    </label>
+                    <label class="choice-card">
+                        <input type="radio" name="theme" value="sepia" {{ 'checked' if settings.theme=='sepia' else
+                            '' }}>
+                        <span class="choice-card-body">
+                            <span class="swatch-row">
+                                <span class="swatch-dot" style="background:#f4ecd8;"></span>
+                                <span class="swatch-dot" style="background:#b45309;"></span>
+                                <span class="swatch-dot" style="background:#3b2f1e;"></span>
+                            </span>
+                            <span class="choice-card-label">📜 Sepia</span>
+                            <span style="font-size:0.78rem; color:var(--text-muted);">Warm reading paper</span>
+                        </span>
+                    </label>
+                </div>
+
+                <details class="advanced-colors">
+                    <summary>Advanced: Custom Color Overrides</summary>
+                    <div class="advanced-colors-body">
+                        <p class="settings-hint" style="margin-top:0.75rem;">Fine-tune specific colors beyond the
+                            chosen theme. Leave blank to use the theme's own colors.</p>
+
+                        <div class="field-grid">
+                            <div class="color-swatch-input">
+                                <label>{{ A('body_color') }}</label>
+                                <input type="color" name="custom_text_color"
+                                    value="{{ settings.custom_text_color or '#f1f5f9' }}">
+                            </div>
+                            <div class="color-swatch-input">
+                                <label>{{ A('accent_color') }}</label>
+                                <input type="color" name="custom_accent_color"
+                                    value="{{ settings.custom_accent_color or '#38bdf8' }}">
+                            </div>
+                        </div>
+
+                        <div class="settings-subheader" style="font-size:0.85rem; margin-top:1.5rem;">HTML Tag Colors
+                        </div>
+                        <div class="color-grid">
+                            {% for tag_name, tag_field in [('H1','color_h1'), ('H2','color_h2'), ('H3','color_h3'),
+                            ('H4','color_h4'), ('H5','color_h5'), ('H6','color_h6'), ('P','color_p'),
+                            ('LI','color_li')] %}
+                            <div class="color-swatch-input">
+                                <label>{{ tag_name }}</label>
+                                <input type="color" name="{{ tag_field }}"
+                                    value="{{ settings[tag_field] or '#ffffff' }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <label
+                            style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; margin-top:1.25rem;">
+                            <input type="checkbox" name="reset_colors" style="width:auto;">
+                            <span style="color:var(--text-muted); font-size:0.9rem;">Reset all colors above to theme
+                                defaults on save</span>
+                        </label>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ========================= SECTION TITLES ========================= -->
+            <section class="settings-panel" data-panel="sections">
+                <div class="settings-panel-header">
+                    <h2>🏷️ {{ A('sections_h') }}</h2>
+                    <p>Each header switches to its Arabic version automatically for Arabic readers. Leave the Arabic
+                        side blank to use a sensible built-in translation.</p>
+                </div>
+
+                {% set section_pairs = [
+                ('section_title_top', settings.section_title_top, 'Top Story', 'section_title_top_ar',
+                settings.section_title_top_ar, 'الخبر الرئيسي'),
+                ('section_title_latest', settings.section_title_latest, 'Latest News', 'section_title_latest_ar',
+                settings.section_title_latest_ar, 'آخر الأخبار'),
+                ('section_title_trending', settings.section_title_trending, 'Trending / Updates',
+                'section_title_trending_ar', settings.section_title_trending_ar, 'الأكثر تداولاً'),
+                ('section_title_archives', settings.section_title_archives, 'Archives', 'section_title_archives_ar',
+                settings.section_title_archives_ar, 'الأرشيف'),
+                ('section_title_ads', settings.section_title_ads, 'Sponsored', 'section_title_ads_ar',
+                settings.section_title_ads_ar, 'إعلان'),
+                ('section_title_reels', settings.section_title_reels, 'Worth Watching', 'section_title_reels_ar',
+                settings.section_title_reels_ar, 'يستحق المشاهدة'),
+                ] %}
+                {% for en_name, en_val, en_default, ar_name, ar_val, ar_default in section_pairs %}
+                <div class="bilingual-pair">
+                    <div class="form-group">
+                        <span class="lang-badge">🇬🇧 English &mdash; {{ en_default }}</span>
+                        <input type="text" name="{{ en_name }}" value="{{ en_val or en_default }}">
+                    </div>
+                    <div class="form-group">
+                        <span class="lang-badge">🇸🇦 العربية</span>
+                        <input type="text" name="{{ ar_name }}" value="{{ ar_val }}" dir="rtl"
+                            placeholder="{{ ar_default }}" style="font-family: var(--font-ar); text-align: right;">
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+
+            <!-- ========================= CONTENT SOURCES ========================= -->
+            <section class="settings-panel" data-panel="content">
+                <div class="settings-panel-header">
+                    <h2>🎬 {{ A('content_h') }}</h2>
+                    <p>Turn optional content blocks on or off across the magazine.</p>
+                </div>
+
+                <div class="toggle-row">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="reels_enabled" {{ 'checked' if settings.reels_enabled else ''
+                            }}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <div>
+                        <div style="font-weight:700; color:var(--text-main);">🎬 "Worth Watching" curated reels</div>
+                        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;">
+                            Shows curated pointers to external short videos on the magazine and article pages.
+                            Manage the actual entries from the <a href="{{ url_for('reels_list') }}"
+                                style="color: var(--accent-primary);">Reels</a> page in the admin nav.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="max-width: 320px; margin-top: 1.25rem;">
+                    <label>How many reels to show in the sidebar widget</label>
+                    <input type="number" name="reels_display_limit" min="1" max="12"
+                        value="{{ settings.reels_display_limit or 4 }}">
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.4rem;">
+                        Only affects the "Worth Watching" widget on the magazine and article pages — the dedicated
+                        <a href="{{ url_for('watch_page') }}" style="color: var(--accent-primary);">Watch page</a>
+                        always shows every published reel. Manage which reels are published, drafts, or archived,
+                        and drag to reorder, from the <a href="{{ url_for('reels_list') }}"
+                            style="color: var(--accent-primary);">Reels</a> page.
+                    </p>
+                </div>
+            </section>
+
+            <!-- ========================= AUTHOR PROFILE ========================= -->
+            <section class="settings-panel" data-panel="author">
+                <div class="settings-panel-header">
+                    <h2>👤 {{ A('author_h') }}</h2>
+                    <p>Filled in for both languages so your Author page shows the right one automatically.</p>
+                </div>
+
+                <div class="bilingual-pair">
+                    <div class="form-group">
+                        <span class="lang-badge">🇬🇧 Author Name</span>
+                        <input type="text" name="author_name" value="{{ settings.author_name or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <span class="lang-badge">🇸🇦 اسم الكاتب</span>
+                        <input type="text" name="author_name_ar" value="{{ settings.author_name_ar or '' }}" dir="rtl"
+                            placeholder="اسم الكاتب" style="font-family: var(--font-ar); text-align: right;">
+                    </div>
+                </div>
+
+                <div class="bilingual-pair">
+                    <div class="form-group">
+                        <span class="lang-badge">🇬🇧 Short Bio / Tagline</span>
+                        <input type="text" name="author_bio" value="{{ settings.author_bio or '' }}"
+                            placeholder="e.g. AI Enthusiast & Curator">
+                    </div>
+                    <div class="form-group">
+                        <span class="lang-badge">🇸🇦 نبذة قصيرة</span>
+                        <input type="text" name="author_bio_ar" value="{{ settings.author_bio_ar or '' }}" dir="rtl"
+                            placeholder="مثال: عاشق للذكاء الاصطناعي ومُحرر محتوى"
+                            style="font-family: var(--font-ar); text-align: right;">
+                    </div>
+                </div>
+
+                <div class="settings-subheader">Detailed Introduction</div>
+                <div class="form-group">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label style="margin-bottom: 0;">🇬🇧 English</label>
+                        <button type="button" class="btn-icon" id="translate-intro-to-ar-btn"
+                            title="Translate to Arabic" style="width: auto; padding: 0.3rem 0.7rem; font-size: 0.75rem;">
+                            🌐 Translate → عربي
+                        </button>
+                    </div>
+                    <textarea id="author_intro" name="author_intro">{{ settings.author_intro or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label style="margin-bottom: 0;">🇸🇦 العربية</label>
+                        <button type="button" class="btn-icon" id="translate-intro-to-en-btn"
+                            title="Translate to English" style="width: auto; padding: 0.3rem 0.7rem; font-size: 0.75rem;">
+                            🌐 Translate → English
+                        </button>
+                    </div>
+                    <textarea id="author_intro_ar" name="author_intro_ar"
+                        dir="rtl">{{ settings.author_intro_ar or '' }}</textarea>
+                </div>
+                <span id="intro-translate-status" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+
+                <div class="settings-subheader">Photo &amp; Credentials</div>
+                <div class="field-grid">
+                    <div class="form-group">
+                        <label>Author Photo</label>
+                        {% if settings.author_image %}
+                        <div class="media-preview-row">
+                            <img src="{{ settings.author_image }}"
+                                style="width: 70px; height: 70px; border-radius: 50%;">
+                        </div>
+                        {% endif %}
+                        <input type="file" name="author_image" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label>CV / Resume</label>
+                        {% if settings.author_cv %}
+                        <div class="media-preview-row">
+                            <a href="{{ settings.author_cv }}" target="_blank"
+                                style="color: var(--accent-primary); font-weight: bold;">📄 Download current CV</a>
+                        </div>
+                        {% endif %}
+                        <input type="file" name="author_cv" accept=".pdf,.doc,.docx">
+                        <small style="color: var(--text-muted);">PDF or Word Document</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Workplace / Title</label>
+                    <input type="text" name="author_workplace" value="{{ settings.author_workplace or '' }}"
+                        placeholder="e.g. AI News Corp">
+                </div>
+            </section>
+
+            <!-- ========================= CONTACT & SOCIAL ========================= -->
+            <section class="settings-panel" data-panel="contact">
+                <div class="settings-panel-header">
+                    <h2>📞 {{ A('contact_h') }}</h2>
+                    <p>How readers can reach you or follow you elsewhere.</p>
+                </div>
+
+                <div class="field-grid">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" name="author_phone" value="{{ settings.author_phone or '' }}"
+                            placeholder="+1 234 567 890">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="author_email" value="{{ settings.author_email or '' }}"
+                            placeholder="contact@example.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Physical Address</label>
+                    <input type="text" name="author_address" value="{{ settings.author_address or '' }}"
+                        placeholder="City, Country">
+                </div>
+
+                <div class="settings-subheader">Social Media Links</div>
+                <div class="field-grid">
+                    <div class="form-group">
+                        <label>🐦 Twitter / X</label>
+                        <input type="url" name="social_twitter" value="{{ settings.social_twitter or '' }}"
+                            placeholder="https://x.com/username">
+                    </div>
+                    <div class="form-group">
+                        <label>💼 LinkedIn</label>
+                        <input type="url" name="social_linkedin" value="{{ settings.social_linkedin or '' }}"
+                            placeholder="https://linkedin.com/in/username">
+                    </div>
+                    <div class="form-group">
+                        <label>👥 Facebook</label>
+                        <input type="url" name="social_facebook" value="{{ settings.social_facebook or '' }}"
+                            placeholder="https://facebook.com/username">
+                    </div>
+                    <div class="form-group">
+                        <label>📸 Instagram</label>
+                        <input type="url" name="social_instagram" value="{{ settings.social_instagram or '' }}"
+                            placeholder="https://instagram.com/username">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================= GALLERY ========================= -->
+            <section class="settings-panel" data-panel="gallery">
+                <div class="settings-panel-header">
+                    <h2>🖼️ {{ A('gallery_h') }}</h2>
+                    <p>A portfolio grid shown on your Author page.</p>
+                </div>
+
+                {% if settings.gallery_list %}
+                <div class="gallery-grid">
+                    {% for item in settings.gallery_list %}
+                    <div class="gallery-card">
+                        <input type="hidden" name="existing_gallery_paths" value="{{ item.path }}">
+                        <div class="media-preview-row">
+                            <img src="{{ item.path }}" style="width: 70px; height: 70px;">
+                            <div style="flex:1;">
+                                <label
+                                    style="display: flex; align-items: center; gap: 0.5rem; color: #ef4444; font-weight: bold; font-size: 0.85rem; cursor: pointer;">
+                                    <input type="checkbox" name="delete_gallery_items" value="{{ item.path }}"
+                                        style="width:auto;"> Delete Image
+                                </label>
+                                <div style="margin-top: 0.4rem; font-size: 0.75rem; color: var(--text-muted); word-break: break-all;">
+                                    {{ item.path.split('/')[-1] }}
+                                </div>
+                            </div>
+                        </div>
+                        <input type="text" name="gallery_titles" value="{{ item.title }}" placeholder="Image Title"
+                            style="margin-bottom: 0.5rem;">
+                        <textarea name="gallery_descs" rows="2"
+                            placeholder="Description/Caption...">{{ item.desc }}</textarea>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted); font-style: italic;">No images in gallery yet.</p>
+                {% endif %}
+
+                <div class="form-group" style="border-top: 1px dashed var(--border-color); padding-top: 1.25rem;">
+                    <label>Add New Images</label>
+                    <input type="file" name="gallery_images" multiple accept="image/*">
+                </div>
+            </section>
+
+        </div>
+
+        <div class="settings-save-bar">
+            <span>
+                <svg class="icon" style="width:16px;height:16px" aria-hidden="true"><use href="#i-check"></use></svg>
+                {{ 'Changes apply across the whole magazine once saved.' if not admin_ar else 'تُطبّق التغييرات على المجلة كاملة بعد الحفظ.' }}
+            </span>
+            <button type="submit" class="btn btn-primary">
+                <svg class="icon" style="width:16px;height:16px" aria-hidden="true"><use href="#i-check"></use></svg>
+                {{ A('save_settings') }}
+            </button>
+        </div>
+        </form>
+
+        <!-- ========================= AI MODELS ========================= -->
+        <section class="settings-panel" data-panel="aimodels">
+            <div class="settings-panel-header">
+                <h2>🤖 {{ A('ai_h') }}</h2>
+                <p>Add a provider, save its key, tick the models you want, then assign one provider and model to each task. You can change the assignment any time.</p>
+            </div>
+
+            <div class="ai-note">
+                Google news search is separate from these chat models. If search says the project does not have access to the Custom Search JSON API, open
+                <a href="https://console.cloud.google.com/apis/library/customsearch.googleapis.com" target="_blank" rel="noopener">Google Cloud Console</a>
+                for the project that owns <code>GOOGLE_API_KEY</code> and enable that API. The key and Search Engine ID stay under API Keys.
+            </div>
+
+            <div class="settings-subheader">1. Providers</div>
+            <div class="apikey-grid" id="ai-provider-grid">
+                {% for provider in ai_desk.providers %}
+                <div class="apikey-card" data-ai-provider="{{ provider.id }}" data-custom="{{ '1' if provider.custom else '0' }}">
+                    <div class="apikey-card-header">
+                        <span class="apikey-icon">{{ provider.icon }}</span>
+                        <div class="apikey-card-title-wrap">
+                            <div class="apikey-title">{{ provider.label }}</div>
+                            <div class="apikey-help">{% if provider.base_url %}{{ provider.base_url }}{% else %}OpenAI default endpoint{% endif %}</div>
+                        </div>
+                        <span class="apikey-status {{ 'is-set' if provider.configured else 'is-unset' }}">
+                            {{ '✅ Key saved' if provider.configured else '⚠️ No key' }}
+                        </span>
+                    </div>
+                    <div class="apikey-card-body">
+                        <div class="apikey-field-row">
+                            <label>API key</label>
+                            <input type="password" class="ai-key" data-provider="{{ provider.id }}"
+                                placeholder="{{ provider.masked if provider.configured else provider.placeholder }}" autocomplete="off">
+                            <small style="color: var(--text-muted);">Leave blank to keep the saved key.</small>
+                        </div>
+                        <div class="ai-models">
+                            {% for model in provider.catalog %}
+                            <label class="ai-model-check">
+                                <input type="checkbox" data-ai-model data-provider="{{ provider.id }}" value="{{ model }}"
+                                    {{ 'checked' if model in provider.selected else '' }}>
+                                {{ model }}
+                            </label>
+                            {% endfor %}
+                            {% for model in provider.selected if model not in provider.catalog %}
+                            <label class="ai-model-check">
+                                <input type="checkbox" data-ai-model data-provider="{{ provider.id }}" value="{{ model }}" checked>
+                                {{ model }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <input type="text" class="ai-extra-models" data-extra-models="{{ provider.id }}"
+                            placeholder="Add another model id, comma separated">
+                        {% if provider.custom %}
+                        <label class="ai-model-check" style="margin-top: 0.6rem;">
+                            <input type="checkbox" class="ai-remove-custom" value="{{ provider.id }}"> Remove this provider
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="apikey-add-custom">
+                <div class="settings-subheader" style="margin-top:0;">Add another provider</div>
+                <p class="settings-hint">Any service with an OpenAI-compatible chat endpoint: Together, Groq, a local gateway, or a lab API.</p>
+                <div class="field-grid">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="custom-ai-label" placeholder="e.g. Groq" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Base URL</label>
+                        <input type="url" id="custom-ai-url" placeholder="https://api.example.com/v1" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>API key</label>
+                        <input type="password" id="custom-ai-key" placeholder="paste the key" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Model ids</label>
+                        <input type="text" id="custom-ai-models" placeholder="model-a, model-b" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-subheader">2. Assign a model to each task</div>
+            <div class="ai-task-list">
+                {% for task in ai_desk.tasks %}
+                <div class="ai-task" data-task="{{ task.id }}">
+                    <div>
+                        <strong>{{ task.label }}</strong>
+                        <p>{{ task.help }}</p>
+                    </div>
+                    <select class="ai-task-provider" data-task="{{ task.id }}">
+                        {% for provider in ai_desk.providers %}
+                        <option value="{{ provider.id }}" {{ 'selected' if provider.id == task.provider else '' }}>{{ provider.label }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="ai-task-model" data-task="{{ task.id }}" data-current="{{ task.model }}">
+                        <option value="{{ task.model }}">{{ task.model }}</option>
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="apikey-card-footer" style="margin-top: 1rem;">
+                <button type="button" class="btn btn-primary" id="ai-routing-save">💾 Save AI setup</button>
+                <span class="apikey-save-status" id="ai-routing-status"></span>
+            </div>
+        </section>
+
+        <!-- ========================= API KEYS ========================= -->
+        <!-- Lives outside the big form on purpose: each card saves independently via -->
+        <!-- its own request the instant you click Save, never bundled with the page's -->
+        <!-- main Save Settings button. -->
+        <section class="settings-panel" data-panel="apikeys">
+            <div class="settings-panel-header">
+                <h2>🔑 {{ A('keys_h') }}</h2>
+                <p>Connect the AI and search providers that power your magazine. Keys are stored in your local
+                    .env file, masked everywhere they're shown, and take effect immediately — no restart needed.
+                </p>
+            </div>
+
+            <div class="apikey-grid">
+                {% for provider in api_providers %}
+                <div class="apikey-card">
+                    <div class="apikey-card-header">
+                        <span class="apikey-icon">{{ provider.icon }}</span>
+                        <div class="apikey-card-title-wrap">
+                            <div class="apikey-title">{{ provider.label }}</div>
+                            <div class="apikey-help">{{ provider.help }}</div>
+                        </div>
+                        <span class="apikey-status {{ 'is-set' if provider.all_configured else 'is-unset' }}">
+                            {{ '✅ Connected' if provider.all_configured else '⚠️ Not set' }}
+                        </span>
+                    </div>
+                    <div class="apikey-card-body">
+                        {% for field in provider.fields %}
+                        <div class="apikey-field-row">
+                            <label>{{ field.label }}</label>
+                            <div style="display:flex; gap:0.5rem;">
+                                <input type="password" class="apikey-input" data-field="{{ field.name }}"
+                                    placeholder="{{ field.masked if field.configured else field.placeholder }}"
+                                    autocomplete="off">
+                                <button type="button" class="btn-icon apikey-toggle-visibility"
+                                    title="Show/hide">👁️</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="apikey-card-footer">
+                        <button type="button" class="btn btn-primary apikey-save-btn">💾 Save</button>
+                        {% if provider.all_configured %}
+                        <button type="button" class="btn-icon danger apikey-remove-btn"
+                            data-fields="{{ provider.fields | map(attribute='name') | join(',') }}"
+                            title="Remove key(s)">🗑️</button>
+                        {% endif %}
+                        <span class="apikey-save-status"></span>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% for ck in custom_api_keys %}
+                <div class="apikey-card">
+                    <div class="apikey-card-header">
+                        <span class="apikey-icon">🧩</span>
+                        <div class="apikey-card-title-wrap">
+                            <div class="apikey-title">{{ ck.name }}</div>
+                            <div class="apikey-help">Custom key you added.</div>
+                        </div>
+                        <span class="apikey-status {{ 'is-set' if ck.configured else 'is-unset' }}">
+                            {{ '✅ Connected' if ck.configured else '⚠️ Not set' }}
+                        </span>
+                    </div>
+                    <div class="apikey-card-body">
+                        <div class="apikey-field-row">
+                            <label>Value</label>
+                            <div style="display:flex; gap:0.5rem;">
+                                <input type="password" class="apikey-input" data-field="{{ ck.name }}"
+                                    placeholder="{{ ck.masked if ck.configured else 'value...' }}" autocomplete="off">
+                                <button type="button" class="btn-icon apikey-toggle-visibility"
+                                    title="Show/hide">👁️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="apikey-card-footer">
+                        <button type="button" class="btn btn-primary apikey-save-btn">💾 Save</button>
+                        <button type="button" class="btn-icon danger apikey-remove-btn" data-fields="{{ ck.name }}"
+                            title="Remove key">🗑️</button>
+                        <span class="apikey-save-status"></span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="apikey-add-custom">
+                <div class="settings-subheader" style="margin-top:0;">➕ Add a Custom API Key</div>
+                <p class="settings-hint">For anything not listed above — another search API, a video API, whatever
+                    you're using. It'll show up as its own card once saved.</p>
+                <div class="field-grid" style="margin-bottom:0.75rem;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Key Name</label>
+                        <input type="text" id="custom-key-name" placeholder="e.g. ELEVENLABS_API_KEY"
+                            style="text-transform:uppercase;" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Value</label>
+                        <input type="password" id="custom-key-value" placeholder="paste the key..."
+                            autocomplete="off">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary" id="add-custom-key-btn">➕ Add Key</button>
+                <span class="apikey-save-status" id="add-custom-key-status"></span>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<!-- Summernote Dependencies (lazy-initialized when the Author tab is first opened) -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+
+<style>
+    /* Summernote Dark Mode Overrides for Settings Page */
+    .note-editor.note-frame {
+        border: 1px solid var(--border-color) !important;
+        background: var(--bg-main) !important;
+    }
+
+    .note-toolbar {
+        background: var(--bg-card) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+    }
+
+    .note-btn {
+        color: var(--text-muted) !important;
+    }
+
+    .note-btn:hover {
+        background: var(--bg-hover) !important;
+        color: var(--text-main) !important;
+    }
+
+    .note-editable {
+        background: var(--bg-main) !important;
+        color: var(--text-main) !important;
+    }
+
+    .note-placeholder {
+        color: var(--text-muted) !important;
+        opacity: 0.7;
+    }
+
+    .ai-note {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.9rem 1rem;
+        margin-bottom: 1.25rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+    }
+
+    .ai-note a { color: var(--accent-primary); }
+
+    .ai-models {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 0.8rem;
+        margin: 0.75rem 0;
+    }
+
+    .ai-model-check {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.85rem;
+        color: var(--text-main);
+    }
+
+    .ai-model-check input { width: auto; }
+
+    .ai-task-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .ai-task {
+        display: grid;
+        grid-template-columns: 1.4fr 0.8fr 0.9fr;
+        gap: 0.75rem;
+        align-items: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+    }
+
+    .ai-task p { margin: 0.2rem 0 0; color: var(--text-muted); font-size: 0.8rem; }
+
+    @media (max-width: 800px) {
+        .ai-task { grid-template-columns: 1fr; }
+    }
+</style>
+
+<script>
+    // --- Tab switching ---
+    (function () {
+        const navItems = document.querySelectorAll('.settings-nav-item');
+        const panels = document.querySelectorAll('.settings-panel');
+        let authorEditorsReady = false;
+
+        function activateTab(tab, opts) {
+            navItems.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            panels.forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+            if (tab === 'author' && !authorEditorsReady) {
+                authorEditorsReady = true;
+                initAuthorEditors();
+            }
+            if (!opts || !opts.silent) {
+                try { localStorage.setItem('nasserSettingsTab', tab); } catch (e) { }
+            }
+        }
+
+        navItems.forEach(btn => {
+            btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+        });
+
+        // Restore last-used tab (best effort — never blocks the page if storage is unavailable)
+        let startTab = 'general';
+        try {
+            const fromUrl = new URLSearchParams(window.location.search).get('tab');
+            const saved = fromUrl || localStorage.getItem('nasserSettingsTab');
+            if (saved && document.querySelector('.settings-panel[data-panel="' + saved + '"]')) {
+                startTab = saved;
+            }
+        } catch (e) { }
+        activateTab(startTab, { silent: true });
+
+        document.getElementById('settings-form').addEventListener('submit', function (e) {
+            const form = this;
+
+            // API key fields live outside this form on purpose (each saves independently
+            // the instant you click its own Save). But if someone types a key and hits
+            // this page-wide "Save Settings" button out of habit instead, don't silently
+            // lose it — flush it through the same save endpoint first.
+            const pendingKeyInputs = Array.from(document.querySelectorAll('.apikey-input'))
+                .filter(inp => inp.value.trim());
+            if (pendingKeyInputs.length > 0) {
+                e.preventDefault();
+                const fields = {};
+                pendingKeyInputs.forEach(inp => { fields[inp.dataset.field] = inp.value.trim(); });
+                fetch('/api/keys/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields })
+                }).finally(() => proceedWithSubmit(form));
+                return;
+            }
+
+            checkValidityThenSubmit(e, form);
+        });
+
+        function checkValidityThenSubmit(e, form) {
+            const invalid = form.querySelector(':invalid');
+            if (invalid) {
+                const panel = invalid.closest('.settings-panel');
+                if (panel && !panel.classList.contains('active')) {
+                    e.preventDefault();
+                    activateTab(panel.dataset.panel);
+                    invalid.reportValidity();
+                }
+            }
+        }
+
+        function proceedWithSubmit(form) {
+            const invalid = form.querySelector(':invalid');
+            if (invalid) {
+                const panel = invalid.closest('.settings-panel');
+                if (panel && !panel.classList.contains('active')) {
+                    activateTab(panel.dataset.panel);
+                }
+                invalid.reportValidity();
+                return;
+            }
+            HTMLFormElement.prototype.submit.call(form);
+        }
+
+        window.__nasserActivateSettingsTab = activateTab;
+    })();
+
+    // --- API Keys tab: each card saves/removes independently, no page form involved ---
+    (function () {
+        document.querySelectorAll('.apikey-toggle-visibility').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = btn.closest('.apikey-field-row').querySelector('.apikey-input');
+                input.type = input.type === 'password' ? 'text' : 'password';
+            });
+        });
+
+        document.querySelectorAll('.apikey-save-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const card = btn.closest('.apikey-card');
+                const inputs = card.querySelectorAll('.apikey-input');
+                const status = card.querySelector('.apikey-save-status');
+                const fields = {};
+                inputs.forEach(inp => {
+                    if (inp.value.trim()) fields[inp.dataset.field] = inp.value.trim();
+                });
+                if (Object.keys(fields).length === 0) {
+                    status.textContent = 'Type a value first.';
+                    return;
+                }
+                status.textContent = 'Saving…';
+                fetch('/api/keys/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            status.textContent = '✅ Saved';
+                            setTimeout(() => location.reload(), 400);
+                        } else {
+                            status.textContent = '';
+                            alert(data.message || 'Failed to save.');
+                        }
+                    })
+                    .catch(() => {
+                        status.textContent = '';
+                        alert('Network error.');
+                    });
+            });
+        });
+
+        document.querySelectorAll('.apikey-remove-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const names = btn.dataset.fields.split(',').filter(Boolean);
+                if (!confirm('Remove this key? Anything that relies on it will stop working until you add it again.')) return;
+                fetch('/api/keys/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ names })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert(data.message || 'Failed to remove.');
+                        }
+                    })
+                    .catch(() => alert('Network error.'));
+            });
+        });
+
+        const addBtn = document.getElementById('add-custom-key-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                const nameInput = document.getElementById('custom-key-name');
+                const valueInput = document.getElementById('custom-key-value');
+                const status = document.getElementById('add-custom-key-status');
+                const name = nameInput.value.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+                const value = valueInput.value.trim();
+
+                if (!name) { status.textContent = 'Give it a name first.'; return; }
+                if (!value) { status.textContent = 'Paste the value first.'; return; }
+
+                status.textContent = 'Adding…';
+                fetch('/api/keys/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: { [name]: value } })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            status.textContent = '✅ Added';
+                            setTimeout(() => location.reload(), 400);
+                        } else {
+                            status.textContent = '';
+                            alert(data.message || 'Failed to add key.');
+                        }
+                    })
+                    .catch(() => {
+                        status.textContent = '';
+                        alert('Network error.');
+                    });
+            });
+        }
+    })();
+
+    // --- AI provider and task assignments ---
+    (function () {
+        function modelsFor(providerId) {
+            const checked = [...document.querySelectorAll('input[data-ai-model][data-provider="' + providerId + '"]:checked')]
+                .map(input => input.value);
+            const extra = document.querySelector('[data-extra-models="' + providerId + '"]');
+            const typed = extra ? extra.value.split(',').map(item => item.trim()).filter(Boolean) : [];
+            const all = checked.slice();
+            typed.forEach(name => { if (!all.includes(name)) all.push(name); });
+            return all;
+        }
+
+        function fillTaskModel(select) {
+            const task = select.dataset.task;
+            const providerSelect = document.querySelector('.ai-task-provider[data-task="' + task + '"]');
+            if (!providerSelect) return;
+            const names = modelsFor(providerSelect.value);
+            const current = select.dataset.current || select.value;
+            select.innerHTML = '';
+            (names.length ? names : [current]).filter(Boolean).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                if (name === current) option.selected = true;
+                select.appendChild(option);
+            });
+            if (![...select.options].some(option => option.selected) && select.options.length) {
+                select.options[0].selected = true;
+            }
+        }
+
+        document.querySelectorAll('.ai-task-model').forEach(fillTaskModel);
+        document.querySelectorAll('.ai-task-provider, input[data-ai-model], .ai-extra-models').forEach(input => {
+            input.addEventListener('change', () => document.querySelectorAll('.ai-task-model').forEach(fillTaskModel));
+            input.addEventListener('input', () => document.querySelectorAll('.ai-task-model').forEach(fillTaskModel));
+        });
+
+        const saveBtn = document.getElementById('ai-routing-save');
+        if (!saveBtn) return;
+        saveBtn.addEventListener('click', () => {
+            const status = document.getElementById('ai-routing-status');
+            const models = {};
+            const keys = {};
+            document.querySelectorAll('[data-ai-provider]').forEach(card => {
+                const providerId = card.dataset.aiProvider;
+                models[providerId] = modelsFor(providerId);
+                const key = card.querySelector('.ai-key');
+                if (key && key.value.trim()) keys[providerId] = key.value.trim();
+            });
+            const tasks = {};
+            document.querySelectorAll('.ai-task').forEach(row => {
+                const taskId = row.dataset.task;
+                tasks[taskId] = {
+                    provider: row.querySelector('.ai-task-provider').value,
+                    model: row.querySelector('.ai-task-model').value
+                };
+            });
+            const custom = [];
+            const label = document.getElementById('custom-ai-label').value.trim();
+            const baseUrl = document.getElementById('custom-ai-url').value.trim();
+            if (label || baseUrl) {
+                custom.push({
+                    label: label,
+                    base_url: baseUrl,
+                    key: document.getElementById('custom-ai-key').value.trim(),
+                    models: document.getElementById('custom-ai-models').value.split(',').map(item => item.trim()).filter(Boolean)
+                });
+            }
+            const removeCustom = [...document.querySelectorAll('.ai-remove-custom:checked')].map(input => input.value);
+            status.textContent = 'Saving…';
+            fetch('/api/ai/routing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ models, keys, tasks, custom, remove_custom: removeCustom })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        status.textContent = '✅ Saved';
+                        setTimeout(() => location.reload(), 400);
+                    } else {
+                        status.textContent = '';
+                        alert(data.message || 'Could not save the AI setup.');
+                    }
+                })
+                .catch(() => {
+                    status.textContent = '';
+                    alert('Network error.');
+                });
+        });
+    })();
+
+    // --- Summernote (rich text) — initialized lazily on first Author tab view ---
+    function initAuthorEditors() {
+        $(document).ready(function () {
+            function makeUploadButton(targetSelector) {
+                return function (context) {
+                    var ui = $.summernote.ui;
+                    var button = ui.button({
+                        contents: '<span style="font-weight:bold;">📂 Upload Img</span>',
+                        tooltip: 'Upload from PC',
+                        click: function () {
+                            var input = $('<input type="file" accept="image/*">');
+                            input.on('change', function () {
+                                var file = this.files[0];
+                                if (file) uploadImage(file, targetSelector);
+                            });
+                            input.trigger('click');
+                        }
+                    });
+                    return button.render();
+                };
+            }
+
+            function initEditor(selector, opts) {
+                const rtl = !!opts.rtl;
+                delete opts.rtl;
+                $(selector).summernote(Object.assign({
+                    tabsize: 2,
+                    height: 300,
+                    toolbar: [
+                        ['style', ['style', 'bold', 'italic', 'underline', 'clear']],
+                        ['font', ['color', 'fontsize']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['insert', ['link', 'table', 'hr']],
+                        ['media', ['uploadBtn', 'picture']],
+                        ['view', ['fullscreen', 'codeview', 'help']]
+                    ],
+                    buttons: {
+                        uploadBtn: makeUploadButton(selector)
+                    },
+                    callbacks: {
+                        onImageUpload: function (files) {
+                            uploadImage(files[0], selector);
+                        },
+                        onInit: function () {
+                            // Summernote's own `direction` option doesn't reliably flip the
+                            // editable area, so force it explicitly: Arabic defaults to
+                            // right-aligned RTL, English to left-aligned LTR. The paragraph
+                            // dropdown (¶ icon in the toolbar) still lets you override
+                            // alignment per-paragraph on top of this default.
+                            const editable = $(selector).next('.note-editor').find('.note-editable');
+                            editable.attr('dir', rtl ? 'rtl' : 'ltr');
+                            editable.css('text-align', rtl ? 'right' : 'left');
+                        }
+                    }
+                }, opts));
+            }
+
+            initEditor('#author_intro', {
+                placeholder: 'Write a detailed introduction about yourself... Images allowed.'
+            });
+            initEditor('#author_intro_ar', {
+                placeholder: 'اكتب نبذة تفصيلية عن نفسك... يمكن إضافة صور.',
+                rtl: true
+            });
+
+            function translateIntro(sourceSelector, targetSelector, targetLang) {
+                const status = document.getElementById('intro-translate-status');
+                const sourceHtml = $(sourceSelector).summernote('code');
+                if (!sourceHtml || $(sourceSelector).summernote('isEmpty')) {
+                    alert('Write something in that box first.');
+                    return;
+                }
+                status.textContent = 'Translating…';
+                fetch('/api/settings/translate_html', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ html: sourceHtml, target: targetLang })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            $(targetSelector).summernote('code', data.translated);
+                            status.textContent = '✅ Translated — review before saving.';
+                            setTimeout(() => { status.textContent = ''; }, 3000);
+                        } else {
+                            status.textContent = '';
+                            alert(data.message || 'Translation failed.');
+                        }
+                    })
+                    .catch(() => {
+                        status.textContent = '';
+                        alert('Network error.');
+                    });
+            }
+
+            document.getElementById('translate-intro-to-ar-btn').addEventListener('click', function () {
+                translateIntro('#author_intro', '#author_intro_ar', 'ar');
+            });
+            document.getElementById('translate-intro-to-en-btn').addEventListener('click', function () {
+                translateIntro('#author_intro_ar', '#author_intro', 'en');
+            });
+
+            function uploadImage(file, targetSelector) {
+                var data = new FormData();
+                data.append("image", file);
+                $.ajax({
+                    url: '/api/upload_image',
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    type: "post",
+                    success: function (response) {
+                        if (response.url) {
+                            $(targetSelector).summernote('insertImage', response.url);
+                        } else if (response.error) {
+                            alert(response.error);
+                        }
+                    },
+                    error: function (data) {
+                        console.log(data);
+                        alert("Upload failed.");
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

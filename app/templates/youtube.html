@@ -1,0 +1,93 @@
+{% extends "public.html" %}
+
+{% block page_title %}{{ 'يوتيوب' if lang_pref == 'ar' else 'YouTube' }} — {{ settings.magazine_title }}{% endblock %}
+
+{% block content %}
+{% set ar = lang_pref == 'ar' %}
+<div class="issue yt-page" {% if ar %}dir="rtl"{% endif %}>
+    <header class="issue-mast">
+        <p class="issue-university">{{ 'جامعة ظفار · قسم علوم الحاسوب' if ar else 'Dhofar University · Computer Science' }}</p>
+        <h1 class="issue-name" style="font-size: clamp(2.4rem, 6vw, 4.4rem);">{{ 'يوتيوب' if ar else 'YouTube' }}</h1>
+        <p class="issue-dek">
+            {{ 'جهتان: أحدث أخبار الذكاء الاصطناعي، ودروس التدريب. في كل جهة أفضل خمس بالعربية وأفضل خمس بالإنجليزية.' if ar else 'Two shelves: the latest AI news, and lessons on building it. Each shelf keeps the best five in Arabic and the best five in English.' }}
+        </p>
+    </header>
+
+    <nav class="issue-doors" aria-label="{{ 'رفوف يوتيوب' if ar else 'YouTube shelves' }}">
+        <a class="issue-door is-campus" href="#yt-news">
+            <small>01 · {{ 'أخبار' if ar else 'News' }}</small>
+            <strong>{{ 'ما الجديد عند الشركات' if ar else 'What is new at the labs' }}</strong>
+            <span>{{ 'أوبن إيه آي، أنثروبيك، جيميناي، إكس إيه آي، وديب سيك.' if ar else 'OpenAI, Anthropic, Gemini, xAI, and DeepSeek.' }}</span>
+        </a>
+        <a class="issue-door is-world" href="#yt-learn">
+            <small>02 · {{ 'تدريب' if ar else 'Training' }}</small>
+            <strong>{{ 'كيف تبني الذكاء الاصطناعي' if ar else 'How to build the AI' }}</strong>
+            <span>{{ 'نماذج محلية، تدريب، وإنشاء تطبيقك.' if ar else 'Local models, training, and making your own app.' }}</span>
+        </a>
+    </nav>
+
+    {% macro shelf(clips, heading, note, ar) %}
+    <section class="yt-shelf">
+        <div class="yt-shelf-head">
+            <h3>{{ heading }}</h3>
+            <p>{{ note }}</p>
+        </div>
+        {% if clips %}
+        <div class="yt-row">
+            {% for clip in clips %}
+            <article class="yt-card">
+                <button type="button" class="yt-thumb" onclick="openVideoModal('{{ clip.video_id }}')" aria-label="{{ clip.title }}">
+                    {% if clip.image %}<img src="{{ clip.image }}" alt="">{% endif %}
+                    <span class="yt-play" aria-hidden="true">▶</span>
+                    {% if clip.minutes %}<span class="yt-time">{{ clip.minutes }}</span>{% endif %}
+                </button>
+                <h4>{{ clip.title }}</h4>
+                <p class="yt-meta">
+                    <span>{{ clip.channel }}</span>
+                    {% if clip.views %}<span>{{ clip.views }}</span>{% endif %}
+                    {% if clip.when %}<span>{{ clip.when }}</span>{% endif %}
+                </p>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="folio-empty">{{ 'هذا الرف فارغ إلى أن تُجلب المقاطع.' if ar else 'This shelf is empty until the clips are gathered.' }}</p>
+        {% endif %}
+    </section>
+    {% endmacro %}
+
+    <section class="issue-anchor" id="yt-news">
+        <div class="issue-section-head">
+            <div>
+                <div class="issue-num is-campus">01</div>
+                <h2>{{ 'أخبار يوتيوب' if ar else 'YouTube news' }}</h2>
+                <p>{{ 'أفضل ما قيل هذا الأسبوع عن الجديد في الذكاء الاصطناعي.' if ar else 'The strongest clips this week on what is new in AI.' }}</p>
+            </div>
+        </div>
+        {% if ar %}
+            {{ shelf(news_ar, 'المقاطع العربية', 'نشرات وشرح إخباري بالعربية.', ar) }}
+            {{ shelf(news_en, 'المقاطع الإنجليزية', 'The English news clips.', ar) }}
+        {% else %}
+            {{ shelf(news_en, 'English clips', 'News clips from the big labs.', ar) }}
+            {{ shelf(news_ar, 'Arabic clips', 'النشرات العربية.', ar) }}
+        {% endif %}
+    </section>
+
+    <section class="issue-anchor" id="yt-learn">
+        <div class="issue-section-head">
+            <div>
+                <div class="issue-num is-world">02</div>
+                <h2>{{ 'التعليم والتدريب' if ar else 'Education and training' }}</h2>
+                <p>{{ 'كيف تشغّل نموذجاً محلياً، وتدرّب نموذجاً، وتبني تطبيقاً.' if ar else 'How to run a local model, train one, and build an application.' }}</p>
+            </div>
+        </div>
+        {% if ar %}
+            {{ shelf(edu_ar, 'الدروس العربية', 'شرح عربي للتدريب والبناء.', ar) }}
+            {{ shelf(edu_en, 'الدروس الإنجليزية', 'English lessons.', ar) }}
+        {% else %}
+            {{ shelf(edu_en, 'English lessons', 'Local models, training, and apps.', ar) }}
+            {{ shelf(edu_ar, 'Arabic lessons', 'الدروس العربية.', ar) }}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

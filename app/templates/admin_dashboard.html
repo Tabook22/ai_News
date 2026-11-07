@@ -1,0 +1,227 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block page_title %}{{ t('Control room', 'غرفة التحكم') }}{% endblock %}
+
+{% block content %}
+<div class="admin-hero">
+    <div>
+        <p style="margin:0 0 4px;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#667085;">
+            {{ t('Nasser AI · Admin', 'ناصر AI · الإدارة') }}
+        </p>
+        <h1>
+            {% if today.hour < 12 %}{{ t('Good morning', 'صباح الخير') }}
+            {% elif today.hour < 18 %}{{ t('Good afternoon', 'مساء الخير') }}
+            {% else %}{{ t('Good evening', 'مساء الخير') }}{% endif %},
+            {{ (settings.author_name_ar if admin_ar and settings.author_name_ar else settings.author_name) if settings else t('Editor', 'المحرر') }}
+        </h1>
+        <p>{{ today.strftime('%A, %d %B %Y') }} · {{ t('Here is the state of the magazine.', 'هذه حالة المجلة اليوم.') }}</p>
+    </div>
+    <div class="admin-hero-actions">
+        <a class="btn btn-secondary" href="{{ url_for('search_page') }}">
+            <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+            {{ t('Find & import', 'بحث واستيراد') }}
+        </a>
+        <a class="btn btn-primary" href="{{ url_for('add_news') }}">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+            {{ t('New story', 'قصة جديدة') }}
+        </a>
+    </div>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi" style="--kpi:#0f766e;--kpi-soft:#e6f6f3;">
+        <div class="kpi-top">
+            <span>{{ t('Published', 'منشور') }}</span>
+            <span class="kpi-icon"><svg class="icon" aria-hidden="true"><use href="#i-newspaper"></use></svg></span>
+        </div>
+        <div class="kpi-value">{{ published }}</div>
+        <div class="kpi-note">{{ campus }} {{ t('on campus', 'في القسم') }} · {{ world }} {{ t('from the world', 'من العالم') }}</div>
+    </div>
+
+    <div class="kpi" style="--kpi:#b54708;--kpi-soft:#fffaeb;">
+        <div class="kpi-top">
+            <span>{{ t('Drafts', 'مسودات') }}</span>
+            <span class="kpi-icon"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+        </div>
+        <div class="kpi-value">{{ drafts }}</div>
+        <div class="kpi-note">{{ t('Waiting in the editing room', 'بانتظار المراجعة') }}</div>
+    </div>
+
+    <div class="kpi" style="--kpi:#4f46e5;--kpi-soft:#eef2ff;">
+        <div class="kpi-top">
+            <span>{{ t('Article reads', 'قراءات المقالات') }}</span>
+            <span class="kpi-icon"><svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg></span>
+        </div>
+        <div class="kpi-value">{{ '{:,}'.format(total_views) }}</div>
+        <div class="kpi-note">{{ comments }} {{ t('comments so far', 'تعليقًا حتى الآن') }}</div>
+    </div>
+
+    <div class="kpi" style="--kpi:#0e7490;--kpi-soft:#ecfeff;">
+        <div class="kpi-top">
+            <span>{{ t('Subscribers', 'المشتركون') }}</span>
+            <span class="kpi-icon"><svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg></span>
+        </div>
+        <div class="kpi-value">{{ subscribers }}</div>
+        <div class="kpi-note">{{ t('Active newsletter readers', 'قارئ نشط للنشرة') }}</div>
+    </div>
+</div>
+
+<div class="admin-grid">
+    <div style="display:grid;gap:18px;">
+        <section class="admin-panel">
+            <div class="admin-panel-head">
+                <svg class="icon" style="color:#0f766e" aria-hidden="true"><use href="#i-dashboard"></use></svg>
+                <h2>{{ t('Publishing rhythm', 'إيقاع النشر') }}</h2>
+                <span class="muted">{{ t('last 7 days', 'آخر ٧ أيام') }}</span>
+                <a href="{{ url_for('archive_page', desk='world') }}">{{ t('Archive', 'الأرشيف') }}</a>
+            </div>
+            <div class="admin-panel-body">
+                <div class="bars">
+                    {% for day in days %}
+                    <div class="bar-col">
+                        <span class="bar-value">{{ day.count }}</span>
+                        <div class="bar" style="height: {{ (6 + (day.count / peak * 94)) | round(0) }}%;"
+                            title="{{ day.count }} {{ t('stories', 'قصة') }} · {{ day.iso }}"></div>
+                        <span class="bar-label">{{ day.label }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-panel">
+            <div class="admin-panel-head">
+                <svg class="icon" style="color:#4f46e5" aria-hidden="true"><use href="#i-newspaper"></use></svg>
+                <h2>{{ t('Recently edited', 'أحدث القصص') }}</h2>
+                <a href="{{ url_for('dashboard') }}">{{ t('All stories', 'كل القصص') }}</a>
+            </div>
+            <div class="admin-panel-body flush admin-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{ t('Story', 'القصة') }}</th>
+                            <th>{{ t('Status', 'الحالة') }}</th>
+                            <th>{{ t('Reads', 'قراءات') }}</th>
+                            <th>{{ t('Date', 'التاريخ') }}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for story in recent %}
+                        <tr>
+                            <td>
+                                <div class="title-cell">
+                                    {% if story.image %}
+                                    <img src="{{ story.image }}" alt="" loading="lazy">
+                                    {% else %}
+                                    <span style="width:38px;height:38px;border-radius:7px;background:#eef2f7;display:grid;place-items:center;font-weight:700;color:#667085;">N</span>
+                                    {% endif %}
+                                    <span>
+                                        <b>{{ (story.title_ar or story.title) if admin_ar else story.title }}</b>
+                                        <span>{{ story.desk_ar if admin_ar else story.desk_en }} · {{ story.source or 'Nasser AI News' }}</span>
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if story.is_published %}
+                                <span class="badge badge-success">{{ t('Published', 'منشور') }}</span>
+                                {% else %}
+                                <span class="badge badge-warn">{{ t('Draft', 'مسودة') }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ story.views or 0 }}</td>
+                            <td style="white-space:nowrap;color:#667085;">{{ story.published_en if not admin_ar else story.published_ar }}</td>
+                            <td>
+                                <a class="btn btn-secondary" style="height:32px;min-height:32px;padding:0 10px;"
+                                    href="{{ url_for('edit_news', item_id=story.id) }}">{{ t('Edit', 'تعديل') }}</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" style="text-align:center;color:#667085;padding:30px;">{{ t('No stories yet.', 'لا توجد قصص بعد.') }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div style="display:grid;gap:18px;">
+        <section class="admin-panel">
+            <div class="admin-panel-head">
+                <svg class="icon" style="color:#b54708" aria-hidden="true"><use href="#i-alert"></use></svg>
+                <h2>{{ t('Needs attention', 'يحتاج انتباهًا') }}</h2>
+            </div>
+            <div class="admin-panel-body">
+                <div class="check-list">
+                    {% for item in attention %}
+                    <a class="check-item {{ 'ok' if item.level == 'ok' else ('bad' if item.level == 'bad' else '') }}"
+                        href="{{ item.href }}">
+                        <span class="dot" aria-hidden="true"></span>
+                        <b>{{ item.label }}</b>
+                        {% if item.count %}<span class="badge">{{ item.count }}</span>{% endif %}
+                        <span class="go">{{ t('Open', 'فتح') }} →</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-panel">
+            <div class="admin-panel-head">
+                <svg class="icon" style="color:#0f766e" aria-hidden="true"><use href="#i-plus"></use></svg>
+                <h2>{{ t('Quick actions', 'إجراءات سريعة') }}</h2>
+            </div>
+            <div class="admin-panel-body">
+                <div class="quick-grid">
+                    <a class="quick" href="{{ url_for('add_news') }}">
+                        <span class="q-icon"><svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg></span>
+                        <span><b>{{ t('New story', 'قصة جديدة') }}</b><span>{{ t('Write or paste a story', 'اكتب أو الصق قصة') }}</span></span>
+                    </a>
+                    <a class="quick" href="{{ url_for('add_news', wing='campus') }}">
+                        <span class="q-icon"><svg class="icon" aria-hidden="true"><use href="#i-building"></use></svg></span>
+                        <span><b>{{ t('Department post', 'منشور قسم') }}</b><span>{{ t('Workshop, exam, notice', 'ورشة، اختبار، إعلان') }}</span></span>
+                    </a>
+                    <a class="quick" href="{{ url_for('reels_list') }}">
+                        <span class="q-icon"><svg class="icon" aria-hidden="true"><use href="#i-video"></use></svg></span>
+                        <span><b>{{ t('Curate a reel', 'أضف مقطعًا') }}</b><span>{{ t('Short video shelf', 'رف الفيديوهات') }}</span></span>
+                    </a>
+                    <a class="quick" href="{{ url_for('subscribers_page') }}">
+                        <span class="q-icon"><svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg></span>
+                        <span><b>{{ t('Subscribers', 'المشتركون') }}</b><span>{{ t('Export the mailing list', 'تصدير القائمة') }}</span></span>
+                    </a>
+                    <a class="quick" href="{{ url_for('digest_preview') }}">
+                        <span class="q-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg></span>
+                        <span><b>{{ t('Preview digest', 'معاينة الملخص') }}</b><span>{{ t('This week’s email', 'بريد هذا الأسبوع') }}</span></span>
+                    </a>
+                    <a class="quick" href="{{ url_for('magazine_view') }}" target="_blank" rel="noopener">
+                        <span class="q-icon"><svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg></span>
+                        <span><b>{{ t('View the issue', 'اعرض العدد') }}</b><span>{{ t('What readers see', 'ما يراه القراء') }}</span></span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-panel">
+            <div class="admin-panel-head">
+                <svg class="icon" style="color:#475467" aria-hidden="true"><use href="#i-settings"></use></svg>
+                <h2>{{ t('System health', 'حالة النظام') }}</h2>
+                <a href="{{ url_for('settings_page') }}">{{ t('Settings', 'الإعدادات') }}</a>
+            </div>
+            <div class="admin-panel-body">
+                <div class="health-row"><span>{{ t('Database', 'قاعدة البيانات') }}</span><b>{{ health.database }}</b></div>
+                <div class="health-row"><span>{{ t('AI provider', 'مزود الذكاء الاصطناعي') }}</span>
+                    {% if health.ai_key %}<span class="badge badge-success">{{ t('Connected', 'متصل') }}</span>
+                    {% else %}<span class="badge badge-danger">{{ t('Missing key', 'لا يوجد مفتاح') }}</span>{% endif %}
+                </div>
+                <div class="health-row"><span>{{ t('Search keys', 'مفاتيح البحث') }}</span>
+                    {% if health.search_key %}<span class="badge badge-success">{{ t('Connected', 'متصل') }}</span>
+                    {% else %}<span class="badge badge-warn">{{ t('Optional', 'اختياري') }}</span>{% endif %}
+                </div>
+                <div class="health-row"><span>{{ t('Theme', 'السمة') }}</span><b>{{ health.theme }}</b></div>
+                <div class="health-row"><span>{{ t('Last publish', 'آخر نشر') }}</span><b>{{ health.last_publish or t('Never', 'لا يوجد') }}</b></div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

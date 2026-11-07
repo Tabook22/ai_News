@@ -1,0 +1,71 @@
+{% extends "auth_layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block title %}{{ t('Sign in', 'تسجيل الدخول') }} · {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+
+{% block content %}
+<div class="login-split">
+    <aside class="login-brand">
+        <div class="login-brand-top">
+            {% if settings and settings.logo_path %}
+            <img src="{{ settings.logo_path }}" alt="">
+            {% else %}
+            <span class="login-mark">N</span>
+            {% endif %}
+            <div>
+                <b>{{ settings.magazine_title if settings else 'Nasser AI News' }}</b>
+                <span>{{ t('Dhofar University · Computer Science', 'جامعة ظفار · علوم الحاسوب') }}</span>
+            </div>
+        </div>
+
+        <div class="login-brand-copy">
+            <p class="login-eyebrow">{{ t('Control room', 'غرفة التحكم') }}</p>
+            <h1>{{ t('The editor’s desk, on one screen.', 'مكتب المحرر، في شاشة واحدة.') }}</h1>
+            <p>{{ t('Publish the weekly issue, curate the wire, watch the audience, and keep the department in the loop.', 'انشر العدد الأسبوعي، ونسّق الأخبار، وتابع الجمهور، وأبقِ القسم على اطلاع.') }}</p>
+        </div>
+
+        <ul class="login-points">
+            <li><svg class="icon" aria-hidden="true"><use href="#i-newspaper"></use></svg>{{ t('Write and publish stories', 'اكتب القصص وانشرها') }}</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>{{ t('Grow the newsletter', 'نمِّ النشرة') }}</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-palette"></use></svg>{{ t('Shape the look of the issue', 'شكّل مظهر العدد') }}</li>
+        </ul>
+    </aside>
+
+    <section class="login-card">
+        <div class="login-card-inner">
+            <h2>{{ t('Welcome back', 'مرحبًا بعودتك') }}</h2>
+            <p class="login-sub">{{ t('Sign in to the Nasser AI control room.', 'سجّل الدخول إلى غرفة تحكم ناصر AI.') }}</p>
+
+            <form method="POST" class="login-form">
+                <input type="hidden" name="next" value="{{ next or '' }}">
+
+                <div class="form-group">
+                    <label for="username">{{ t('Username', 'اسم المستخدم') }}</label>
+                    <div class="login-field">
+                        <svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg>
+                        <input id="username" type="text" name="username" required autocomplete="username"
+                            placeholder="{{ t('Your username', 'اسم المستخدم') }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">{{ t('Password', 'كلمة المرور') }}</label>
+                    <div class="login-field">
+                        <svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg>
+                        <input id="password" type="password" name="password" required autocomplete="current-password"
+                            placeholder="{{ t('Your password', 'كلمة المرور') }}">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary login-submit" type="submit">
+                    {{ t('Sign in', 'تسجيل الدخول') }}
+                    <svg class="icon" style="width:16px;height:16px" aria-hidden="true"><use href="#i-arrow"></use></svg>
+                </button>
+            </form>
+
+            <p class="login-note">{{ t('Credentials are configured in the server’s .env file.', 'بيانات الدخول مُعدّة في ملف .env على الخادم.') }}</p>
+            <a class="login-back" href="{{ url_for('magazine_view') }}">← {{ t('Back to the magazine', 'العودة إلى المجلة') }}</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

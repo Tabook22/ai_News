@@ -1,0 +1,265 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/suneditor@2.47.7/dist/css/suneditor.min.css">
+<style>
+    .story-editor-wrap { margin: 0 0 1.25rem; }
+    .story-editor-wrap > label {
+        display: block;
+        margin-bottom: 0.45rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .story-editor-note {
+        margin: 0 0 0.9rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    .sun-editor {
+        width: 100% !important;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #cbd5e1 !important;
+        font-family: Cairo, Inter, sans-serif;
+    }
+    .sun-editor .se-toolbar {
+        background: #f8fafc;
+        outline: none;
+    }
+    .sun-editor .se-btn { color: #0f172a; }
+    .sun-editor .se-wrapper-wysiwyg {
+        background: #fff;
+        color: #0f172a;
+        font-size: 17px;
+        line-height: 1.75;
+        padding: 1rem 1.1rem;
+    }
+    .sun-editor .se-wrapper-wysiwyg[dir="rtl"] {
+        font-family: "Cairo", "Amiri", sans-serif;
+    }
+    .sun-editor table { border-collapse: collapse; }
+    .sun-editor td, .sun-editor th { border: 1px solid #cbd5e1; padding: 0.35rem 0.5rem; }
+    .sun-editor .se-wrapper-wysiwyg::after { content: ""; display: table; clear: both; }
+    .sun-editor .se-wrapper-wysiwyg .se-component.__se__float-left,
+    .sun-editor .se-wrapper-wysiwyg .se-component.__se__float-right,
+    .sun-editor .se-wrapper-wysiwyg .se-component.story-img-left,
+    .sun-editor .se-wrapper-wysiwyg .se-component.story-img-right {
+        display: block !important;
+        max-width: 48%;
+        clear: none;
+    }
+    .sun-editor .se-wrapper-wysiwyg .se-component.__se__float-left,
+    .sun-editor .se-wrapper-wysiwyg .se-component.story-img-left {
+        float: left !important;
+        margin: 0.35rem 1.1rem 0.8rem 0 !important;
+    }
+    .sun-editor .se-wrapper-wysiwyg .se-component.__se__float-right,
+    .sun-editor .se-wrapper-wysiwyg .se-component.story-img-right {
+        float: right !important;
+        margin: 0.35rem 0 0.8rem 1.1rem !important;
+    }
+    .sun-editor .se-wrapper-wysiwyg .se-component.__se__float-center,
+    .sun-editor .se-wrapper-wysiwyg .se-component.story-img-center {
+        float: none !important;
+        display: block !important;
+        max-width: 100%;
+        margin: 0.8rem auto !important;
+        clear: both;
+    }
+    .sun-editor .se-wrapper-wysiwyg .se-component.__se__float-left img,
+    .sun-editor .se-wrapper-wysiwyg .se-component.__se__float-right img,
+    .sun-editor .se-wrapper-wysiwyg .se-component.story-img-left img,
+    .sun-editor .se-wrapper-wysiwyg .se-component.story-img-right img {
+        width: 100%;
+        height: auto;
+        margin: 0;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/suneditor@2.47.7/dist/suneditor.min.js"></script>
+<script>
+    window.SUNEDITOR_LANG = window.SUNEDITOR_LANG || {};
+    window.SUNEDITOR_LANG.ar = {
+        code: 'ar',
+        toolbar: {
+            default: 'افتراضي', save: 'حفظ', font: 'الخط', formats: 'التنسيق', fontSize: 'الحجم',
+            bold: 'عريض', underline: 'تحته خط', italic: 'مائل', strike: 'يتوسطه خط',
+            removeFormat: 'إزالة التنسيق', fontColor: 'لون الخط', hiliteColor: 'لون التمييز',
+            indent: 'زيادة المسافة', outdent: 'إنقاص المسافة', align: 'المحاذاة',
+            alignLeft: 'محاذاة لليسار', alignRight: 'محاذاة لليمين', alignCenter: 'توسيط', alignJustify: 'ضبط',
+            list: 'قائمة', orderList: 'قائمة مرقمة', unorderList: 'قائمة منقطة',
+            horizontalRule: 'خط', table: 'جدول', link: 'رابط', image: 'صورة', video: 'فيديو',
+            fullScreen: 'ملء الشاشة', codeView: 'الشفرة', undo: 'تراجع', redo: 'إعادة', preview: 'معاينة',
+            tag_p: 'فقرة', tag_div: 'عادي', tag_h: 'عنوان', tag_blockquote: 'اقتباس', tag_pre: 'شفرة',
+            lineHeight: 'تباعد الأسطر', dir_ltr: 'من اليسار إلى اليمين', dir_rtl: 'من اليمين إلى اليسار'
+        },
+        dialogBox: {
+            linkBox: { title: 'إدراج رابط', url: 'الرابط', text: 'النص الظاهر', newWindowCheck: 'فتح في نافذة جديدة', downloadLinkCheck: 'رابط تنزيل' },
+            imageBox: { title: 'إدراج صورة', file: 'اختر ملفاً', url: 'رابط الصورة', altText: 'نص بديل' },
+            videoBox: { title: 'إدراج فيديو', url: 'رابط يوتيوب أو فيميو' },
+            audioBox: { title: 'صوت', url: 'رابط الصوت' },
+            caption: 'وصف', close: 'إغلاق', submitButton: 'إدراج', revertButton: 'تراجع',
+            proportion: 'حافظ على النسبة', basic: 'أساسي', left: 'يسار', right: 'يمين', center: 'وسط',
+            width: 'العرض', height: 'الارتفاع', size: 'الحجم', ratio: 'النسبة'
+        },
+        controller: {
+            edit: 'تعديل', unlink: 'إزالة الرابط', remove: 'حذف',
+            insertRowAbove: 'صف أعلاه', insertRowBelow: 'صف أدناه', deleteRow: 'حذف الصف',
+            insertColumnBefore: 'عمود قبل', insertColumnAfter: 'عمود بعد', deleteColumn: 'حذف العمود',
+            resize100: '100%', resize75: '75%', resize50: '50%', resize25: '25%',
+            tableHeader: 'رأس الجدول', mergeCells: 'دمج الخلايا', splitCells: 'تقسيم الخلايا'
+        },
+        menu: { spaced: 'متباعد', bordered: 'بإطار', neon: 'نيون', translucent: 'شفاف', shadow: 'ظل', code: 'شفرة' }
+    };
+    window.storyEditors = window.storyEditors || {};
+    window.STORY_IMG_NEED = {{ A('img_need')|tojson }};
+
+    function placeStoryImage(core, side) {
+        var host = null;
+        var image = core.context && core.context.image;
+        if (image && image._container && image._container.isConnected && image._container.querySelector('img')) host = image._container;
+        if (!host) {
+            var node = core.getSelectionNode ? core.getSelectionNode() : null;
+            if (node && node.nodeType === 3) node = node.parentElement;
+            if (node && node.closest) host = node.closest('.se-component') || node.closest('figure');
+        }
+        var root = core.context.element.wysiwyg;
+        if (!host && root) {
+            var imgs = root.querySelectorAll('img');
+            if (imgs.length) host = imgs[imgs.length - 1].closest('.se-component') || imgs[imgs.length - 1].closest('figure');
+        }
+        if (!host) {
+            alert(window.STORY_IMG_NEED);
+            return;
+        }
+        ['__se__float-left', '__se__float-right', '__se__float-center', '__se__float-none',
+         'story-img-left', 'story-img-right', 'story-img-center'].forEach(function (name) {
+            host.classList.remove(name);
+        });
+        host.style.minWidth = '0';
+        if (side === 'center') {
+            host.classList.add('__se__float-center', 'story-img-center');
+            host.style.float = 'none';
+            host.style.display = 'block';
+            host.style.width = '100%';
+            host.style.maxWidth = '100%';
+            host.style.margin = '0.8rem auto';
+            host.style.clear = 'both';
+        } else {
+            host.classList.add(side === 'left' ? '__se__float-left' : '__se__float-right');
+            host.classList.add(side === 'left' ? 'story-img-left' : 'story-img-right');
+            host.style.float = side;
+            host.style.display = 'block';
+            host.style.width = '46%';
+            host.style.maxWidth = '46%';
+            host.style.margin = side === 'left' ? '0.35rem 1.1rem 0.8rem 0' : '0.35rem 0 0.8rem 1.1rem';
+            host.style.clear = 'none';
+            var prev = host.previousElementSibling;
+            while (prev && !prev.textContent.replace(/\u200b/g, '').trim() && !prev.querySelector('img')) {
+                prev = prev.previousElementSibling;
+            }
+            if (prev && /^(P|DIV|H1|H2|H3|H4|BLOCKQUOTE|UL|OL)$/.test(prev.nodeName) && !prev.querySelector('img')) {
+                host.parentNode.insertBefore(host, prev);
+            }
+        }
+        var picture = host.querySelector('img');
+        if (picture) {
+            picture.style.width = side === 'center' ? '' : '100%';
+            picture.style.maxWidth = '100%';
+            picture.style.height = 'auto';
+            picture.style.margin = '0';
+            picture.setAttribute('data-align', side);
+        }
+        if (core.history && core.history.push) core.history.push(false);
+    }
+
+    function imagePlaceButton(side, label, title) {
+        return {
+            name: 'img_' + side,
+            display: 'command',
+            title: title,
+            innerHTML: '<span style="font-weight:800;font-size:12px">' + label + '</span>',
+            add: function () {},
+            action: function () { placeStoryImage(this, side); }
+        };
+    }
+
+    function directionButton(dir, label, title) {
+        return {
+            name: 'dir_' + dir,
+            display: 'command',
+            title: title,
+            innerHTML: '<span style="font-weight:800">' + label + '</span>',
+            add: function () {},
+            active: function (element) {
+                if (!element) return false;
+                var block = element;
+                while (block && block.nodeType === 1 && !/^(P|DIV|H1|H2|H3|H4|LI|TD|TH|BLOCKQUOTE)$/.test(block.nodeName)) {
+                    block = block.parentElement;
+                }
+                return !!(block && (block.getAttribute('dir') === dir || block.style.direction === dir));
+            },
+            action: function () {
+                var node = this.getSelectionNode();
+                if (!node) return;
+                if (node.nodeType === 3) node = node.parentElement;
+                while (node && node !== this.context.element.wysiwyg && !/^(P|DIV|H1|H2|H3|H4|LI|TD|TH|BLOCKQUOTE)$/.test(node.nodeName)) {
+                    node = node.parentElement;
+                }
+                if (!node || node === this.context.element.wysiwyg) return;
+                node.setAttribute('dir', dir);
+                node.style.direction = dir;
+                node.style.textAlign = dir === 'rtl' ? 'right' : 'left';
+            }
+        };
+    }
+
+    window.mountStoryEditor = function (id, opts) {
+        if (window.storyEditors[id]) return window.storyEditors[id];
+        var box = document.getElementById(id);
+        if (!box || typeof SUNEDITOR === 'undefined') return null;
+        opts = opts || {};
+        var rtl = !!opts.rtl;
+        var langPack = window.SUNEDITOR_LANG && (window.SUNEDITOR_LANG.ar || window.SUNEDITOR_LANG['ar']);
+        var editor = SUNEDITOR.create(id, {
+            lang: rtl && langPack ? langPack : undefined,
+            rtl: rtl,
+            height: opts.height || '340px',
+            width: '100%',
+            resizingBar: false,
+            buttonList: [
+                ['undo', 'redo'],
+                ['font', 'fontSize', 'formatBlock'],
+                ['bold', 'underline', 'italic', 'strike'],
+                ['fontColor', 'hiliteColor'],
+                ['dir_rtl', 'dir_ltr', 'align', 'list', 'lineHeight'],
+                ['table', 'link', 'image', 'video'],
+                ['img_right', 'img_left', 'img_center'],
+                ['removeFormat', 'fullScreen', 'codeView', 'preview']
+            ],
+            plugins: [
+                directionButton('rtl', 'ع', 'من اليمين إلى اليسار'),
+                directionButton('ltr', 'A', 'Left to right'),
+                imagePlaceButton('right', {{ A('img_right_s')|tojson }}, {{ A('img_right')|tojson }}),
+                imagePlaceButton('left', {{ A('img_left_s')|tojson }}, {{ A('img_left')|tojson }}),
+                imagePlaceButton('center', {{ A('img_center_s')|tojson }}, {{ A('img_center')|tojson }})
+            ],
+            font: ['Cairo', 'Amiri', 'Arial', 'Georgia', 'Times New Roman', 'Tahoma', 'Verdana', 'Courier New'],
+            fontSize: [12, 14, 16, 18, 20, 24, 28, 32, 36],
+            imageUploadUrl: '/api/upload_image',
+            imageAccept: '.jpg, .jpeg, .png, .gif, .webp',
+            videoFileInput: false,
+            defaultStyle: rtl
+                ? 'font-family: Cairo, Amiri, sans-serif; font-size: 17px; direction: rtl; text-align: right;'
+                : 'font-family: Georgia, "Times New Roman", serif; font-size: 17px;'
+        });
+        window.storyEditors[id] = editor;
+        return editor;
+    };
+
+    window.storyEditorHtml = function (id) {
+        var editor = window.storyEditors[id];
+        if (editor) editor.save();
+        var box = document.getElementById(id);
+        var html = editor ? editor.getContents(false) : (box ? box.value : '');
+        var plain = (html || '').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
+        return plain ? html : '';
+    };
+</script>

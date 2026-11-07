@@ -1,0 +1,421 @@
+/* Admin chrome. The bar is always dark, so its type stays light
+   even when the magazine theme paints the page in ink or paper. */
+nav .brand {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+nav .brand a {
+    text-decoration: none;
+    background: none;
+    -webkit-text-fill-color: #f8fafc;
+    color: #f8fafc;
+    letter-spacing: -0.04em;
+}
+
+.admin-nav {
+    flex-wrap: wrap;
+    gap: 0.15rem 0.15rem;
+}
+
+nav .admin-nav a {
+    color: #cbd5e1 !important;
+    font-size: 0.84rem;
+    font-weight: 600;
+    padding: 0.35rem 0.45rem;
+    border-radius: 6px;
+}
+
+nav .admin-nav a::after {
+    display: none;
+}
+
+nav .admin-nav a:hover,
+nav .admin-nav a.active {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+nav .admin-nav a.nav-campus.active {
+    box-shadow: inset 0 -2px 0 #fb923c;
+}
+
+nav .admin-nav a.nav-world.active {
+    box-shadow: inset 0 -2px 0 #38bdf8;
+}
+
+.admin-lang {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    margin-inline-start: 0.35rem;
+    padding: 0.12rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+nav .admin-lang a {
+    padding: 0.18rem 0.55rem !important;
+    border-radius: 999px;
+    font-weight: 800;
+}
+
+nav .admin-lang a.active {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+}
+
+html[dir="rtl"] nav .admin-nav a,
+html[dir="rtl"] .btn,
+html[dir="rtl"] label,
+html[dir="rtl"] input,
+html[dir="rtl"] select,
+html[dir="rtl"] textarea,
+html[dir="rtl"] .subtitle,
+html[dir="rtl"] footer a {
+    font-family: "Cairo", "Segoe UI", sans-serif;
+}
+
+html[dir="rtl"] .container {
+    font-family: "Cairo", "Segoe UI", sans-serif;
+}
+
+html[dir="rtl"] .newsroom-head h1,
+html[dir="rtl"] .newsroom-door h2,
+html[dir="rtl"] .pasteup-head h2,
+html[dir="rtl"] .pasteup-half h3,
+html[dir="rtl"] .container h1,
+html[dir="rtl"] .container h2 {
+    font-family: "Amiri", "Traditional Arabic", serif;
+    letter-spacing: 0;
+}
+
+.nav-rule {
+    width: 1px;
+    height: 1rem;
+    margin: 0 0.35rem;
+    background: rgba(255, 255, 255, 0.22);
+    align-self: center;
+}
+
+/* Every admin page. Saved magazine colors must not wash the titles out. */
+.container h1,
+.container h2,
+.container h3,
+.container h4,
+.container h5,
+.container h6,
+.container .page-title,
+.container .magazine-title {
+    color: #0f172a !important;
+}
+
+.container p,
+.container li,
+.container label,
+.container .subtitle {
+    color: #334155;
+}
+
+.newsroom {
+    max-width: 1080px;
+    margin: 0 auto 2rem;
+}
+
+.newsroom-kicker {
+    margin: 0;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #64748b !important;
+}
+
+.newsroom-head h1 {
+    font-family: var(--font-serif, 'Playfair Display', serif);
+    font-size: clamp(2.1rem, 4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    margin: 0.4rem 0 0.55rem;
+    color: #0f172a !important;
+}
+
+.newsroom-head p {
+    max-width: 38rem;
+    margin: 0 0 1.6rem;
+    color: #334155 !important;
+    font-size: 1.05rem;
+    line-height: 1.55;
+}
+
+.newsroom-doors,
+.pasteup-spread {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem;
+}
+
+.newsroom-door,
+.pasteup-half {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1.35rem 1.35rem 1.2rem;
+    text-decoration: none;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+}
+
+.newsroom-door {
+    min-height: 19rem;
+    border-top: 4px solid #cbd5e1;
+}
+
+.newsroom-door.is-campus { border-top-color: #c2410c; }
+.newsroom-door.is-world { border-top-color: #0369a1; }
+
+.newsroom-door:hover {
+    text-shadow: none;
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+}
+
+.newsroom-index {
+    position: absolute;
+    top: 0.35rem;
+    inset-inline-end: 0.85rem;
+    font-family: var(--font-serif, 'Playfair Display', serif);
+    font-size: 4.2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #e2e8f0;
+}
+
+.newsroom-label {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.newsroom-door.is-campus .newsroom-label,
+.pasteup-half.is-campus .newsroom-label { color: #c2410c !important; }
+.newsroom-door.is-world .newsroom-label,
+.pasteup-half.is-world .newsroom-label { color: #0369a1 !important; }
+
+.newsroom-door h2,
+.pasteup-half h3,
+.pasteup-head h2 {
+    margin: 0;
+    font-family: var(--font-serif, 'Playfair Display', serif);
+    color: #0f172a !important;
+    line-height: 1.25;
+}
+
+.newsroom-door h2 { font-size: 1.7rem; }
+.pasteup-half h3 { margin: 0.15rem 0 0.75rem; font-size: 1.45rem; }
+
+.newsroom-door p,
+.pasteup-half > p {
+    margin: 0;
+    color: #475569 !important;
+}
+
+.newsroom-door ul {
+    margin: 0.55rem 0 0;
+    padding-inline-start: 1.15rem;
+}
+
+.newsroom-door li {
+    margin: 0.28rem 0;
+    color: #1e293b !important;
+}
+
+.newsroom-door strong {
+    margin-top: auto;
+    padding-top: 0.9rem;
+    font-size: 0.92rem;
+    color: #0f172a;
+}
+
+.pasteup {
+    margin-top: 2.25rem;
+}
+
+.pasteup-head h2 {
+    font-size: 1.7rem;
+    font-weight: 700;
+}
+
+.pasteup-head p {
+    max-width: 38rem;
+    margin: 0.4rem 0 1rem;
+    color: #334155 !important;
+}
+
+.paste-kicker,
+.pasteup-half li span {
+    color: #64748b !important;
+}
+
+.paste-kicker {
+    margin: 0.85rem 0 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.pasteup-half ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pasteup-half li {
+    margin: 0;
+    padding: 0.55rem 0;
+    border-top: 1px solid #e2e8f0;
+    line-height: 1.4;
+    color: #1e293b !important;
+}
+
+.pasteup-half li span {
+    display: inline-block;
+    min-width: 4.2rem;
+    margin-inline-end: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.pasteup-half a,
+.newsroom-foot a,
+.paste-more {
+    color: #0f172a !important;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pasteup-half a:hover,
+.newsroom-foot a:hover,
+.paste-more:hover {
+    color: #0369a1 !important;
+    text-decoration: underline;
+}
+
+.paste-more {
+    display: inline-block;
+    margin-top: 1rem;
+}
+
+.newsroom-foot {
+    margin: 1.35rem 0 0;
+    color: #334155 !important;
+}
+
+@media (max-width: 800px) {
+    .newsroom-doors,
+    .pasteup-spread {
+        grid-template-columns: 1fr;
+    }
+}
+
+.photo-form h2,
+.photo-semester h2,
+.photo-album h3 {
+    color: #0f172a;
+}
+
+.photo-form-grid,
+.photo-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.9rem;
+}
+
+.photo-drafts,
+.photo-admin-grid {
+    margin-top: 0.8rem;
+}
+
+.photo-draft,
+.photo-admin-grid figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.7rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.photo-draft img,
+.photo-admin-grid img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.photo-show {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.8rem 0;
+}
+
+.photo-semester {
+    margin-top: 2rem;
+}
+
+.photo-album {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #fff;
+}
+
+.photo-album-head,
+.photo-album-actions,
+.photo-more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.photo-kicker,
+.photo-hidden {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.photo-hidden {
+    color: #c2410c;
+}
+
+.photo-more {
+    margin-top: 1rem;
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.photo-topic-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 1rem 0 0.2rem;
+}

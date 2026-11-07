@@ -1,0 +1,95 @@
+{% extends "public_v3.html" %}
+{% import "_v3_macros.html" as m %}
+
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ (('بحث: ' if ar else 'Search: ') ~ q) if q else ('كل القصص' if ar else 'All stories') }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_meta %}
+<meta name="description" content="{{ 'ابحث في كل قصص مجلة الذكاء الاصطناعي لقسم علوم الحاسوب في جامعة ظفار.' if ar else 'Search every story in the AI magazine of Computer Science at Dhofar University.' }}">
+<meta name="robots" content="noindex, follow">
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+<section class="search-page">
+    <h1>{{ 'ابحث في المجلة' if ar else 'Search the magazine' }}</h1>
+    <p class="lede">{{ 'كل قصة نُشرت، من الأحدث. ابحث بعنوان أو مصدر أو مصطلح.' if ar else 'Every published story, newest first. Search by headline, source, or term.' }}</p>
+
+    <form class="search-form" action="{{ url_for('find_stories') }}" method="GET" role="search">
+        <label class="visually-hidden" for="q">{{ 'كلمة البحث' if ar else 'Search terms' }}</label>
+        <input id="q" type="search" name="q" value="{{ q }}" autocomplete="off"
+            placeholder="{{ 'مثال: وكلاء، أمن، اختبار…' if ar else 'e.g. agents, security, exam…' }}">
+        {% if wing %}<input type="hidden" name="wing" value="{{ wing }}">{% endif %}
+        <button class="btn btn-primary" type="submit">{{ 'بحث' if ar else 'Search' }}</button>
+    </form>
+
+    <div class="chip-row" aria-label="{{ 'تصفية' if ar else 'Filters' }}">
+        <a class="chip" href="{{ url_for('find_stories', q=q) }}"
+            aria-current="{{ 'true' if not wing and not desk else 'false' }}">{{ 'الكل' if ar else 'All' }}</a>
+        <a class="chip" href="{{ url_for('find_stories', q=q, wing='world') }}"
+            aria-current="{{ 'true' if wing == 'world' else 'false' }}">{{ 'العالم' if ar else 'The world' }}</a>
+        <a class="chip" href="{{ url_for('find_stories', q=q, wing='research') }}"
+            aria-current="{{ 'true' if wing == 'research' else 'false' }}">{{ 'البحث العلمي' if ar else 'Research' }}</a>
+        <a class="chip" href="{{ url_for('find_stories', q=q, wing='campus') }}"
+            aria-current="{{ 'true' if wing == 'campus' else 'false' }}">{{ 'القسم' if ar else 'Department' }}</a>
+    </div>
+
+    <p class="result-count">
+        {% if q %}
+        {{ total }} {{ 'نتيجة' if ar else 'result' }}{{ '' if total == 1 or ar else 's' }} {{ 'عن' if ar else 'for' }} “{{ q }}”
+        {% else %}
+        {{ total }} {{ 'قصة منشورة' if ar else 'published stories' }}
+        {% endif %}
+    </p>
+
+    {% if stories %}
+    <div class="result-list">
+        {% for story in stories %}
+        <article class="result-row">
+            <a class="thumb" href="{{ url_for('magazine_detail', item_id=story.id) }}" tabindex="-1" aria-hidden="true">
+                {{ m.media(story, '4x3') }}
+            </a>
+            <div>
+                <h2><a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a></h2>
+                {% set dek = (story.summary_ar | reader_line or story.summary) if ar else story.summary %}
+                {% if dek %}<p class="dek">{{ dek | plain_dek | truncate(170, true) }}</p>{% endif %}
+            </div>
+            <div class="meta">
+                {{ story.desk_ar if ar else story.desk_en }}<br>
+                {{ story.source or 'Nasser AI News' }}<br>
+                {{ story.published_ar if ar else story.published_en }}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>{{ 'لا نتائج' if ar else 'No results' }}</h2>
+        <p>{{ 'جرّب كلمة أعم، أو ابحث في كل القصص.' if ar else 'Try a broader word, or browse all stories.' }}</p>
+        <p style="margin-top:14px;"><a class="btn btn-ghost" href="{{ url_for('find_stories') }}">{{ 'كل القصص' if ar else 'All stories' }}</a></p>
+    </div>
+    {% endif %}
+</section>
+</div>
+{% endblock %}
+
+{% block pre_footer %}
+<div class="wrap">
+    <div class="subscribe">
+        <div>
+            <h2>{{ 'بريد واحد كل أحد. أسبوع الذكاء الاصطناعي، بالعربية والإنجليزية.' if ar else 'One email on Sunday. The week in AI, in Arabic and English.' }}</h2>
+            <p>{{ 'الملخص، وقصة الغلاف، وما هو قادم في القسم. مجانًا، وبلا ضجيج.' if ar else 'The brief, the cover story, and what is coming up in the department. Free, and no noise.' }}</p>
+        </div>
+        <div>
+            <form action="{{ url_for('subscribe') }}" method="POST">
+                <input type="hidden" name="source" value="search">
+                <label class="visually-hidden" for="v3-email-search">{{ 'بريدك الإلكتروني' if ar else 'Your email' }}</label>
+                <input id="v3-email-search" type="email" name="email" required
+                    placeholder="{{ 'بريدك@du.edu.om' if ar else 'you@du.edu.om' }}">
+                <button class="btn btn-primary" type="submit">{{ 'اشترك' if ar else 'Subscribe' }}</button>
+            </form>
+            <p class="note">{{ 'نحفظ بريدك لإرسال الملخص. رابط إلغاء الاشتراك في كل عدد.' if ar else 'We store your email to send the digest. Unsubscribe link in every issue.' }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

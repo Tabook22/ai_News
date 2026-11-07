@@ -1,0 +1,60 @@
+{% for item in results %}
+<div class="card">
+    <div class="card-image">
+        {% if item.image %}
+        <img src="{{ item.image }}" loading="lazy">
+        {% else %}
+        <div class="placeholder-icon">🌐</div>
+        {% endif %}
+
+        {% if item.article_type == 'video' or item.source == 'YouTube' %}
+        <span class="badge top" style="background: #ef4444; color: white;">▶ YouTube</span>
+        {% else %}
+        <span class="badge top">{{ item.source }}</span>
+        {% endif %}
+    </div>
+    <div class="card-content">
+        <div class="meta">{{ item.published }}</div>
+        <div class="title-en"><a href="{{ item.url }}" target="_blank" style="color: var(--text-main);">{{
+                item.title }}</a></div>
+        <div
+            style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+            {{ item.snippet }}
+        </div>
+        <div class="actions-row">
+            <form method="POST" action="{{ url_for('save_search_result') }}" class="js-add-result">
+                <input type="hidden" name="title" value="{{ item.title }}">
+                <input type="hidden" name="url" value="{{ item.url }}">
+                <input type="hidden" name="source" value="{{ item.source }}">
+                <input type="hidden" name="published" value="{{ item.published }}">
+                <input type="hidden" name="snippet" value="{{ item.snippet }}">
+                <input type="hidden" name="image" value="{{ item.image }}">
+                <input type="hidden" name="article_type" value="external">
+                <input type="hidden" name="content_format" value="{{ item.content_format or '' }}">
+                <input type="hidden" name="video_id" value="{{ item.video_id or '' }}">
+                {% if saved_ids is defined and item.url in saved_ids %}
+                <a href="{{ url_for('edit_news', item_id=saved_ids[item.url]) }}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;">{{ A('edit') }}</a>
+                {% else %}
+                <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+                    ➕ {{ A('add_btn') }}
+                </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+{% if query %}
+<div
+    style="grid-column: 1/-1; text-align: center; padding: 2rem; opacity: 0.9; border: 2px dashed var(--border-color); border-radius: 12px;">
+    <p style="margin: 0 0 0.5rem; font-weight: 600;">{{ A('no_live') }}</p>
+    {% if search_warnings %}
+    <ul style="text-align: start; max-width: 600px; margin: 1rem auto 0; color: var(--accent-warning); font-size: 0.85rem; line-height: 1.6;">
+        {% for w in search_warnings %}
+        <li>{{ w }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endif %}
+{% endfor %}

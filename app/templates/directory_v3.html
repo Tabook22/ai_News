@@ -1,0 +1,192 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+{% macro cat_url(key) %}{{ url_for('tools_directory', category=key, q=q or None, pricing=pricing or None, free='1' if free_only else None, arabic='1' if arabic_only else None, sort=sort) }}{% endmacro %}
+{% macro cat_name(label) %}{{ label.split(' ', 1)[1] if ' ' in label else label }}{% endmacro %}
+{% set cat_ar = {'chatbot': 'المحادثة', 'coding': 'البرمجة', 'image': 'الصور', 'video': 'الفيديو', 'video_edit': 'المونتاج', 'presentations': 'العروض', 'writing': 'الكتابة', 'research': 'البحث', 'productivity': 'الإنتاجية', 'voice': 'الصوت', 'design': 'التصميم', 'education': 'التعلّم', 'agents': 'الوكلاء', 'platforms': 'المنصات', 'other': 'أخرى'} %}
+
+{% block page_title %}{{ 'دليل أدوات الذكاء الاصطناعي' if ar else 'AI Tools Directory' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_desc %}{{ 'دليل مختار لأدوات الذكاء الاصطناعي المفيدة للطلبة: ما تفعله، وهل لها خطة مجانية، وهل تدعم العربية.' if ar else 'A curated directory of AI tools for students: what each one does, whether it has a free tier, and whether it supports Arabic.' }}{% endblock %}
+
+{% block content %}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="tool-i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="tool-i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-.9.7-1.5 1.2-1.5 2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 17h.01" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+</svg>
+<div class="wrap">
+    <header class="tools-hero">
+        <span class="eyebrow">{{ 'دليل الأدوات' if ar else 'The tool directory' }}</span>
+        <h1>{{ 'Find the right AI tool — without the hype.' if not ar else 'اعثر على أداة الذكاء الاصطناعي المناسبة — بلا مبالغة.' }}</h1>
+        <p>{{ 'A short, honest list for students. Each entry says what the tool is best for, what it costs, and whether it works in Arabic. We check the links and update the list.' if not ar else 'قائمة قصيرة وصادقة للطلبة. كل أداة تشرح لأي شيء تُستخدم، وكم تكلف، وهل تعمل بالعربية. نتحقق من الروابط ونحدّث القائمة.' }}</p>
+
+        <form class="tools-search" action="{{ url_for('tools_directory') }}" method="GET" role="search">
+            <svg class="icon" aria-hidden="true"><use href="#tool-i-search"></use></svg>
+            <label class="visually-hidden" for="tool-q">{{ 'ابحث عن أداة' if ar else 'Search tools' }}</label>
+            <input id="tool-q" type="search" name="q" value="{{ q }}"
+                placeholder="{{ 'ابحث باسم الأداة أو ما تفعله…' if ar else 'Search by name or what it does…' }}">
+            {% if category and category != 'all' %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+            <button class="btn btn-primary" type="submit">{{ 'بحث' if ar else 'Search' }}</button>
+        </form>
+
+        <div class="tools-meta">
+            <span><b>{{ total }}</b> {{ 'أداة منشورة' if ar else 'published tools' }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <span>{{ 'آخر تحقق' if ar else 'Last checked' }} {{ date }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <a href="mailto:{{ settings.author_email if settings and settings.author_email else 'editor@du.edu.om' }}">{{ 'اقترح أداة' if ar else 'Suggest a tool' }} ↗</a>
+        </div>
+    </header>
+
+    <nav class="tools-tabs" aria-label="{{ 'أقسام الدليل' if ar else 'Directory sections' }}">
+        <a class="is-active" href="{{ url_for('tools_directory') }}">{{ 'الدليل' if ar else 'Directory' }}</a>
+        <a href="{{ url_for('tools_ranked') }}">{{ 'الترتيب' if ar else 'Rankings' }}</a>
+        <a href="{{ url_for('models_directory') }}">{{ 'أفضل النماذج' if ar else 'Top models' }}</a>
+    </nav>
+
+    {% if featured and not q and category == 'all' and not pricing and not free_only and not arabic_only %}
+    <section class="tools-featured" aria-labelledby="featured-title">
+        <header class="tools-section-head">
+            <h2 id="featured-title">{{ 'Start with these' if not ar else 'ابدأ بهذه' }}</h2>
+            <p>{{ 'Three tools we would give a first-year student today.' if not ar else 'ثلاث أدوات كنا سنعطيها لطالب في السنة الأولى اليوم.' }}</p>
+        </header>
+        <div class="tools-featured-grid">
+            {% for tool in featured %}
+            <a class="featured-tool tool-cat-{{ tool.category }}" href="{{ url_for('tool_detail', tool_id=tool.id) }}">
+                <span class="featured-badge">{{ 'Editor’s pick' if not ar else 'اختيار المحرر' }}</span>
+                <span class="tool-logo is-large">{{ (tool.name_ar or tool.name)[:1] if ar else tool.name[:1] }}</span>
+                <b>{{ (tool.name_ar or tool.name) if ar else tool.name }}</b>
+                <span class="featured-tagline">{{ (tool.tagline_ar or tool.tagline_en) if ar else (tool.tagline_en or tool.tagline_ar) }}</span>
+                <span class="featured-foot">
+                    <span class="price-badge is-{{ tool.pricing }}">{{ tool.pricing_label_ar if ar else tool.pricing_label_en }}</span>
+                    {% if tool.rating %}<span class="rating-badge">★ {{ '%.1f'|format(tool.rating) }}</span>{% endif %}
+                    {% if tool.arabic_support %}<span class="lang-badge">{{ 'عربي' if ar else 'Arabic' }}</span>{% endif %}
+                    <span class="featured-open">{{ 'Details' if not ar else 'التفاصيل' }} →</span>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <form class="tools-filters" action="{{ url_for('tools_directory') }}" method="GET" id="tool-filters">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        <div class="tool-chips" role="group" aria-label="{{ 'التصنيفات' if ar else 'Categories' }}">
+            <a class="tool-chip {{ 'is-active' if category == 'all' else '' }}" href="{{ cat_url('all') }}">
+                {{ 'الكل' if ar else 'All' }} <b>{{ counts['all'] }}</b>
+            </a>
+            {% for key, label in categories %}
+            {% if counts[key] %}
+            <a class="tool-chip {{ 'is-active' if category == key else '' }} tool-cat-{{ key }}" href="{{ cat_url(key) }}">
+                {{ cat_ar[key] if ar else cat_name(label) }} <b>{{ counts[key] }}</b>
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="tool-filter-row">
+            <label class="tool-select">
+                <span>{{ 'السعر' if ar else 'Price' }}</span>
+                <select name="pricing" onchange="this.form.submit()">
+                    <option value="">{{ 'أي سعر' if ar else 'Any price' }}</option>
+                    <option value="free" {{ 'selected' if pricing == 'free' else '' }}>{{ 'مجاني' if ar else 'Free' }}</option>
+                    <option value="freemium" {{ 'selected' if pricing == 'freemium' else '' }}>{{ 'خطة مجانية' if ar else 'Free tier' }}</option>
+                    <option value="paid" {{ 'selected' if pricing == 'paid' else '' }}>{{ 'مدفوع' if ar else 'Paid' }}</option>
+                </select>
+            </label>
+
+            <label class="tool-toggle">
+                <input type="checkbox" name="free" value="1" {{ 'checked' if free_only else '' }} onchange="this.form.submit()">
+                <span class="switch"></span>
+                {{ 'له خطة مجانية' if ar else 'Has a free tier' }}
+            </label>
+
+            <label class="tool-toggle">
+                <input type="checkbox" name="arabic" value="1" {{ 'checked' if arabic_only else '' }} onchange="this.form.submit()">
+                <span class="switch"></span>
+                {{ 'يدعم العربية' if ar else 'Works in Arabic' }}
+            </label>
+
+            <label class="tool-select">
+                <span>{{ 'الترتيب' if ar else 'Sort' }}</span>
+                <select name="sort" onchange="this.form.submit()">
+                    <option value="featured" {{ 'selected' if sort == 'featured' else '' }}>{{ 'المختارة أولًا' if ar else 'Featured first' }}</option>
+                    <option value="name" {{ 'selected' if sort == 'name' else '' }}>{{ 'أبجديًا' if ar else 'Name A–Z' }}</option>
+                    <option value="newest" {{ 'selected' if sort == 'newest' else '' }}>{{ 'الأحدث' if ar else 'Newest' }}</option>
+                </select>
+            </label>
+
+            {% if q or category != 'all' or pricing or free_only or arabic_only %}
+            <a class="tool-clear" href="{{ url_for('tools_directory') }}">{{ 'مسح الفلاتر' if ar else 'Clear filters' }}</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <section class="tools-results" aria-labelledby="results-title">
+        <header class="tools-section-head is-row">
+            <h2 id="results-title">
+                {{ tools|length }} {{ 'أداة' if ar else 'tool' }}{{ '' if tools|length == 1 or ar else 's' }}
+                {% if q %}{{ 'عن' if ar else 'for' }} “{{ q }}”{% endif %}
+            </h2>
+            {% if category != 'all' %}
+            <span class="results-context">{{ cat_ar.get(category, category) if ar else cat_name(dict(categories).get(category, category)) }}</span>
+            {% endif %}
+        </header>
+
+        {% if tools %}
+        <div class="tool-grid">
+            {% for tool in tools %}
+            <article class="tool-card tool-cat-{{ tool.category }}">
+                <a class="tool-card-main" href="{{ url_for('tool_detail', tool_id=tool.id) }}">
+                    <span class="tool-logo">
+                        {% if tool.logo %}<img src="{{ tool.logo }}" alt="">
+                        {% else %}{{ (tool.name_ar or tool.name)[:1] if ar else tool.name[:1] }}{% endif %}
+                    </span>
+                    <span class="tool-card-title">
+                        <b>{{ (tool.name_ar or tool.name) if ar else tool.name }}</b>
+                        {% if ar and tool.name %}<small>{{ tool.name }}</small>{% elif not ar and tool.name_ar %}<small dir="rtl">{{ tool.name_ar }}</small>{% endif %}
+                    </span>
+                    <span class="tool-category">{{ cat_ar.get(tool.category, tool.category) if ar else cat_name(tool.category_label) }}</span>
+                </a>
+
+                <p class="tool-tagline">{{ (tool.tagline_ar or tool.tagline_en) if ar else (tool.tagline_en or tool.tagline_ar) }}</p>
+
+                {% if tool.best_for %}
+                <p class="tool-best"><span>{{ 'الأفضل لـ' if ar else 'Best for' }}</span> {{ tool.best_for }}</p>
+                {% endif %}
+
+                <div class="tool-badges">
+                    <span class="price-badge is-{{ tool.pricing }}">{{ tool.pricing_label_ar if ar else tool.pricing_label_en }}</span>
+                    {% if tool.rating %}<span class="rating-badge">★ {{ '%.1f'|format(tool.rating) }}</span>{% endif %}
+                    {% if tool.arabic_support %}<span class="lang-badge">{{ 'عربي' if ar else 'Arabic' }}</span>{% endif %}
+                    {% for platform in tool.platforms[:2] %}<span class="platform-badge">{{ platform }}</span>{% endfor %}
+                </div>
+
+                <footer class="tool-card-foot">
+                    <a class="tool-detail-link" href="{{ url_for('tool_detail', tool_id=tool.id) }}">{{ 'التفاصيل' if ar else 'Details' }} →</a>
+                    {% if tool.official_url %}
+                    <a class="tool-open" href="{{ tool.official_url }}" target="_blank" rel="noopener noreferrer">
+                        {{ 'افتح الأداة' if ar else 'Open tool' }} ↗
+                    </a>
+                    {% endif %}
+                </footer>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="tools-empty">
+            <svg class="icon" aria-hidden="true"><use href="#tool-i-search"></use></svg>
+            <h2>{{ 'No tools match these filters' if not ar else 'لا توجد أدوات تطابق هذه الفلاتر' }}</h2>
+            <p>{{ 'Try a broader search or clear the filters.' if not ar else 'جرّب بحثًا أوسع أو امسح الفلاتر.' }}</p>
+            <a class="btn btn-primary" href="{{ url_for('tools_directory') }}">{{ 'All tools' if not ar else 'كل الأدوات' }}</a>
+        </div>
+        {% endif %}
+    </section>
+
+    <aside class="tools-note">
+        <svg class="icon" aria-hidden="true"><use href="#tool-i-help"></use></svg>
+        <div>
+            <b>{{ 'How we choose' if not ar else 'كيف نختار' }}</b>
+            <p>{{ 'We list tools that a Computer Science student can actually use, not every launch. Free tiers are marked because cost matters. A listing is not an endorsement, and prices change — always check the official page.' if not ar else 'نُدرج الأدوات التي يستطيع طالب علوم الحاسوب استخدامها فعلًا، لا كل إطلاق جديد. نحدد الخطط المجانية لأن التكلفة تهم. الإدراج ليس توصية، والأسعار تتغير، تحقق دائمًا من الصفحة الرسمية.' }}</p>
+        </div>
+    </aside>
+</div>
+{% endblock %}

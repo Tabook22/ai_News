@@ -1,0 +1,105 @@
+{% extends "public.html" %}
+
+{% block page_title %}{{ 'أرشيف الصور' if lang_pref == 'ar' else 'Photo archive' }} — {{ settings.magazine_title }}{% endblock %}
+
+{% block content %}
+{% set ar = lang_pref == 'ar' %}
+<div class="issue photo-page">
+    <header class="issue-mast">
+        <p class="issue-university">{{ 'جامعة ظفار · قسم علوم الحاسوب' if ar else 'Dhofar University · Computer Science' }}</p>
+        <h1 class="issue-name" style="font-size: clamp(2.2rem, 5vw, 3.8rem);">{{ 'أرشيف الصور' if ar else 'Photo archive' }}</h1>
+        <p class="issue-dek" {% if ar %}dir="rtl"{% endif %}>
+            {{ 'مناسبات القسم وأحداثه وتكريمه. اختر الفصل، ثم المناسبة، ثم الصور.' if ar else 'Department occasions, events, and honors. Choose the semester, then the occasion, then the pictures.' }}
+        </p>
+        <div class="issue-meta">
+            <a class="issue-jump" href="{{ url_for('campus_weekly') }}">{{ 'القسم →' if ar else '← Department' }}</a>
+        </div>
+    </header>
+
+    {% if semesters %}
+    <nav class="desk-nav" aria-label="{{ 'الفصول' if ar else 'Semesters' }}">
+        {% for semester in semesters %}
+        <a class="desk-chip" href="#sem-{{ semester.key }}">{{ semester.label }}</a>
+        {% endfor %}
+    </nav>
+
+    {% for semester in semesters %}
+    <section class="issue-anchor" id="sem-{{ semester.key }}">
+        <div class="issue-section-head">
+            <div>
+                <div class="issue-num is-campus">{{ '%02d' % loop.index }}</div>
+                <h2>{{ semester.label }}</h2>
+            </div>
+        </div>
+        {% for album in semester.albums %}
+        <article class="photo-event" id="album-{{ album.id }}" {% if ar %}dir="rtl"{% endif %}>
+            <header>
+                <p class="folio-kicker" style="color: var(--campus, #c2410c);">
+                    {{ album.event_date.strftime('%d %b %Y') if album.event_date and not ar else '' }}
+                    {% if ar and album.event_date %}{{ album.event_date.day }} {{ ['', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'][album.event_date.month] }} {{ album.event_date.year }}{% endif %}
+                </p>
+                <h3>{{ (album.title_ar or album.title) if ar else (album.title or album.title_ar) }}</h3>
+                {% set note = (album.note_ar or album.note) if ar else (album.note or album.note_ar) %}
+                {% if note %}<p class="folio-dek">{{ note }}</p>{% endif %}
+            </header>
+            <div class="photo-grid">
+                {% for photo in album.photos %}
+                {% set title = (photo.title_ar or photo.title) if ar else (photo.title or photo.title_ar) %}
+                {% set caption = (photo.caption_ar or photo.caption) if ar else (photo.caption or photo.caption_ar) %}
+                <figure>
+                    <button type="button" class="photo-open" data-src="{{ photo.image }}" data-title="{{ title }}" data-caption="{{ caption }}">
+                        <img src="{{ photo.image }}" alt="{{ title }}">
+                    </button>
+                    {% if title or caption %}
+                    <figcaption>
+                        {% if title %}<strong>{{ title }}</strong>{% endif %}
+                        {% if caption %}<span>{{ caption }}</span>{% endif %}
+                    </figcaption>
+                    {% endif %}
+                </figure>
+                {% endfor %}
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+    {% endfor %}
+    {% else %}
+    <section class="folio folio-campus" style="margin-top: 1.5rem;">
+        <p class="folio-kicker">{{ 'بانتظار الصور' if ar else 'Waiting for pictures' }}</p>
+        <h2 class="folio-title" {% if ar %}dir="rtl"{% endif %}>{{ 'أرشيف المناسبات فارغ الآن' if ar else 'The occasion archive is empty for now' }}</h2>
+        <p class="folio-empty" {% if ar %}dir="rtl"{% endif %}>{{ 'حين يرفع القسم صور تكريم أو حدث، تظهر هنا حسب الفصل ثم المناسبة ثم التاريخ.' if ar else 'When the department adds photos of an honor or an event, they appear here by semester, then occasion, then date.' }}</p>
+    </section>
+    {% endif %}
+</div>
+
+<dialog id="photo-box" class="photo-box">
+    <button type="button" class="photo-box-close" aria-label="{{ 'إغلاق' if ar else 'Close' }}">×</button>
+    <img alt="">
+    <h3></h3>
+    <p></p>
+</dialog>
+<script>
+(function () {
+    const box = document.getElementById('photo-box');
+    if (!box) return;
+    const img = box.querySelector('img');
+    const title = box.querySelector('h3');
+    const caption = box.querySelector('p');
+    document.querySelectorAll('.photo-open').forEach(function (button) {
+        button.addEventListener('click', function () {
+            img.src = button.dataset.src || '';
+            img.alt = button.dataset.title || '';
+            title.textContent = button.dataset.title || '';
+            caption.textContent = button.dataset.caption || '';
+            title.hidden = !title.textContent;
+            caption.hidden = !caption.textContent;
+            box.showModal();
+        });
+    });
+    box.querySelector('.photo-box-close').addEventListener('click', function () { box.close(); });
+    box.addEventListener('click', function (event) {
+        if (event.target === box) box.close();
+    });
+})();
+</script>
+{% endblock %}

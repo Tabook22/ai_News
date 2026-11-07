@@ -1,0 +1,88 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+{% set page_title = (settings.section_title_reels_ar or 'يستحق المشاهدة') if ar else (settings.section_title_reels or 'Worth Watching') %}
+
+{% block page_title %}{{ page_title }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_desc %}{{ 'مقاطع يوتيوب مختارة عن أخبار الذكاء الاصطناعي والتقنية، مع سبب مشاهدة كل مقطع.' if ar else 'Curated YouTube videos on AI news and technology, with a reason to watch each one.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <header class="watch-hero">
+        <span class="eyebrow">{{ 'شاهد' if ar else 'Watch' }}</span>
+        <h1>{{ 'Worth watching.' if not ar else 'يستحق المشاهدة.' }}</h1>
+        <p>{{ 'A small, edited set of YouTube videos on AI news, research and technology — chosen because they teach something, not because they are loud. Every card opens the original creator.' if not ar else 'مجموعة صغيرة ومنتقاة من مقاطع يوتيوب عن أخبار الذكاء الاصطناعي والبحث والتقنية — مختارة لأنها تعلّم شيئًا لا لأنها صاخبة. كل بطاقة تفتح المصدر الأصلي.' }}</p>
+        <div class="tools-meta">
+            <span><b>{{ reels|length }}</b> {{ 'مقاطع' if ar else 'videos' }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <span>{{ 'آخر تحقق' if ar else 'Last checked' }} {{ date }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <a href="{{ url_for('magazine_view') }}">{{ 'عدد هذا الأسبوع' if ar else 'This week’s issue' }} →</a>
+        </div>
+    </header>
+
+    {% if reels %}
+    {% set lead = reels[0] %}
+    <section class="watch-feature" aria-label="{{ 'اختيار الأسبوع' if ar else 'Pick of the week' }}">
+        <a class="watch-feature-media" href="{{ lead.source_url }}" target="_blank" rel="noopener noreferrer">
+            {% if lead.thumbnail %}
+            <img src="{{ lead.thumbnail }}" alt="{{ (lead.title_ar or lead.title) if ar else lead.title }}" loading="eager">
+            {% endif %}
+            <span class="watch-play" aria-hidden="true">▶</span>
+            <span class="watch-platform">YouTube</span>
+        </a>
+        <div class="watch-feature-copy">
+            <span class="watch-label">{{ 'اختيار المحرر' if ar else 'Editor’s pick' }}</span>
+            <h2>{{ (lead.title_ar or lead.title) if ar else lead.title }}</h2>
+            <p class="watch-creator">{{ lead.creator_name }}{% if lead.creator_handle %} · @{{ lead.creator_handle }}{% endif %}</p>
+            <p class="watch-summary">{{ (lead.summary_ar or lead.summary_en) if ar else lead.summary_en }}</p>
+            <a class="btn btn-primary" href="{{ lead.source_url }}" target="_blank" rel="noopener noreferrer">
+                {{ 'شاهد على يوتيوب' if ar else 'Watch on YouTube' }} ↗
+            </a>
+        </div>
+    </section>
+
+    {% if reels|length > 1 %}
+    <div class="tools-section-head is-row watch-section-head">
+        <h2>{{ 'More worth your time' if not ar else 'المزيد مما يستحق وقتك' }}</h2>
+        <span class="results-context">{{ reels|length - 1 }} {{ 'مقاطع' if ar else 'videos' }}</span>
+    </div>
+    <div class="watch-grid">
+        {% for reel in reels[1:] %}
+        <a class="watch-card" href="{{ reel.source_url }}" target="_blank" rel="noopener noreferrer">
+            <span class="watch-thumb">
+                {% if reel.thumbnail %}
+                <img src="{{ reel.thumbnail }}" alt="{{ (reel.title_ar or reel.title) if ar else reel.title }}" loading="lazy">
+                {% endif %}
+                <span class="watch-play is-small" aria-hidden="true">▶</span>
+                <span class="watch-platform">YouTube</span>
+            </span>
+            <span class="watch-body">
+                <b>{{ (reel.title_ar or reel.title) if ar else reel.title }}</b>
+                <small class="watch-creator">{{ reel.creator_name }}{% if reel.creator_handle %} · @{{ reel.creator_handle }}{% endif %}</small>
+                <span class="watch-summary">{{ (reel.summary_ar or reel.summary_en) if ar else reel.summary_en }}</span>
+                <span class="watch-cta">{{ 'شاهد على يوتيوب' if ar else 'Watch on YouTube' }} ↗</span>
+            </span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <aside class="watch-note">
+        <b>{{ 'How we choose' if not ar else 'كيف نختار' }}</b>
+        <p>{{ 'We look for explainers and reporting that leave a student with a useful idea: a research result, a model launch, a tool worth trying, or a shift in the AI economy. We link the creator, never re-host the video, and update the list as the news moves.' if not ar else 'نبحث عن شرح أو تقرير يترك للطالب فكرة مفيدة: نتيجة بحثية أو إطلاق نموذج أو أداة تستحق التجربة أو تحول في اقتصاد الذكاء الاصطناعي. نربط بصاحب المحتوى ولا نعيد استضافة الفيديو، ونحدّث القائمة مع تحرك الأخبار.' }}</p>
+    </aside>
+    {% else %}
+    <div class="tools-empty">
+        <h2>{{ 'No videos yet' if not ar else 'لا توجد مقاطع بعد' }}</h2>
+        <p>{{ 'Add a YouTube link in the admin Watch list, or read this week’s issue.' if not ar else 'أضف رابط يوتيوب من قائمة المشاهدة في الإدارة، أو اقرأ عدد هذا الأسبوع.' }}</p>
+        <a href="{{ url_for('magazine_view') }}" class="btn btn-primary">{{ 'This week’s issue' if not ar else 'عدد هذا الأسبوع' }}</a>
+    </div>
+    {% endif %}
+
+    <div class="watch-more">
+        <a href="{{ url_for('magazine_view') }}">{{ 'The issue' if not ar else 'العدد' }} →</a>
+        <a href="{{ url_for('tools_directory') }}">{{ 'AI tools' if not ar else 'أدوات الذكاء الاصطناعي' }} →</a>
+        <a href="{{ url_for('campus_projects') }}">{{ 'Project ideas' if not ar else 'أفكار مشاريع' }} →</a>
+    </div>
+</div>
+{% endblock %}

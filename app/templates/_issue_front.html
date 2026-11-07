@@ -1,0 +1,557 @@
+{% import "_cards.html" as cards with context %}
+{% import "_platform_icons.html" as icons %}
+
+{% set ar = lang_pref == 'ar' %}
+{% set title_latest = title_latest|default('آخر الأخبار' if ar else 'Latest') %}
+{% set title_archives = title_archives|default('الأرشيف' if ar else 'Archive') %}
+{% set title_ads = title_ads|default('إعلان' if ar else 'Sponsored') %}
+{% set title_most_viewed = title_most_viewed|default('الأكثر قراءة' if ar else 'Most read') %}
+{% set show_issue = not current_filter and not science_only and not active_desk %}
+
+<div class="issue">
+    <header class="issue-mast">
+        <p class="issue-university" {% if ar %}dir="rtl"{% endif %}>
+            {{ 'جامعة ظفار · قسم علوم الحاسوب' if ar else 'Dhofar University · Computer Science' }}
+        </p>
+        <h1 class="issue-name">{{ settings.magazine_title if settings else 'Nasser AI' }}</h1>
+        <p class="issue-dek" {% if ar %}dir="rtl"{% endif %}>
+            {{ 'مجلة الذكاء الاصطناعي لطلبة القسم: حياة القسم في جهة، وأخبار العالم في الجهة الأخرى.' if ar else 'The AI magazine for this department. Student and department life on one side. The world’s AI news on the other.' }}
+        </p>
+        <div class="issue-meta">
+            <div>
+                <strong>{{ edition_weekday_ar if ar else edition_weekday_en }}</strong>
+                · {{ edition_date_ar if ar else edition_date_en }}
+            </div>
+            <div>
+                {{ settings.version or 'Vol. 1' }}
+                · {{ campus_front_groups|sum(attribute='total') if campus_front_groups else 0 }} {{ 'في القسم' if ar else 'on campus' }}
+                · {{ edition_count }} {{ 'من العالم' if ar else 'from the world' }}
+            </div>
+            <a class="issue-editor" href="{{ url_for('author_info') }}">
+                {% if settings.author_image %}<img src="{{ settings.author_image }}" alt="">{% endif %}
+                <span>{{ settings.author_name_ar if ar and settings.author_name_ar else settings.author_name }}</span>
+            </a>
+            <button type="button" class="issue-print" onclick="window.print()">{{ 'طباعة العدد' if ar else 'Print this issue' }}</button>
+        </div>
+    </header>
+
+    <nav class="issue-doors" aria-label="{{ 'جهتا المجلة' if ar else 'The two desks' }}">
+        <a class="issue-door is-campus" href="{{ url_for('campus_weekly') }}">
+            <small>01 · {{ 'القسم' if ar else 'The department' }}</small>
+            <strong {% if ar %}dir="rtl"{% endif %}>{{ 'أخبار قسم علوم الحاسوب' if ar else 'Students and the department' }}</strong>
+            <span {% if ar %}dir="rtl"{% endif %}>{{ 'اختبارات، ورش، مؤتمرات، اجتماعات طلبة، ومناسبات.' if ar else 'Exams, workshops, conferences, student meetings, and occasions.' }}</span>
+        </a>
+        <a class="issue-door is-world" href="#the-world">
+            <small>02 · {{ 'العالم' if ar else 'The world' }}</small>
+            <strong {% if ar %}dir="rtl"{% endif %}>{{ 'أخبار الذكاء الاصطناعي' if ar else 'AI news worth your week' }}</strong>
+            <span {% if ar %}dir="rtl"{% endif %}>{{ 'ما يحدث خارج الجامعة، مكتوباً لطالب علوم الحاسوب.' if ar else 'What is happening outside the university, written for a computer-science student.' }}</span>
+        </a>
+    </nav>
+
+    <a class="yt-invite" href="{{ url_for('youtube_desk') }}">
+        <strong {% if ar %}dir="rtl"{% endif %}>{{ 'يوتيوب: أخبار الشركات، ودروس بناء الذكاء الاصطناعي.' if ar else 'YouTube: lab news, and lessons on building AI.' }}</strong>
+        <span>{{ 'خمس بالعربية وخمس بالإنجليزية في كل جهة.' if ar else 'Five in Arabic and five in English on each shelf.' }}</span>
+    </a>
+
+    <div id="continue-banner" class="continue-banner" hidden></div>
+
+    {% if current_filter or (not top_news and not sub_news and not sidebar and not ads and not items and not campus_front_groups and not world_cover) %}
+        {% if items %}
+        <div class="filter-banner">
+            <span>{{ 'عرض حسب:' if ar else 'Filtering by:' }} <b>{{ current_filter or ('تحديد' if ar else 'Selection') }}</b></span>
+            <a href="{{ url_for('magazine_view') }}">{{ 'العدد كاملاً' if ar else 'Full issue' }}</a>
+        </div>
+        <div class="secondary-grid">
+            {% for item in items %}
+            {{ cards.story_card(item, lang_pref, date) }}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <h3>{{ 'لا توجد قصص لهذا التحديد.' if ar else 'No stories for this selection.' }}</h3>
+            <a href="{{ url_for('magazine_view') }}" class="btn btn-secondary">{{ 'العودة للعدد' if ar else 'Back to the issue' }}</a>
+        </div>
+        {% endif %}
+
+    {% elif science_only %}
+        <section class="issue-anchor" id="science">
+            <div class="issue-section-head">
+                <div>
+                    <div class="issue-num is-world">{{ 'بحث' if ar else 'Research' }}</div>
+                    <h2>{{ 'المجتمع العلمي' if ar else 'Scientific community' }}</h2>
+                </div>
+                <a class="issue-jump" href="{{ url_for('magazine_view') }}">{{ 'العدد كاملاً' if ar else 'Full issue' }}</a>
+            </div>
+            <div class="secondary-grid">
+                {% for item in research_all %}
+                {{ cards.story_card(item, lang_pref, date) }}
+                {% endfor %}
+            </div>
+        </section>
+
+    {% elif active_desk and desk_sections %}
+        <div class="filter-banner">
+            <span>{{ 'القسم:' if ar else 'Desk:' }} <b>{{ desk_sections[0].label_ar if ar else desk_sections[0].label_en }}</b></span>
+            <a href="{{ url_for('magazine_view') }}">{{ 'العدد كاملاً' if ar else 'Full issue' }}</a>
+        </div>
+        {% for section in desk_sections %}
+        <div class="secondary-grid">
+            {% for item in section.stories %}
+            {{ cards.story_card(item, lang_pref, date) }}
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+    {% else %}
+
+    {% if campus_cover or picture_lead %}
+    <section class="cover-pair" aria-label="{{ 'غلافا العدد' if ar else 'The two covers' }}">
+        <article class="cover-face is-campus">
+            <p class="folio-kicker">{{ 'غلاف قسم علوم الحاسوب' if ar else 'Cover · Computer Science' }}</p>
+            {% if campus_cover %}
+            {% set c_title = (campus_cover.title_ar|reader_line or campus_cover.title) if ar else campus_cover.title %}
+            {% set c_what = campus_cover.lead_what_ar if ar else campus_cover.lead_what_en %}
+            {% set c_href = campus_cover.watch_url or url_for('magazine_detail', item_id=campus_cover.id) %}
+            {% set c_img = campus_cover.image or '' %}
+            {% if c_img and (campus_cover_chosen or ('ytimg.com' not in c_img and 'img.youtube.com' not in c_img)) %}
+            <a class="cover-face-media" href="{{ c_href }}" {% if campus_cover.watch_url %}target="_blank" rel="noopener"{% endif %}>
+                <img src="{{ c_img }}" alt="">
+            </a>
+            {% endif %}
+            <div class="cover-face-copy" {% if ar %}dir="rtl"{% endif %}>
+                <h2><a href="{{ c_href }}" {% if campus_cover.watch_url %}target="_blank" rel="noopener"{% endif %}>{{ c_title }}</a></h2>
+                {% if campus_cover.day_ar or campus_cover.place_label %}
+                <p class="cover-meta">{{ campus_cover.day_ar if ar else campus_cover.day_en }}{% if campus_cover.place_label %} · {{ campus_cover.place_label }}{% endif %}</p>
+                {% endif %}
+                {% if c_what %}<p class="folio-dek">{{ c_what }}</p>{% endif %}
+                <a class="folio-cta" href="{{ c_href }}" {% if campus_cover.watch_url %}target="_blank" rel="noopener"{% endif %}>{{ 'اقرأ غلاف القسم' if ar else 'Read the department cover' }}</a>
+            </div>
+            {% else %}
+            <div class="cover-face-copy" {% if ar %}dir="rtl"{% endif %}>
+                <h2>{{ 'غلاف القسم يظهر هنا' if ar else 'The department cover will sit here' }}</h2>
+                <p class="folio-dek">{{ 'اختر خبر القسم من الإعدادات، أو انشر مناسبة أو درساً ليعتلي الغلاف.' if ar else 'Choose the department story in Settings, or publish an occasion or a lesson and it will lead.' }}</p>
+            </div>
+            {% endif %}
+        </article>
+
+        <article class="cover-face is-world">
+            <p class="folio-kicker">{{ 'غلاف أخبار الذكاء الاصطناعي' if ar else 'Cover · AI news' }}</p>
+            {% if picture_lead %}
+            {% set lead = picture_lead %}
+            {% set lead_title = (lead.title_ar|reader_line or lead.title) if ar else lead.title %}
+            {% set lead_what = lead.lead_what_ar if ar else lead.lead_what_en %}
+            {% set lead_why = lead.lead_why_ar if ar else lead.lead_why_en %}
+            {% set lead_href = url_for('magazine_detail', item_id=lead.id) %}
+            {% set lead_img = lead.image or '' %}
+            {% if lead_img and (world_cover_chosen or ('ytimg.com' not in lead_img and 'img.youtube.com' not in lead_img)) %}
+            <a class="cover-face-media" href="{{ lead_href }}">
+                <img src="{{ lead_img }}" alt="">
+            </a>
+            {% endif %}
+            <div class="cover-face-copy" {% if ar %}dir="rtl"{% endif %}>
+                <h2><a href="{{ lead_href }}">{{ lead_title }}</a></h2>
+                <ul class="lead-facts">
+                    {% if lead.source %}
+                    <li><span>{{ 'المصدر' if ar else 'Who' }}</span><p>{{ lead.source }}</p></li>
+                    {% endif %}
+                    {% if lead_what %}
+                    <li><span>{{ 'ماذا تغيّر' if ar else 'What changed' }}</span><p>{{ lead_what }}</p></li>
+                    {% endif %}
+                    {% if lead_why %}
+                    <li><span>{{ 'في القاعة' if ar else 'In class' }}</span><p>{{ lead_why }}</p></li>
+                    {% elif lead.desk_ar or lead.desk_en %}
+                    <li><span>{{ 'القسم' if ar else 'Desk' }}</span><p>{{ lead.desk_ar if ar else lead.desk_en }}</p></li>
+                    {% endif %}
+                </ul>
+                <a class="folio-cta" href="{{ lead_href }}">{{ 'اقرأ غلاف العالم' if ar else 'Read the world cover' }}</a>
+            </div>
+            {% else %}
+            <div class="cover-face-copy" {% if ar %}dir="rtl"{% endif %}>
+                <h2>{{ 'غلاف العالم يظهر هنا' if ar else 'The world cover will sit here' }}</h2>
+            </div>
+            {% endif %}
+        </article>
+    </section>
+    {% endif %}
+
+    {% if picture_lead and picture_rail %}
+    <div class="picture-rail" {% if ar %}dir="rtl"{% endif %}>
+        {% for item in picture_rail %}
+        {% set rail_title = (item.title_ar|reader_line or item.title) if ar else item.title %}
+        <a href="{{ url_for('magazine_detail', item_id=item.id) }}">
+            {% if item.image %}
+            <img src="{{ item.image }}" alt="">
+            {% else %}
+            <span class="card-fallback">{{ '%02d' % (loop.index + 1) }}</span>
+            {% endif %}
+            <strong>{{ '%02d' % (loop.index + 1) }} · {{ rail_title }}</strong>
+            {% if item.source %}<em>{{ item.source }}</em>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <section class="issue-spread" aria-label="{{ 'افتتاحية العدد' if ar else 'Opening spread' }}">
+        <article class="folio folio-campus">
+            <span class="folio-index" aria-hidden="true">01</span>
+            <p class="folio-kicker">{{ ('هذا الأسبوع في القسم' if week_is_current else 'الآن في القسم') if ar else ('This week in the department' if week_is_current else 'Now in the department') }}</p>
+            {% if week_board %}
+                {% set lead = week_board|selectattr('campus_kind', 'equalto', 'occasion')|selectattr('image')|first %}
+                {% if lead and (not campus_cover or lead.id != campus_cover.id) %}
+                {% set lead_dest = lead.watch_url or url_for('magazine_detail', item_id=lead.id) %}
+                <a class="folio-media" href="{{ lead_dest }}">
+                    <img src="{{ lead.image }}" alt="">
+                </a>
+                {% endif %}
+                <ol class="week-board" {% if ar %}dir="rtl"{% endif %}>
+                    {% for item in week_board %}
+                    {% set line_dest = item.watch_url or url_for('magazine_detail', item_id=item.id) %}
+                    <li>
+                        <time>{{ item.day_ar if ar else item.day_en }}</time>
+                        <div>
+                            <a href="{{ line_dest }}" {% if item.watch_url %}target="_blank" rel="noopener"{% endif %}>
+                                {{ (item.title_ar|reader_line or item.title) if ar else item.title }}
+                            </a>
+                            <em>{{ item.kind_ar if ar else item.kind_en }}{% if item.place_label %} · {{ item.place_label }}{% endif %}</em>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ol>
+            {% elif campus_featured %}
+                {% set dest = campus_featured.watch_url or url_for('magazine_detail', item_id=campus_featured.id) %}
+                {% if campus_featured.image and campus_featured.campus_kind in ['occasion', 'exam', 'video'] %}
+                <a class="folio-media" href="{{ dest }}" {% if campus_featured.watch_url %}target="_blank" rel="noopener"{% endif %}>
+                    <img src="{{ campus_featured.image }}" alt="">
+                </a>
+                {% endif %}
+                <h2 class="folio-title" {% if ar %}dir="rtl"{% endif %}>
+                    <a href="{{ dest }}" {% if campus_featured.watch_url %}target="_blank" rel="noopener"{% endif %}>
+                        {{ (campus_featured.title_ar or campus_featured.title) if ar else campus_featured.title }}
+                    </a>
+                </h2>
+                {% set campus_dek = (campus_featured.summary_ar or campus_featured.summary) if ar else (campus_featured.summary or campus_featured.summary_ar) %}
+                {% if campus_dek %}<p class="folio-dek" {% if ar %}dir="rtl"{% endif %}>{{ campus_dek | plain_dek | truncate(180) }}</p>{% endif %}
+            {% else %}
+                <h2 class="folio-title" {% if ar %}dir="rtl"{% endif %}>{{ 'مكان القسم في العدد' if ar else 'The department’s place in the issue' }}</h2>
+                <p class="folio-empty" {% if ar %}dir="rtl"{% endif %}>
+                    {{ 'ما يخص الدراسة والحياة داخل قسم علوم الحاسوب يظهر هنا، منفصلاً عن أخبار الشركات والمختبرات.' if ar else 'Study and life inside Computer Science live here, apart from company news and laboratory reports.' }}
+                </p>
+                <ul class="folio-kinds">
+                    <li>{{ 'اختبار' if ar else 'Exams' }}</li>
+                    <li>{{ 'ملخص' if ar else 'Study notes' }}</li>
+                    <li>{{ 'فيديو' if ar else 'Teaching videos' }}</li>
+                    <li>{{ 'مناسبة' if ar else 'Occasions' }}</li>
+                    <li>{{ 'إعلان' if ar else 'Notices' }}</li>
+                    <li>{{ 'عمل القسم' if ar else 'Department work' }}</li>
+                </ul>
+            {% endif %}
+            <a class="folio-cta" href="{{ url_for('campus_weekly') }}">{{ 'عدد القسم' if ar else 'Open the department issue' }}</a>
+        </article>
+
+        <article class="folio folio-world" id="cover">
+            <span class="folio-index" aria-hidden="true">02</span>
+            <p class="folio-kicker">{{ ('من العالم أيضاً' if picture_lead else 'غلاف العالم') if ar else ('Also from the world' if picture_lead else 'Cover · the world') }}</p>
+            {% if world_cover %}
+                {% set cover_video = world_cover.content_format == 'video' or world_cover.article_type == 'video' or world_cover.source == 'YouTube' %}
+                {% set cover_title = (world_cover.title_ar|reader_line or world_cover.title) if ar else world_cover.title %}
+                {% set cover_dek = (world_cover.summary_ar|reader_line or world_cover.summary) if ar else world_cover.summary %}
+                {% set cover_image = world_cover.image if world_cover.image and 'ytimg.com' not in world_cover.image and 'img.youtube.com' not in world_cover.image else '' %}
+                {% if cover_image %}
+                <a class="folio-media" href="{{ '#' if cover_video else url_for('magazine_detail', item_id=world_cover.id) }}"
+                    {% if cover_video %}onclick="openVideoModal('{{ world_cover.video_id }}'); return false;"{% endif %}>
+                    <img src="{{ cover_image }}" alt="">
+                </a>
+                {% endif %}
+                <h2 class="folio-title" {% if ar %}dir="rtl"{% endif %}>
+                    <a href="{{ '#' if cover_video else url_for('magazine_detail', item_id=world_cover.id) }}"
+                        {% if cover_video %}onclick="openVideoModal('{{ world_cover.video_id }}'); return false;"{% endif %}>
+                        {{ cover_title }}
+                    </a>
+                </h2>
+                {% if cover_dek %}<p class="folio-dek" {% if ar %}dir="rtl"{% endif %}>{{ cover_dek | plain_dek | truncate(220) }}</p>{% endif %}
+                <div class="meta-row">
+                    <a class="desk-kicker" href="{{ url_for('magazine_view', desk=world_cover.desk) }}">{{ world_cover.desk_ar if ar else world_cover.desk_en }}</a>
+                    {% if world_cover.wing == 'research' %}<span class="research-pill">{{ 'مجتمع علمي' if ar else 'Research' }}</span>{% endif %}
+                    <span>{{ world_cover.reading_minutes or 1 }} {{ 'د' if ar else 'min' }}</span>
+                </div>
+                <a class="folio-cta" href="{{ url_for('magazine_detail', item_id=world_cover.id) }}">{{ 'اقرأ الغلاف' if ar else 'Read the cover' }}</a>
+            {% else %}
+                <h2 class="folio-title">{{ 'غلاف العالم يظهر هنا' if ar else 'The world cover will sit here' }}</h2>
+                <p class="folio-empty">{{ 'عند نشر خبر عالمي، يفتح العدد من هنا.' if ar else 'When a world story is published, the issue opens from here.' }}</p>
+            {% endif %}
+        </article>
+    </section>
+
+    {% if recent_photos %}
+    <section class="issue-anchor photo-wall" id="occasion-wall" {% if ar %}dir="rtl"{% endif %}>
+        <div class="issue-section-head">
+            <div>
+                <div class="issue-num is-campus">{{ 'صور' if ar else 'Photos' }}</div>
+                <h2>{{ 'مناسبات قسم علوم الحاسوب' if ar else 'Department occasions' }}</h2>
+            </div>
+            <a class="issue-jump" href="{{ url_for('campus_photos') }}">{{ 'أرشيف الصور' if ar else 'Photo archive' }}</a>
+        </div>
+        <div class="photo-wall-row">
+            {% for photo in recent_photos %}
+            <figure>
+                <a href="{{ url_for('campus_photos') }}#album-{{ photo.album_id }}">
+                    <img src="{{ photo.image }}" alt="{{ (photo.title_ar or photo.title) if ar else (photo.title or photo.title_ar) }}">
+                </a>
+                <figcaption>{{ (photo.title_ar or photo.title) if ar else (photo.title or photo.title_ar) }}</figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="issue-anchor" id="the-department">
+        <div class="issue-section-head">
+            <div>
+                <div class="issue-num is-campus">01 · {{ 'القسم' if ar else 'Department' }}</div>
+                <h2 {% if ar %}dir="rtl"{% endif %}>{{ 'ثلاث غرف: الدراسة، والحياة، والإعلانات' if ar else 'Three rooms: study, life, and the board' }}</h2>
+                <p {% if ar %}dir="rtl"{% endif %}>{{ 'الاختبار والملخص والفيديو في الدراسة. المناسبة والورشة والمؤتمر واجتماع الطلبة في حياة القسم. الإعلان وعمل القسم والمنتدى على اللوحة.' if ar else 'Exams, notes, and teaching videos sit in Study. Occasions, workshops, conferences, and student meetings sit in Department life. Notices, work, and the forum sit on the board.' }}</p>
+            </div>
+            <a class="issue-jump" href="{{ url_for('campus_weekly') }}">{{ 'كل القسم' if ar else 'The full department issue' }}</a>
+        </div>
+        {% if campus_room_groups %}
+        <div class="dept-columns">
+            {% for room in campus_room_groups %}
+            <div class="dept-col">
+                <h3>{{ room.label_ar if ar else room.label_en }} <span>{{ room.total }}</span></h3>
+                {% for item in room.stories %}
+                {% set line_dest = item.watch_url or url_for('magazine_detail', item_id=item.id) %}
+                <a class="dept-line" href="{{ line_dest }}" {% if item.watch_url %}target="_blank" rel="noopener"{% endif %}>
+                    <strong {% if ar %}dir="rtl"{% endif %}>{{ (item.title_ar|reader_line or item.title) if ar else item.title }}</strong>
+                    <em>{{ item.day_ar if ar else item.day_en }}{% if item.place_label %} · {{ item.place_label }}{% elif item.kind_ar %} · {{ item.kind_ar if ar else item.kind_en }}{% endif %}</em>
+                </a>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% if course_week %}
+        <section class="course-band" {% if ar %}dir="rtl"{% endif %}>
+            <p class="folio-kicker">{{ 'مقرر الأسبوع' if ar else 'Course of the week' }}</p>
+            <h3>{{ course_week.name }}</h3>
+            <div class="course-slots">
+                {% if course_week.summary %}
+                <a class="course-slot" href="{{ url_for('magazine_detail', item_id=course_week.summary.id) }}">
+                    <small>{{ 'الملخص' if ar else 'Summary' }}</small>
+                    <strong>{{ (course_week.summary.title_ar or course_week.summary.title) if ar else course_week.summary.title }}</strong>
+                </a>
+                {% endif %}
+                {% if course_week.video %}
+                {% set vdest = course_week.video.watch_url or url_for('magazine_detail', item_id=course_week.video.id) %}
+                <a class="course-slot" href="{{ vdest }}" {% if course_week.video.watch_url %}target="_blank" rel="noopener"{% endif %}>
+                    <small>{{ 'الدرس' if ar else 'Lesson' }}</small>
+                    <strong>{{ (course_week.video.title_ar or course_week.video.title) if ar else course_week.video.title }}</strong>
+                </a>
+                {% endif %}
+                {% if course_week.exam %}
+                <a class="course-slot" href="{{ url_for('magazine_detail', item_id=course_week.exam.id) }}">
+                    <small>{{ 'الاختبار' if ar else 'Exam' }}</small>
+                    <strong>{{ course_week.exam.day_ar if ar else course_week.exam.day_en }}{% if course_week.exam.place_label %} · {{ course_week.exam.place_label }}{% endif %}</strong>
+                </a>
+                {% endif %}
+                {% if course_week.question %}
+                <a class="course-slot" href="{{ url_for('magazine_detail', item_id=course_week.question.id) }}">
+                    <small>{{ 'سؤال القاعة' if ar else 'For class' }}</small>
+                    <strong>{{ (course_week.question.lesson_ask_ar or course_week.question.lesson_ask or course_week.question.title_ar or course_week.question.title) if ar else (course_week.question.lesson_ask or course_week.question.lesson_ask_ar or course_week.question.title) }}</strong>
+                </a>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+        {% else %}
+        <p class="folio-empty" style="margin-bottom: 2rem;" {% if ar %}dir="rtl"{% endif %}>
+            {{ 'لم يُنشر بعد شيء من القسم. أخبار العالم تبقى في جهتها إلى أن يختار القسم ما يُعرض هنا.' if ar else 'Nothing from the department is published yet. World news stays on its own side until the department chooses what belongs here.' }}
+        </p>
+        {% endif %}
+    </section>
+
+    {% if lesson_story %}
+    {% set lesson_why = (lesson_story.lesson_why_ar or lesson_story.lesson_why) if ar else (lesson_story.lesson_why or lesson_story.lesson_why_ar) %}
+    {% set lesson_term = (lesson_story.lesson_term_ar or lesson_story.lesson_term) if ar else (lesson_story.lesson_term or lesson_story.lesson_term_ar) %}
+    {% set lesson_gloss = (lesson_story.lesson_gloss_ar or lesson_story.lesson_gloss) if ar else (lesson_story.lesson_gloss or lesson_story.lesson_gloss_ar) %}
+    {% set lesson_ask = (lesson_story.lesson_ask_ar or lesson_story.lesson_ask) if ar else (lesson_story.lesson_ask or lesson_story.lesson_ask_ar) %}
+    <section class="classroom-issue issue-anchor" id="for-class" {% if ar %}dir="rtl"{% endif %}>
+        <p class="classroom-kicker">{{ 'الجسر بين الجهتين' if ar else 'The bridge between the two desks' }}</p>
+        <h2>{{ 'لماذا يهم هذا في القاعة' if ar else 'Why this belongs in class' }}</h2>
+        <p class="classroom-on">
+            {{ 'على خبر من العالم:' if ar else 'On a story from the world:' }}
+            <a href="{{ url_for('magazine_detail', item_id=lesson_story.id) }}">{{ (lesson_story.title_ar or lesson_story.title) if ar else lesson_story.title }}</a>
+        </p>
+        {% if lesson_why %}<p>{{ lesson_why }}</p>{% endif %}
+        {% if lesson_term %}<p><strong>{{ lesson_term }}</strong>{% if lesson_gloss %} — {{ lesson_gloss }}{% endif %}</p>{% endif %}
+        {% if lesson_ask %}<p class="classroom-ask">{{ lesson_ask }}</p>{% endif %}
+    </section>
+    {% endif %}
+
+    <section class="issue-anchor" id="the-world">
+        <div class="issue-section-head">
+            <div>
+                <div class="issue-num is-world">02 · {{ 'العالم' if ar else 'The world' }}</div>
+                <h2 {% if ar %}dir="rtl"{% endif %}>{{ 'الأخبار التي تستحق وقتكم' if ar else 'The news worth your time' }}</h2>
+                <p {% if ar %}dir="rtl"{% endif %}>{{ 'شركات، مختبرات، وأدوات. مفصولة عن إعلانات القسم حتى لا يختلط الاثنان.' if ar else 'Companies, laboratories, and tools. Kept apart from department notices so the two never blur.' }}</p>
+            </div>
+        </div>
+
+        {% if desk_nav %}
+        <nav class="desk-nav" aria-label="{{ 'أقسام العالم' if ar else 'World desks' }}">
+            <a href="{{ url_for('magazine_view') }}" class="desk-chip active">{{ 'كل الأقسام' if ar else 'All' }}</a>
+            {% for desk in desk_nav %}
+            <a href="{{ url_for('magazine_view', desk=desk.key) }}" class="desk-chip">
+                {{ desk.label_ar if ar else desk.label_en }}
+                <span>{{ desk.count }}</span>
+            </a>
+            {% endfor %}
+            {% if research_all %}
+            <a href="{{ url_for('magazine_view', wing='research') }}" class="desk-chip">
+                {{ 'المجتمع العلمي' if ar else 'Research' }}
+                <span>{{ research_all|length }}</span>
+            </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% if sub_news %}
+        <div class="secondary-grid" style="margin-bottom: 2rem;">
+            {% for item in sub_news %}
+            {{ cards.story_card(item, lang_pref, date) }}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if research_band %}
+        <div class="issue-section-head">
+            <div>
+                <div class="issue-num is-world">{{ 'بحث' if ar else 'Research' }}</div>
+                <h2>{{ 'المجتمع العلمي' if ar else 'Scientific community' }}</h2>
+                <p {% if ar %}dir="rtl"{% endif %}>{{ 'مختبرات وجامعات ومجلات. ليست إعلانات شركات.' if ar else 'Laboratories, universities, and journals. Not company announcements.' }}</p>
+            </div>
+            <a class="issue-jump" href="{{ url_for('magazine_view', wing='research') }}">{{ 'كل البحوث' if ar else 'All research' }}</a>
+        </div>
+        <div class="secondary-grid" style="margin-bottom: 2rem;">
+            {% for item in research_band %}
+            {{ cards.story_card(item, lang_pref, date) }}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% for section in desk_sections %}
+        <div class="issue-section-head" id="desk-{{ section.key }}">
+            <div>
+                <h2>{{ section.label_ar if ar else section.label_en }}</h2>
+            </div>
+            {% if section.has_more %}
+            <a class="issue-jump" href="{{ url_for('magazine_view', desk=section.key) }}">{{ 'المزيد' if ar else 'More' }}</a>
+            {% endif %}
+        </div>
+        <div class="secondary-grid" style="margin-bottom: 1.5rem;">
+            {% for item in section.stories %}
+            {{ cards.story_card(item, lang_pref, date) }}
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </section>
+
+    <section class="back-book" aria-label="{{ 'نهاية العدد' if ar else 'Back of the issue' }}">
+        <div>
+            <h3>{{ title_most_viewed }}</h3>
+            {% for item in most_viewed[:5] %}
+            <div class="back-item">
+                <span class="back-rank">{{ loop.index }}</span>
+                <a href="{{ url_for('magazine_detail', item_id=item.id) }}" {% if ar %}dir="rtl"{% endif %}>
+                    {{ (item.title_ar|reader_line or item.title) if ar else item.title }}
+                </a>
+            </div>
+            {% else %}
+            <p class="folio-empty">{{ 'ستظهر القصص الأكثر قراءة هنا.' if ar else 'The most-read stories will gather here.' }}</p>
+            {% endfor %}
+            {% if archive_data %}
+            <h3 style="margin-top: 1.4rem;">{{ title_archives }}</h3>
+            <div class="archive-years">
+                {% for year_group in archive_data %}
+                <a href="{{ url_for('magazine_view', year=year_group.year) }}">{{ year_group.year }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <h3>{{ (settings.section_title_reels_ar or 'يستحق المشاهدة') if ar else (settings.section_title_reels or 'Worth watching') }}</h3>
+            {% if settings.reels_enabled and reels %}
+                {% for reel in reels %}
+                <a class="tool-pill" href="{{ reel.source_url }}" target="_blank" rel="noopener">
+                    {{ icons.platform_badge(reel.platform, 28) }}
+                    <span>
+                        <strong {% if ar %}dir="rtl"{% endif %}>{{ (reel.title_ar or reel.title) if ar else reel.title }}</strong>
+                        <span>{% if reel.creator_handle %}@{{ reel.creator_handle }}{% else %}{{ reel.platform }}{% endif %}</span>
+                    </span>
+                </a>
+                {% endfor %}
+                <a class="issue-jump" href="{{ url_for('watch_page') }}" style="display:inline-block; margin-top: 0.8rem;">{{ 'كل المشاهدة' if ar else 'All watching' }}</a>
+            {% else %}
+            <p class="folio-empty">{{ 'مقاطع قصيرة مختارة للطلبة تظهر هنا.' if ar else 'Short films chosen for students appear here.' }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <h3>{{ 'أدوات للطالب' if ar else 'Tools for students' }}</h3>
+            {% for tool in tools_preview|default([]) %}
+            <a class="tool-pill" href="{{ url_for('tool_detail', tool_id=tool.id) }}">
+                {% if tool.logo %}<img src="{{ tool.logo }}" alt="">{% endif %}
+                <span>
+                    <strong {% if ar %}dir="rtl"{% endif %}>{{ (tool.name_ar or tool.name) if ar else tool.name }}</strong>
+                    <span>{{ tool.category_label }}</span>
+                </span>
+            </a>
+            {% else %}
+            <p class="folio-empty">{{ 'دليل الأدوات يُبنى من هنا.' if ar else 'The tool guide will be built from here.' }}</p>
+            {% endfor %}
+            <a class="issue-jump" href="{{ url_for('tools_directory') }}" style="display:inline-block; margin-top: 0.8rem;">{{ 'كل الأدوات' if ar else 'The full guide' }}</a>
+
+            {% if ads %}
+            <h3 style="margin-top: 1.4rem;">{{ title_ads }}</h3>
+            {% for item in ads[:2] %}
+            <a class="dept-line" href="{{ item.url or '#' }}" target="_blank" rel="noopener">
+                <strong>{{ item.title }}</strong>
+            </a>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    var el = document.getElementById('continue-banner');
+    if (!el) return;
+    var label = {{ ('متابعة القراءة' if ar else 'Continue reading') | tojson }};
+    var dismissLabel = {{ ('إخفاء' if ar else 'Dismiss') | tojson }};
+    try {
+        var data = JSON.parse(localStorage.getItem('nan_continue') || 'null');
+        if (!data || !data.url || !data.title) return;
+        if (location.pathname === data.url) return;
+        el.hidden = false;
+        var kicker = document.createElement('span');
+        kicker.className = 'desk-kicker';
+        kicker.textContent = label;
+        var link = document.createElement('a');
+        link.href = data.url;
+        link.textContent = String(data.title).replace(/^\[AR\]\s*/, '');
+        var dismiss = document.createElement('button');
+        dismiss.type = 'button';
+        dismiss.className = 'continue-dismiss';
+        dismiss.setAttribute('aria-label', dismissLabel);
+        dismiss.textContent = '×';
+        dismiss.addEventListener('click', function () {
+            localStorage.removeItem('nan_continue');
+            el.hidden = true;
+        });
+        el.appendChild(kicker);
+        el.appendChild(link);
+        el.appendChild(dismiss);
+    } catch (e) {}
+})();
+</script>

@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .qr-wrap {
+        max-width: 640px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .qr-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 2.5rem;
+        display: inline-block;
+        box-shadow: var(--shadow-md);
+    }
+
+    .qr-card img {
+        width: 320px;
+        height: 320px;
+        display: block;
+        image-rendering: pixelated;
+    }
+
+    .qr-caption {
+        margin-top: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 0.95rem;
+    }
+
+    .qr-url-box {
+        margin: 2rem auto;
+        max-width: 500px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.9rem 1.2rem;
+        font-family: monospace;
+        font-size: 0.9rem;
+        color: var(--accent-primary);
+        word-break: break-all;
+    }
+
+    .qr-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .qr-tip {
+        margin-top: 3rem;
+        text-align: left;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem 2rem;
+    }
+
+    .qr-tip li {
+        margin-bottom: 0.6rem;
+        color: var(--text-muted);
+    }
+</style>
+
+<div class="dashboard-header">
+    <div>
+        <h1>📱 Door QR Code</h1>
+        <p style="color: var(--text-muted); margin: 0;">Print this and stick it on your door or a campus notice board
+            — students scan it between classes, land straight on the subscribe page, and join your list in one tap.
+        </p>
+    </div>
+    <a href="{{ url_for('subscribers_page') }}" class="btn btn-secondary">📬 View Subscribers</a>
+</div>
+
+<div class="qr-wrap">
+    <div class="qr-card">
+        <img src="{{ url_for('qr_png') }}?target={{ target_url | urlencode }}" alt="QR code linking to subscribe page">
+        <div class="qr-caption">{{ settings.magazine_title }} — Scan to Subscribe</div>
+    </div>
+
+    <div class="qr-url-box">{{ target_url }}</div>
+
+    <div class="qr-actions">
+        <a href="{{ url_for('qr_png') }}?target={{ target_url | urlencode }}" download="nasser-ai-news-qr.png"
+            class="btn btn-primary">⬇ Download PNG</a>
+        <a href="{{ target_url }}" target="_blank" class="btn btn-secondary">🔗 Open Subscribe Page</a>
+        <button type="button" class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+    </div>
+
+    <div class="qr-tip">
+        <strong>How to use it</strong>
+        <ul style="margin-top: 1rem; padding-left: 1.2rem;">
+            <li>Download the PNG and print it at a large size (at least 5×5 cm) so phone cameras can focus on it
+                easily.</li>
+            <li>Stick it somewhere well-lit — your door, a flyer, or a business card.</li>
+            <li>Anyone who scans it lands on the subscribe page and can join your newsletter in one tap.</li>
+            <li>Track everyone who joins from the <a href="{{ url_for('subscribers_page') }}">Subscribers</a> page —
+                sign-ups from this code are tagged <span class="pill" style="background: rgba(56,189,248,.15); color: var(--accent-primary); padding:2px 8px; border-radius:50px; font-size:0.7rem;">qr</span>.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

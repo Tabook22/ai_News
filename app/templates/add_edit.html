@@ -1,0 +1,639 @@
+{% extends "layout.html" %}
+
+{% block page_title %}
+{% if item and item.wing == 'campus' %}{{ 'Edit department post' if not admin_ar else 'تعديل منشور القسم' }}
+{% elif mode == 'edit' %}{{ 'Edit story' if not admin_ar else 'تعديل القصة' }}
+{% else %}{{ 'New story' if not admin_ar else 'قصة جديدة' }}{% endif %}
+{% endblock %}
+
+{% block content %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+<div class="story-editor-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Newsroom · Editor', 'غرفة الأخبار · المحرر') }}</p>
+            <h1>
+                {% if item and item.wing == 'campus' %}{{ A('edit_campus') }}
+                {% elif mode == 'edit' %}{{ A('edit_world') }}
+                {% else %}{{ A('new_world') }}{% endif %}
+            </h1>
+            <p class="editor-dek">{{ A('edit_dek') if mode == 'edit' else A('new_dek') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            {% if mode == 'edit' and item %}
+            <a class="btn btn-secondary" href="{{ url_for('magazine_detail', item_id=item.id) }}" target="_blank" rel="noopener">
+                <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                {{ t('Preview', 'معاينة') }}
+            </a>
+            {% endif %}
+            <a class="btn btn-secondary"
+                href="{{ url_for('department_admin') if item and item.wing == 'campus' else url_for('search_page', mode='archive') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow" style="transform:rotate(180deg)"></use></svg>
+                {{ t('Back to the list', 'العودة إلى القائمة') }}
+            </a>
+            <button type="submit" form="story-form" class="btn btn-primary">
+                <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                {{ A('save_story') }}
+            </button>
+        </div>
+    </div>
+
+    <form id="story-form" method="POST" enctype="multipart/form-data">
+        <div class="editor-grid">
+            <div class="editor-main">
+
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-indigo"><svg class="icon" aria-hidden="true"><use href="#i-newspaper"></use></svg></span>
+                        <div>
+                            <h2>{{ t('The story', 'القصة') }}</h2>
+                            <p>{{ t('The headline readers see first. Write the English line, then the Arabic one.', 'العنوان الذي يراه القارئ أولًا. اكتب بالإنجليزية ثم بالعربية.') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="title_en">{{ A('headline_en') }} <span class="req">*</span></label>
+                        <input id="title_en" class="input-headline" type="text" name="title_en"
+                            value="{{ item.title if item else '' }}" placeholder="{{ t('A clear, specific headline…', 'عنوان واضح ومحدد…') }}" required>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="title_ar">{{ A('headline_ar') }}</label>
+                        <input id="title_ar" class="input-headline is-ar" type="text" name="title_ar" dir="rtl"
+                            value="{{ item.title_ar if item else '' }}" placeholder="{{ t('العنوان بالعربية (اختياري)', 'العنوان بالعربية (اختياري)') }}">
+                    </div>
+
+                    <div class="editor-field">
+                        <span class="field-label">{{ t('Displayed headline', 'العنوان المعروض') }}</span>
+                        <div class="segmented">
+                            <label class="seg-option">
+                                <input type="radio" name="headline_display_mode" value="en"
+                                    {% if item and item.headline_display_mode == 'en' %}checked{% endif %}>
+                                <span>English only</span>
+                            </label>
+                            <label class="seg-option">
+                                <input type="radio" name="headline_display_mode" value="ar"
+                                    {% if item and item.headline_display_mode == 'ar' %}checked{% endif %}>
+                                <span>العربية فقط</span>
+                            </label>
+                            <label class="seg-option">
+                                <input type="radio" name="headline_display_mode" value="default"
+                                    {% if not item or not item.headline_display_mode or item.headline_display_mode == 'default' %}checked{% endif %}>
+                                <span>{{ t('Auto · both', 'تلقائي · الاثنان') }}</span>
+                            </label>
+                        </div>
+                        <p class="field-hint">{{ t('Auto uses the Arabic headline for Arabic readers and the English one for everyone else.', 'يستخدم التلقائي العنوان العربي للقارئ العربي والإنجليزي لبقية القراء.') }}</p>
+                    </div>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-type"></use></svg></span>
+                        <div>
+                            <h2>{{ t('Summary', 'الملخص') }}</h2>
+                            <p>{{ t('Two or three sentences that make someone want to read the full story.', 'جملتان أو ثلاث تجعل القارئ يرغب في قراءة القصة كاملة.') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="editor-grid-2">
+                        {% if settings.language_mode in ['bilingual', 'en'] %}
+                        <div class="editor-field">
+                            <label for="summary_en">{{ A('summary_en') }} <span class="req">*</span></label>
+                            <textarea id="summary_en" name="summary_en" rows="5" required
+                                placeholder="{{ t('What happened, in one paragraph…', 'ماذا حدث، في فقرة واحدة…') }}">{{ item.summary if item else '' }}</textarea>
+                            <span class="counter" id="summary-en-count">{{ (item.summary|length) if item and item.summary else 0 }} {{ t('characters', 'حرفًا') }}</span>
+                        </div>
+                        {% endif %}
+                        {% if settings.language_mode in ['bilingual', 'ar'] %}
+                        <div class="editor-field">
+                            <label for="summary_ar">{{ A('summary_ar') }}</label>
+                            <textarea id="summary_ar" name="summary_ar" rows="5" dir="rtl" class="is-ar"
+                                placeholder="{{ t('ملخص الخبر…', 'ملخص الخبر…') }}">{{ item.summary_ar if item else '' }}</textarea>
+                            <span class="counter" id="summary-ar-count">{{ (item.summary_ar|length) if item and item.summary_ar else 0 }} {{ t('characters', 'حرفًا') }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-violet"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+                        <div>
+                            <h2>{{ t('Full story', 'القصة الكاملة') }}</h2>
+                            <p>{{ A('details_hint') }}</p>
+                        </div>
+                    </div>
+
+                    {% include '_story_editor.html' %}
+
+                    <div class="body-tabs" role="tablist" aria-label="{{ t('Story language', 'لغة القصة') }}">
+                        <button type="button" class="body-tab is-active" data-body-tab="en" role="tab" aria-selected="true">
+                            <span class="lang-chip">EN</span> {{ t('English', 'الإنجليزية') }}
+                        </button>
+                        <button type="button" class="body-tab" data-body-tab="ar" role="tab" aria-selected="false">
+                            <span class="lang-chip is-ar">ع</span> {{ t('Arabic', 'العربية') }}
+                        </button>
+                    </div>
+
+                    <div class="editor-body-block" data-body-panel="en">
+                        <textarea id="rich-text-editor" name="full_content">{{ item.full_content | e if item and item.full_content else '' }}</textarea>
+                    </div>
+
+                    <div class="editor-body-block" data-body-panel="ar">
+                        <textarea id="rich-text-editor-ar" name="full_content_ar">{{ item.full_content_ar | e if item and item.full_content_ar else '' }}</textarea>
+                    </div>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-amber"><svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg></span>
+                        <div>
+                            <h2>{{ t('Cover and files', 'الغلاف والملفات') }}</h2>
+                            <p>{{ t('The cover is the image readers see on the issue and in every share card.', 'الغلاف هو الصورة التي يراها القارئ في العدد وفي بطاقات المشاركة.') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="editor-media-grid">
+                        <div>
+                            <span class="field-label">{{ A('cover_image') }}</span>
+                            <div class="dropzone" id="cover-drop-zone">
+                                <input type="file" name="cover_image" id="cover-input" accept="image/*">
+                                <div class="dropzone-art" id="cover-art">
+                                    {% if item and item.image %}
+                                    <img src="{{ item.image }}" alt="">
+                                    {% else %}
+                                    <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+                                    {% endif %}
+                                </div>
+                                <b id="cover-label">{{ t('Click or drop an image', 'اضغط أو أفلت صورة') }}</b>
+                                <span>{{ t('JPG, PNG or WebP · landscape works best', 'JPG أو PNG أو WebP · الأفضل أفقي') }}</span>
+                            </div>
+                            {% if item and item.image %}
+                            <p class="field-hint">{{ t('Leave empty to keep the current cover.', 'اتركه فارغًا للإبقاء على الغلاف الحالي.') }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="field-label">{{ t('Attachment', 'مرفق') }}</span>
+                            <div class="dropzone is-small" id="attachment-drop-zone">
+                                <input type="file" name="attachment" id="attachment-input" accept=".pdf,.doc,.docx,.txt">
+                                <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg>
+                                <b id="attachment-label">{{ t('Attach a PDF or document', 'أرفق ملف PDF أو مستندًا') }}</b>
+                                <span>{{ t('Optional', 'اختياري') }}</span>
+                            </div>
+                            {% if item and item.attachment %}
+                            <p class="field-hint">{{ t('A file is already attached. Upload a new one to replace it.', 'يوجد ملف مرفق. ارفع ملفًا جديدًا لاستبداله.') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="switch-rows">
+                        <label class="switch-row">
+                            <input type="checkbox" name="show_details" id="show_details" {% if not item or item.show_details %}checked{% endif %}>
+                            <span class="switch"></span>
+                            <span>
+                                <b>{{ t('Give this story its own page', 'امنح القصة صفحتها الخاصة') }}</b>
+                                <small>{{ t('Adds a readable article page with the full body and images.', 'يضيف صفحة مقالة كاملة مع النص والصور.') }}</small>
+                            </span>
+                        </label>
+                        <label class="switch-row">
+                            <input type="checkbox" name="force_retranslate" id="force_retranslate">
+                            <span class="switch"></span>
+                            <span>
+                                <b>{{ t('Regenerate the Arabic translation on save', 'أعد توليد الترجمة العربية عند الحفظ') }}</b>
+                                <small>{{ t('Off by default. Turn on only to overwrite existing Arabic copy.', 'مغلق افتراضيًا. شغّله فقط لاستبدال النص العربي الحالي.') }}</small>
+                            </span>
+                        </label>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="editor-side">
+                <section class="editor-card preview-card">
+                    <div class="editor-card-head is-compact">
+                        <span class="editor-icon is-slate"><svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg></span>
+                        <div>
+                            <h2>{{ t('Live preview', 'معاينة مباشرة') }}</h2>
+                        </div>
+                    </div>
+                    <div class="mini-story">
+                        <div class="mini-media" id="mini-media">
+                            {% if item and item.image %}
+                            <img id="mini-image" src="{{ item.image }}" alt="">
+                            {% else %}
+                            <img id="mini-image" src="" alt="" style="display:none">
+                            <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+                            {% endif %}
+                        </div>
+                        <span class="mini-desk" id="mini-desk">{{ t('The world', 'العالم') }}</span>
+                        <h3 id="mini-title">{{ item.title if item else t('Your headline will appear here', 'سيظهر عنوانك هنا') }}</h3>
+                        <p id="mini-summary">{{ (item.summary if item else '') or t('The summary readers see on the card.', 'الملخص الذي يراه القارئ على البطاقة.') }}</p>
+                        <span class="mini-meta">{{ item.source if item and item.source else t('Source', 'المصدر') }} · <span id="mini-time">1</span> {{ t('min read', 'دقيقة قراءة') }}</span>
+                    </div>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head is-compact">
+                        <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg></span>
+                        <div>
+                            <h2>{{ t('Publishing', 'النشر') }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="editor-field">
+                        <span class="field-label">{{ t('Article type', 'نوع المقالة') }}</span>
+                        <div class="segmented is-block">
+                            <label class="seg-option">
+                                <input type="radio" name="article_type" value="manual"
+                                    {% if not item or item.article_type == 'manual' or not item.article_type %}checked{% endif %}>
+                                <span>{{ t('Original', 'أصلية') }}</span>
+                            </label>
+                            <label class="seg-option">
+                                <input type="radio" name="article_type" value="external"
+                                    {% if item and item.article_type == 'external' %}checked{% endif %}>
+                                <span>{{ t('External link', 'رابط خارجي') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="wing-select">{{ t('Desk', 'القسم') }}</label>
+                        <select name="wing" id="wing-select">
+                            <option value="world" {% if not item or (item.wing or 'world') == 'world' %}selected{% endif %}>{{ 'The world · AI news' if not admin_ar else 'العالم · أخبار الذكاء الاصطناعي' }}</option>
+                            <option value="research" {% if item and item.wing == 'research' %}selected{% endif %}>{{ 'The world · labs and journals' if not admin_ar else 'العالم · المختبرات والمجلات' }}</option>
+                            <option value="campus" {% if item and item.wing == 'campus' %}selected{% endif %}>{{ 'The department · Computer Science' if not admin_ar else 'القسم · علوم الحاسوب' }}</option>
+                        </select>
+                        <p class="field-hint">{{ t('This is the only control that moves a story between the two desks.', 'هذا هو التحكم الوحيد الذي ينقل القصة بين القسمين.') }}</p>
+                    </div>
+
+                    <div id="world-tools">
+                        <div class="editor-field">
+                            <label for="category-select">{{ t('Placement', 'الموضع') }}</label>
+                            <select name="category" id="category-select">
+                                <option value="top" {% if item and item.category == 'top' %}selected{% endif %}>{{ t('Top highlight (hero)', 'الخبر الرئيسي') }}</option>
+                                <option value="second" {% if item and item.category == 'second' %}selected{% endif %}>{{ t('Secondary news', 'خبر ثانوي') }}</option>
+                                <option value="sidebar" {% if (item and item.category == 'sidebar') or not item %}selected{% endif %}>{{ t('Sidebar / list', 'القائمة الجانبية') }}</option>
+                                <option value="ads" {% if item and item.category == 'ads' %}selected{% endif %}>{{ t('Advertisement', 'إعلان') }}</option>
+                            </select>
+                        </div>
+                        <div class="editor-field">
+                            <label for="topic-select">{{ t('World desk', 'قسم العالم') }}</label>
+                            <select name="topic" id="topic-select">
+                                <option value="" {% if not item or not item.topic %}selected{% endif %}>{{ t('Auto — from the headline', 'تلقائي — من العنوان') }}</option>
+                                {% for key, en, ar, words in news_desks %}
+                                <option value="{{ key }}" {% if item and item.topic == key %}selected{% endif %}>{{ en }} / {{ ar }}</option>
+                                {% endfor %}
+                                <option value="briefing" {% if item and item.topic == 'briefing' %}selected{% endif %}>{{ t('The Brief', 'مختارات') }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="campus-tools">
+                        <div class="editor-field">
+                            <label for="campus-kind-select">{{ t('Department topic', 'موضوع القسم') }}</label>
+                            <select name="campus_kind" id="campus-kind-select">
+                                <option value="" {% if not item or not item.campus_kind %}selected{% endif %}>{{ t('Choose a topic', 'اختر موضوعًا') }}</option>
+                                {% for key, en, ar in campus_kind_choices %}
+                                <option value="{{ key }}" {% if item and item.campus_kind == key %}selected{% endif %}>{{ en }} / {{ ar }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="editor-grid-2">
+                            <div class="editor-field">
+                                <label for="event_on">{{ A('event_day') }}</label>
+                                <input id="event_on" type="date" name="event_on"
+                                    value="{{ (item.event_on[:10] if item.event_on is string else item.event_on.isoformat()) if item and item.event_on else '' }}">
+                            </div>
+                            <div class="editor-field">
+                                <label for="place">{{ A('place') }}</label>
+                                <input id="place" type="text" name="place" maxlength="160"
+                                    value="{{ item.place if item and item.place else '' }}" placeholder="{{ A('place_ph') }}">
+                            </div>
+                        </div>
+                        <div class="editor-field">
+                            <label for="course">{{ A('course') }}</label>
+                            <input id="course" type="text" name="course" maxlength="120"
+                                value="{{ item.course if item and item.course else '' }}" placeholder="{{ A('course_ph') }}">
+                        </div>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="source">{{ A('source_name') }}</label>
+                        <input id="source" type="text" name="source" value="{{ item.source if item else '' }}"
+                            placeholder="{{ t('e.g. The Guardian, MIT News', 'مثال: ذا غارديان، MIT News') }}">
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="external-url-input">{{ A('external_url') }}</label>
+                        <input id="external-url-input" type="url" name="url" value="{{ item.url if item else '' }}"
+                            placeholder="https://…">
+                        <p class="field-hint">{{ t('The original source. YouTube links are recognised automatically.', 'المصدر الأصلي. روابط يوتيوب تُكتشف تلقائيًا.') }}</p>
+                        <div id="video-preview-container" class="video-preview" style="display:none">
+                            <span class="lang-chip">{{ t('Video', 'فيديو') }}</span>
+                            <img id="video-preview-thumb" src="" alt="">
+                            <div id="video-preview-title"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="editor-card" id="classroom-card">
+                    <div class="editor-card-head is-compact">
+                        <span class="editor-icon is-amber"><svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg></span>
+                        <div>
+                            <h2>{{ t('For class', 'للقاعة') }}</h2>
+                            <p>{{ t('Optional. These lines power the course band and the article’s class box.', 'اختياري. هذه السطور تشغّل شريط المقرر وصندوق القاعة.') }}</p>
+                        </div>
+                    </div>
+
+                    <details class="editor-details" {% if item and (item.lesson_why or item.lesson_term or item.lesson_ask) %}open{% endif %}>
+                        <summary>{{ t('Add a classroom note', 'أضف ملاحظة للقاعة') }}</summary>
+                        <div id="classroom-tools">
+                            <div class="editor-field">
+                                <label for="lesson_why">{{ t('Why it matters', 'لماذا يهم') }}</label>
+                                <textarea id="lesson_why" name="lesson_why" rows="3" placeholder="{{ t('Two sentences for a CS student…', 'جملتان لطالب علوم الحاسوب…') }}">{{ item.lesson_why if item else '' }}</textarea>
+                                <textarea name="lesson_why_ar" rows="3" dir="rtl" class="is-ar" placeholder="{{ t('للطالب، بالعربية', 'للطالب، بالعربية') }}">{{ item.lesson_why_ar if item else '' }}</textarea>
+                            </div>
+                            <div class="editor-grid-2">
+                                <div class="editor-field">
+                                    <label for="lesson_term">{{ t('Term', 'المصطلح') }}</label>
+                                    <input id="lesson_term" type="text" name="lesson_term" value="{{ item.lesson_term if item else '' }}" placeholder="{{ t('One term from the story', 'مصطلح من القصة') }}">
+                                </div>
+                                <div class="editor-field">
+                                    <label for="lesson_term_ar">{{ t('Term in Arabic', 'المصطلح بالعربية') }}</label>
+                                    <input id="lesson_term_ar" type="text" name="lesson_term_ar" dir="rtl" class="is-ar" value="{{ item.lesson_term_ar if item else '' }}">
+                                </div>
+                            </div>
+                            <div class="editor-field">
+                                <label for="lesson_gloss">{{ t('Definition', 'التعريف') }}</label>
+                                <textarea id="lesson_gloss" name="lesson_gloss" rows="2">{{ item.lesson_gloss if item else '' }}</textarea>
+                                <textarea name="lesson_gloss_ar" rows="2" dir="rtl" class="is-ar" style="margin-top:8px;">{{ item.lesson_gloss_ar if item else '' }}</textarea>
+                            </div>
+                            <div class="editor-field">
+                                <label for="lesson_ask">{{ t('Classroom question', 'سؤال القاعة') }}</label>
+                                <textarea id="lesson_ask" name="lesson_ask" rows="2">{{ item.lesson_ask if item else '' }}</textarea>
+                                <textarea name="lesson_ask_ar" rows="2" dir="rtl" class="is-ar" style="margin-top:8px;">{{ item.lesson_ask_ar if item else '' }}</textarea>
+                            </div>
+                        </div>
+                    </details>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head is-compact">
+                        <span class="editor-icon is-green"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+                        <div>
+                            <h2>{{ t('Ready to publish?', 'جاهزة للنشر؟') }}</h2>
+                        </div>
+                    </div>
+                    <ul class="publish-checklist" id="publish-checklist">
+                        <li data-check="headline"><span class="tick"></span>{{ t('English headline', 'عنوان إنجليزي') }}</li>
+                        <li data-check="summary"><span class="tick"></span>{{ t('Summary', 'ملخص') }}</li>
+                        <li data-check="arabic"><span class="tick"></span>{{ t('Arabic headline', 'عنوان عربي') }}</li>
+                        <li data-check="image"><span class="tick"></span>{{ t('Cover image', 'صورة الغلاف') }}</li>
+                    </ul>
+                    <p class="field-hint" style="margin-top:10px;">{{ t('Anything unchecked is optional, but the issue looks better when all four are green.', 'أي بند غير محدد اختياري، لكن العدد يبدو أفضل عندما تكون الأربعة خضراء.') }}</p>
+                </section>
+            </aside>
+        </div>
+
+        <div class="editor-savebar" id="editor-savebar">
+            <span>{{ t('Saving publishes the story across the magazine.', 'الحفظ ينشر القصة في المجلة كاملة.') }}</span>
+            <button type="submit" class="btn btn-primary">
+                <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                {{ A('save_story') }}
+            </button>
+        </div>
+    </form>
+
+    <div id="custom-resize-modal"
+        style="display:none; position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 1050; align-items: center; justify-content: center;">
+        <div style="background:#fff; padding:24px; border-radius:14px; width:320px; border:1px solid var(--a-line); box-shadow:0 20px 50px -20px rgba(16,24,40,.4);">
+            <h3 style="margin:0 0 16px; text-align:center;">{{ t('Adjust image size', 'ضبط حجم الصورة') }}</h3>
+            <div class="editor-field">
+                <label for="resize-width">{{ t('Width', 'العرض') }}</label>
+                <input type="text" id="resize-width" placeholder="e.g. 100% or 300px">
+            </div>
+            <div class="editor-field">
+                <label for="resize-height">{{ t('Height', 'الارتفاع') }}</label>
+                <input type="text" id="resize-height" placeholder="auto">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button id="cancel-resize-btn" type="button" class="btn btn-secondary">{{ t('Cancel', 'إلغاء') }}</button>
+                <button id="apply-resize-btn" type="button" class="btn btn-primary">{{ t('Apply', 'تطبيق') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateFileLabel(input, labelId) {
+        if (input.files && input.files.length > 0) {
+            document.getElementById(labelId).innerText = input.files[0].name;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof mountStoryEditor === 'function') {
+            mountStoryEditor('rich-text-editor-ar', { rtl: true, height: '380px' });
+            mountStoryEditor('rich-text-editor', { rtl: false, height: '380px' });
+        }
+
+        // language tabs for the body
+        var bodyTabs = document.querySelectorAll('[data-body-tab]');
+        var bodyPanels = document.querySelectorAll('[data-body-panel]');
+        function showBodyPanel(key) {
+            bodyTabs.forEach(function (tab) {
+                var active = tab.getAttribute('data-body-tab') === key;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', String(active));
+            });
+            bodyPanels.forEach(function (panel) {
+                panel.hidden = panel.getAttribute('data-body-panel') !== key;
+            });
+            window.dispatchEvent(new Event('resize'));
+        }
+        bodyTabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                showBodyPanel(tab.getAttribute('data-body-tab'));
+            });
+        });
+        if (bodyPanels.length) showBodyPanel('en');
+
+        // --- desk tools + preview ---
+        var wing = document.getElementById('wing-select');
+        var worldTools = document.getElementById('world-tools');
+        var campusTools = document.getElementById('campus-tools');
+        var classroomCard = document.getElementById('classroom-card');
+        var miniDesk = document.getElementById('mini-desk');
+        var previewTitle = document.getElementById('mini-title');
+        var previewSummary = document.getElementById('mini-summary');
+        var previewTime = document.getElementById('mini-time');
+        var titleInput = document.getElementById('title_en');
+        var summaryInput = document.getElementById('summary_en');
+        var arabicInput = document.getElementById('title_ar');
+        var coverInput = document.getElementById('cover-input');
+        var miniImage = document.getElementById('mini-image');
+        var miniMedia = document.getElementById('mini-media');
+
+        function deskLabel() {
+            if (!wing) return 'The world';
+            var value = wing.value;
+            if (value === 'campus') return 'The department';
+            if (value === 'research') return 'Research';
+            return 'The world';
+        }
+
+        function syncDeskTools() {
+            if (!wing || !worldTools || !campusTools) return;
+            var campus = wing.value === 'campus';
+            worldTools.style.display = campus ? 'none' : '';
+            campusTools.style.display = campus ? '' : 'none';
+            if (classroomCard) classroomCard.style.display = campus ? 'none' : '';
+            if (miniDesk) miniDesk.textContent = deskLabel();
+            updateChecklist();
+        }
+
+        function updatePreview() {
+            if (previewTitle) {
+                previewTitle.textContent = (titleInput && titleInput.value.trim()) || 'Your headline will appear here';
+            }
+            if (previewSummary) {
+                var text = (summaryInput && summaryInput.value.trim()) || 'The summary readers see on the card.';
+                previewSummary.textContent = text.length > 120 ? text.slice(0, 120) + '…' : text;
+            }
+            if (previewTime) {
+                var words = ((summaryInput && summaryInput.value) || '').trim().split(/\s+/).filter(Boolean).length;
+                previewTime.textContent = Math.max(1, Math.round(words / 200));
+            }
+            updateChecklist();
+        }
+
+        function updateChecklist() {
+            var list = document.getElementById('publish-checklist');
+            if (!list) return;
+            var hasImage = (coverInput && coverInput.files && coverInput.files.length > 0) ||
+                (miniImage && miniImage.getAttribute('src'));
+            var checks = {
+                headline: !!(titleInput && titleInput.value.trim()),
+                summary: !!(summaryInput && summaryInput.value.trim()),
+                arabic: !!(arabicInput && arabicInput.value.trim()),
+                image: !!hasImage
+            };
+            list.querySelectorAll('li').forEach(function (item) {
+                item.classList.toggle('is-done', !!checks[item.getAttribute('data-check')]);
+            });
+        }
+
+        if (wing) {
+            wing.addEventListener('change', syncDeskTools);
+            syncDeskTools();
+        }
+        [titleInput, summaryInput, arabicInput].forEach(function (input) {
+            if (input) input.addEventListener('input', updatePreview);
+        });
+        updatePreview();
+
+        // counters
+        var counts = [
+            ['summary_en', 'summary-en-count'],
+            ['summary_ar', 'summary-ar-count']
+        ];
+        counts.forEach(function (pair) {
+            var input = document.getElementById(pair[0]);
+            var out = document.getElementById(pair[1]);
+            if (!input || !out) return;
+            var unit = out.textContent.replace(/^[0-9\s]+/, '');
+            input.addEventListener('input', function () {
+                out.textContent = input.value.length + ' ' + unit;
+            });
+        });
+
+        // cover dropzone + preview
+        var drop = document.getElementById('cover-drop-zone');
+        if (drop && coverInput) {
+            drop.addEventListener('click', function (event) {
+                if (event.target !== coverInput) coverInput.click();
+            });
+            ['dragenter', 'dragover'].forEach(function (name) {
+                drop.addEventListener(name, function (event) {
+                    event.preventDefault();
+                    drop.classList.add('is-dragging');
+                });
+            });
+            ['dragleave', 'drop'].forEach(function (name) {
+                drop.addEventListener(name, function (event) {
+                    event.preventDefault();
+                    drop.classList.remove('is-dragging');
+                    if (name === 'drop' && event.dataTransfer.files.length) {
+                        coverInput.files = event.dataTransfer.files;
+                        coverInput.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+            coverInput.addEventListener('change', function () {
+                if (!coverInput.files || !coverInput.files[0]) return;
+                var file = coverInput.files[0];
+                var url = URL.createObjectURL(file);
+                if (miniImage) {
+                    miniImage.src = url;
+                    miniImage.style.display = 'block';
+                }
+                var art = document.getElementById('cover-art');
+                if (art) art.innerHTML = '<img src="' + url + '" alt="">';
+                var label = document.getElementById('cover-label');
+                if (label) label.textContent = file.name;
+                updateChecklist();
+            });
+        }
+
+        var attachmentInput = document.getElementById('attachment-input');
+        var attachmentDrop = document.getElementById('attachment-drop-zone');
+        if (attachmentDrop && attachmentInput) {
+            attachmentDrop.addEventListener('click', function (event) {
+                if (event.target !== attachmentInput) attachmentInput.click();
+            });
+            attachmentInput.addEventListener('change', function () {
+                var label = document.getElementById('attachment-label');
+                if (label && attachmentInput.files[0]) label.textContent = attachmentInput.files[0].name;
+            });
+        }
+
+        // save bar appears once the editor scrolls
+        var savebar = document.getElementById('editor-savebar');
+        if (savebar) {
+            var onScroll = function () {
+                savebar.classList.toggle('is-visible', window.scrollY > 220);
+            };
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        }
+
+        // YouTube detection
+        var urlInput = document.getElementById('external-url-input');
+        if (urlInput) {
+            urlInput.addEventListener('input', function () {
+                var match = this.value.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                var container = document.getElementById('video-preview-container');
+                if (match && match[1]) {
+                    document.getElementById('video-preview-thumb').src = 'https://img.youtube.com/vi/' + match[1] + '/maxresdefault.jpg';
+                    document.getElementById('video-preview-title').textContent = 'Video ID: ' + match[1];
+                    container.style.display = 'block';
+                    var ext = document.querySelector('input[name="article_type"][value="external"]');
+                    if (ext) ext.checked = true;
+                    var source = document.querySelector('input[name="source"]');
+                    if (source && !source.value) source.value = 'YouTube';
+                } else if (container) {
+                    container.style.display = 'none';
+                }
+            });
+            if (urlInput.value) urlInput.dispatchEvent(new Event('input'));
+        }
+    });
+
+    document.querySelector('#story-form').addEventListener('submit', function () {
+        ['rich-text-editor', 'rich-text-editor-ar'].forEach(function (id) {
+            var editor = window.storyEditors && window.storyEditors[id];
+            if (editor) editor.save();
+        });
+    });
+</script>
+{% endblock %}

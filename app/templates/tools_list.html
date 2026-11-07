@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{% block page_title %}AI tools{% endblock %}
+
+{% block content %}
+<div class="ta-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">Directory</p>
+            <h1>AI tools &amp; platforms</h1>
+            <p class="editor-dek">Curate the public directory readers use to find their next tool. Featured picks appear first; free tiers and Arabic support are shown on every card.</p>
+        </div>
+        <div class="editor-top-actions">
+            <a href="{{ url_for('tools_directory') }}" target="_blank" class="btn btn-secondary">
+                <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg>
+                View public directory
+            </a>
+            <a href="{{ url_for('add_tool') }}" class="btn btn-primary">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                Add tool
+            </a>
+        </div>
+    </div>
+
+    <div class="ta-stats">
+        <div class="ta-stat is-indigo">
+            <b>{{ counts.all }}</b>
+            <span>Tools listed</span>
+        </div>
+        <div class="ta-stat is-green">
+            <b>{{ stats.free }}</b>
+            <span>With a free tier</span>
+        </div>
+        <div class="ta-stat is-teal">
+            <b>{{ stats.arabic }}</b>
+            <span>Work in Arabic</span>
+        </div>
+        <div class="ta-stat is-amber">
+            <b>{{ stats.featured }}</b>
+            <span>Featured picks</span>
+        </div>
+    </div>
+
+    <div class="ta-toolbar">
+        <form class="ta-search" method="GET" action="{{ url_for('tools_list') }}">
+            <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+            <input type="search" name="q" value="{{ q }}" placeholder="Search a tool by name or use…">
+            {% if category != 'all' %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+            <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+        {% if q %}<a class="ta-clear" href="{{ url_for('tools_list', category=category) }}">Clear search</a>{% endif %}
+    </div>
+
+    <div class="ta-chips">
+        <a class="ta-chip {{ 'is-active' if category == 'all' else '' }}" href="{{ url_for('tools_list', category='all', q=q or None) }}">
+            All <b>{{ counts.all }}</b>
+        </a>
+        {% for key, label in categories %}
+        {% if counts[key] %}
+        <a class="ta-chip ta-cat-{{ key }} {{ 'is-active' if category == key else '' }}" href="{{ url_for('tools_list', category=key, q=q or None) }}">
+            {{ label.split(' ', 1)[1] }} <b>{{ counts[key] }}</b>
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if tools %}
+    <div class="ta-list">
+        {% for tool in tools %}
+        <article class="ta-row ta-cat-{{ tool.category }} {{ 'is-hidden' if not tool.is_published else '' }}">
+            <span class="ta-logo">
+                {% if tool.logo %}<img src="{{ tool.logo }}" alt="">
+                {% else %}{{ tool.name[:1] }}{% endif %}
+            </span>
+            <div class="ta-main">
+                <div class="ta-name">
+                    <b>{{ tool.name }}</b>
+                    {% if tool.name_ar %}<span dir="rtl">{{ tool.name_ar }}</span>{% endif %}
+                    {% if tool.featured %}<span class="ta-featured">★ Featured</span>{% endif %}
+                    {% if tool.rating %}<span class="ta-rating">★ {{ '%.1f'|format(tool.rating) }}</span>{% endif %}
+                    {% if not tool.is_published %}<span class="ta-draft">Hidden</span>{% endif %}
+                </div>
+                <p class="ta-tagline">{{ tool.tagline_en or tool.description_en|truncate(100) }}</p>
+                <div class="ta-meta">
+                    <span>{{ tool.category_label.split(' ', 1)[1] }}</span>
+                    <span class="ta-price is-{{ tool.pricing }}">{{ tool.pricing_label_en }}</span>
+                    {% if tool.arabic_support %}<span class="ta-ar">Arabic</span>{% endif %}
+                    {% if tool.best_for %}<span class="ta-best">Best for: {{ tool.best_for }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="ta-actions">
+                {% if tool.official_url %}
+                <a href="{{ tool.official_url }}" target="_blank" rel="noopener" class="ta-open">Open ↗</a>
+                {% endif %}
+                <a href="{{ url_for('edit_tool', tool_id=tool.id) }}" class="ta-edit">Edit</a>
+                <form method="POST" action="{{ url_for('delete_tool', tool_id=tool.id) }}"
+                    onsubmit="return confirm('Remove {{ tool.name }} from the directory?');">
+                    <button type="submit" class="ta-delete">Delete</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ta-empty">
+        <h2>No tools match</h2>
+        <p>{{ 'Nothing matches that search.' if q else 'Add the first tool to the directory.' }}</p>
+        <a href="{{ url_for('tools_list') }}" class="btn btn-secondary">Clear filters</a>
+        <a href="{{ url_for('add_tool') }}" class="btn btn-primary">Add a tool</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

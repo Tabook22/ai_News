@@ -1,0 +1,45 @@
+# ---- secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Flask / local data ----
+instance/
+app/instance/
+*.db
+*.sqlite
+*.sqlite3
+local_dev.db
+app/local_dev.db
+*.db-journal
+
+# ---- logs ----
+logs/
+*.log
+
+# ---- private uploads (CVs and documents) ----
+app/static/uploads/docs/
+
+# ---- generated design screenshots ----
+design-review/shots/
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ---- tool caches ----
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

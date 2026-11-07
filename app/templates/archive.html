@@ -1,0 +1,217 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="archive-manager">
+    <div class="dashboard-header">
+        <div>
+            <h1>{{ A('arch_dept') if desk == 'campus' else A('arch_world') }}</h1>
+            <p class="subtitle">{{ A('arch_dept_dek') if desk == 'campus' else A('arch_world_dek') }}</p>
+        </div>
+        <div class="actions" style="display:flex; gap:0.5rem;">
+            <a href="{{ url_for('archive_page', desk='campus') }}" class="btn {{ 'btn-primary' if desk == 'campus' else 'btn-secondary' }}">{{ A('department') }}</a>
+            <a href="{{ url_for('archive_page', desk='world') }}" class="btn {{ 'btn-primary' if desk == 'world' else 'btn-secondary' }}">{{ A('world') }}</a>
+        </div>
+        <div class="stats-badge"
+            style="padding: 0.5rem 1rem; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color);">
+            {{ archive_data|length }} {{ A('years') }}
+        </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div id="bulk-actions-bar"
+        style="margin-bottom: 2rem; padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: 12px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <label
+                style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                <input type="checkbox" id="select-all-checkbox" style="width: 18px; height: 18px; cursor: pointer;">
+                {{ A('select_all') }}
+            </label>
+            <span id="selection-count" style="color: var(--text-muted); font-size: 0.9rem;">(0 {{ A('selected') }})</span>
+        </div>
+        <button id="bulk-delete-btn" onclick="executeBulkDelete()" disabled
+            style="background: var(--accent-danger); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 6px; cursor: pointer; opacity: 0.5; transition: 0.2s; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🗑 {{ A('delete_selected') }}</span>
+        </button>
+    </div>
+
+    <!-- Hierarchy -->
+    <div class="archive-tree">
+        {% for year_group in archive_data %}
+        <details class="year-block" open style="margin-bottom: 2rem;">
+            <summary class="year-header card"
+                style="display: flex; justify-content: space-between; padding: 1rem 1.5rem; cursor: pointer; align-items: center; background: linear-gradient(to right, var(--bg-hover), var(--bg-card)); list-style: none;">
+                <span style="font-size: 1.5rem; font-weight: 800; color: var(--accent-primary);">{{ year_group.year
+                    }}</span>
+                <span class="badge sidebar">{{ year_group.count }} {{ A('items') }}</span>
+            </summary>
+
+            <div class="months-container" style="padding: 1rem;">
+                {% for month in year_group.months %}
+                <details class="month-block" open
+                    style="margin-bottom: 1rem; padding-left: 1rem; border-left: 2px solid var(--border-color);">
+                    <summary class="month-header"
+                        style="color: var(--text-muted); font-weight: 600; cursor: pointer; margin-bottom: 1rem; padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        📂 {{ month.name_ar if admin_ar else month.name }} <span style="font-size: 0.8rem; opacity: 0.7;">({{ month.count }})</span>
+                    </summary>
+
+                    <div class="posts-list" style="display: grid; gap: 1rem;">
+                        {% for item in month.posts %}
+                        <div class="card archive-row {{ 'published' if item.is_published else 'hidden' }}"
+                            style="flex-direction: row; align-items: center; padding: 1rem; border-left: 4px solid {{ 'var(--accent-primary)' if item.is_published else 'var(--accent-danger)' }};">
+
+                            <!-- Bulk Checkbox -->
+                            <div style="margin-right: 1rem;">
+                                <input type="checkbox" class="bulk-item-checkbox" value="{{ item.id }}"
+                                    style="width: 18px; height: 18px; cursor: pointer;" onchange="updateBulkState()">
+                            </div>
+
+                            <!-- Toggle Switch -->
+                            <div class="toggle-container" style="margin-right: 1.5rem;">
+                                <label class="switch" title="Toggle Publication">
+                                    <input type="checkbox" onchange="togglePublish('{{ item.id }}', this)" {% if
+                                        item.is_published %}checked{% endif %}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                            <div class="post-info" style="flex: 1;">
+                                <a href="{{ url_for('magazine_view', item_id=item.id) }}" class="post-title"
+                                    style="font-weight: 700; font-size: 1.1rem; display: block; margin-bottom: 0.3rem;">
+                                    {{ item.title }}
+                                </a>
+                                <div class="post-meta" style="font-size: 0.85rem; color: var(--text-muted);">
+                                    {{ item.timestamp.strftime('%Y-%m-%d') }} &bull; {{ item.source }}
+                                </div>
+                            </div>
+
+                            <div class="post-actions" style="display: flex; gap: 0.8rem;">
+                                <a href="{{ url_for('edit_news', item_id=item.id) }}" class="btn btn-primary"
+                                    style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">{{ A('edit') }}</a>
+                                <form method="post" action="{{ url_for('delete_news', item_id=item.id) }}" style="display:inline; margin:0;"
+                                    onsubmit="return confirm('Delete this item permanently? This cannot be undone.')">
+                                    <button type="submit" class="btn-icon danger" title="Delete Permanently"
+                                        style="background:none; border:none; cursor:pointer; font:inherit; padding:0;">🗑</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </details>
+                {% endfor %}
+            </div>
+        </details>
+        {% else %}
+        <div class="empty-state"
+            style="text-align: center; padding: 4rem; border: 2px dashed var(--border-color); border-radius: 12px; color: var(--text-muted);">
+            <h3>📭 Archive is Empty</h3>
+            <p>No content history found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    // --- BULK DELETE LOGIC ---
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const deleteBtn = document.getElementById('bulk-delete-btn');
+    const countLabel = document.getElementById('selection-count');
+
+    // Handle Select All
+    selectAllCheckbox.addEventListener('change', function () {
+        const isChecked = this.checked;
+        document.querySelectorAll('.bulk-item-checkbox').forEach(cb => {
+            cb.checked = isChecked;
+        });
+        updateBulkState();
+    });
+
+    // Update Button State
+    function updateBulkState() {
+        const allCheckboxes = document.querySelectorAll('.bulk-item-checkbox');
+        const checkedBoxes = document.querySelectorAll('.bulk-item-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        countLabel.innerText = `(${count} {{ A('selected') }})`;
+
+        if (count > 0) {
+            deleteBtn.disabled = false;
+            deleteBtn.style.opacity = '1';
+        } else {
+            deleteBtn.disabled = true;
+            deleteBtn.style.opacity = '0.5';
+        }
+
+        // Sync "Select All" checkbox if manual deselect
+        if (count < allCheckboxes.length && count > 0) {
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = (count === allCheckboxes.length && count > 0);
+        }
+    }
+
+    // Execute Delete
+    function executeBulkDelete() {
+        const checkedBoxes = document.querySelectorAll('.bulk-item-checkbox:checked');
+        const ids = Array.from(checkedBoxes).map(cb => cb.value);
+
+        if (ids.length === 0) return;
+
+        if (confirm({{ A('delete_confirm')|tojson }})) {
+            // Show loading state
+            deleteBtn.innerText = "Processing...";
+            deleteBtn.disabled = true;
+
+            fetch('/api/bulk_delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ids: ids })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Reload to reflect changes
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                        deleteBtn.innerText = "🗑 Delete Selected";
+                        deleteBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred.');
+                    deleteBtn.innerText = "🗑 Delete Selected";
+                    deleteBtn.disabled = false;
+                });
+        }
+    }
+
+    function togglePublish(itemId, checkbox) {
+        const isChecked = checkbox.checked;
+        const row = checkbox.closest('.archive-row');
+
+        // Optimistic UI update
+        row.style.borderLeftColor = isChecked ? 'var(--accent-primary)' : 'var(--accent-danger)';
+        row.style.opacity = isChecked ? '1' : '0.6';
+
+        fetch(`/toggle_publish/${itemId}`, {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    alert('Error updating status');
+                    checkbox.checked = !isChecked; // Revert
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Network error');
+                checkbox.checked = !isChecked;
+            });
+    }
+</script>
+{% endblock %}

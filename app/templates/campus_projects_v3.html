@@ -1,0 +1,131 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+{% set diff_labels = {'starter': ('Starter', 'تمهيدي'), 'intermediate': ('Intermediate', 'متوسط'), 'advanced': ('Advanced', 'متقدم')} %}
+
+{% block page_title %}{{ 'مشاريع مقترحة' if ar else 'Recommended projects' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_desc %}{{ 'أفكار مشاريع السنة الأخيرة لطلبة علوم الحاسوب، مع وصف بسيط ومرجع لكل فكرة.' if ar else 'Final-year project ideas for Computer Science students, each with a short description and a reference.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <nav class="project-crumb" aria-label="{{ 'مسار التصفح' if ar else 'Breadcrumb' }}">
+        <a href="{{ url_for('campus_weekly') }}">{{ 'القسم' if ar else 'The department' }}</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ 'مشاريع مقترحة' if ar else 'Recommended projects' }}</span>
+    </nav>
+
+    <header class="projects-hero">
+        <span class="eyebrow">{{ 'علوم الحاسوب · السنة الأخيرة' if ar else 'Computer Science · Final year' }}</span>
+        <h1>{{ 'Recommended projects.' if not ar else 'مشاريع مقترحة.' }}</h1>
+        <p>{{ 'Starting points for a final-year project, not assigned topics. Each idea comes with a short brief, the skills it needs, and a reference to the paper or product it is built on. Pick one, narrow it, and make the evaluation yours.' if not ar else 'نقاط بداية لمشروع السنة الأخيرة، لا مواضيع مفروضة. كل فكرة معها وصف قصير والمهارات المطلوبة ومرجع للورقة أو المنتج الذي بُنيت عليه. اختر فكرة، وضيّقها، واجعل التقييم من عملك.' }}</p>
+        <div class="tools-meta">
+            <span><b>{{ total }}</b> {{ 'فكرة' if ar else 'ideas' }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <span>{{ 'آخر تحقق' if ar else 'Last checked' }} {{ date }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <a href="mailto:{{ settings.author_email if settings and settings.author_email else 'editor@du.edu.om' }}">{{ 'اقترح فكرة' if ar else 'Suggest an idea' }} ↗</a>
+        </div>
+    </header>
+
+    <div class="project-tracks">
+        <a class="project-track {{ 'is-active' if track == 'all' else '' }}" href="{{ url_for('campus_projects', track='all', q=q or None, area=area if area != 'all' else None, difficulty=difficulty if difficulty != 'all' else None) }}">{{ 'الكل' if ar else 'All' }} <b>{{ track_counts['all'] }}</b></a>
+        {% for key, labels in tracks.items() %}
+        <a class="project-track is-{{ key }} {{ 'is-active' if track == key else '' }}" href="{{ url_for('campus_projects', track=key, q=q or None, area=area if area != 'all' else None, difficulty=difficulty if difficulty != 'all' else None) }}">{{ labels[1] if ar else labels[0] }} <b>{{ track_counts[key] }}</b></a>
+        {% endfor %}
+    </div>
+
+    <form class="project-toolbar" action="{{ url_for('campus_projects') }}" method="GET">
+        <div class="project-search">
+            <input type="search" name="q" value="{{ q }}"
+                placeholder="{{ 'ابحث في الأفكار أو المهارات أو الأدوات…' if ar else 'Search ideas, skills or tools…' }}">
+            {% if area != 'all' %}<input type="hidden" name="area" value="{{ area }}">{% endif %}
+            {% if difficulty != 'all' %}<input type="hidden" name="difficulty" value="{{ difficulty }}">{% endif %}
+            {% if track != 'all' %}<input type="hidden" name="track" value="{{ track }}">{% endif %}
+            <button type="submit" class="btn btn-primary">{{ 'بحث' if ar else 'Search' }}</button>
+        </div>
+        <div class="project-filter-row">
+            <label class="project-select">
+                <span>{{ 'المستوى' if ar else 'Level' }}</span>
+                <select name="difficulty" onchange="this.form.submit()">
+                    <option value="all">{{ 'كل المستويات' if ar else 'All levels' }}</option>
+                    <option value="starter" {{ 'selected' if difficulty == 'starter' else '' }}>{{ 'تمهيدي' if ar else 'Starter' }}</option>
+                    <option value="intermediate" {{ 'selected' if difficulty == 'intermediate' else '' }}>{{ 'متوسط' if ar else 'Intermediate' }}</option>
+                    <option value="advanced" {{ 'selected' if difficulty == 'advanced' else '' }}>{{ 'متقدم' if ar else 'Advanced' }}</option>
+                </select>
+            </label>
+            {% if q or area != 'all' or difficulty != 'all' or track != 'all' %}
+            <a class="project-clear" href="{{ url_for('campus_projects') }}">{{ 'مسح الفلاتر' if ar else 'Clear filters' }}</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="project-chips">
+        <a class="project-chip {{ 'is-active' if area == 'all' else '' }}" href="{{ url_for('campus_projects', area='all', q=q or None, difficulty=difficulty if difficulty != 'all' else None) }}">
+            {{ 'الكل' if ar else 'All' }} <b>{{ counts['all'] }}</b>
+        </a>
+        {% for key, labels in areas.items() %}
+        {% if counts[key] %}
+        <a class="project-chip project-area-{{ key }} {{ 'is-active' if area == key else '' }}" href="{{ url_for('campus_projects', area=key, track=track if track != 'all' else None, q=q or None, difficulty=difficulty if difficulty != 'all' else None) }}">
+            {{ labels[1] if ar else labels[0] }} <b>{{ counts[key] }}</b>
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if ideas %}
+    <div class="project-grid">
+        {% for idea in ideas %}
+        <article id="idea-{{ idea.id }}" class="project-card project-area-{{ idea.area }}">
+            <div class="project-top">
+                <span class="project-area">{{ idea.area_ar if ar else idea.area_en }}</span>
+                {% if idea.track != 'final_year' %}<span class="project-track-label">{{ idea.track_ar if ar else idea.track_en }}</span>{% endif %}
+                {% set d = diff_labels.get(idea.difficulty, ('Intermediate', 'متوسط')) %}
+                <span class="project-difficulty">{{ d[1] if ar else d[0] }}</span>
+            </div>
+            <h2>{{ (idea.title_ar or idea.title_en) if ar else idea.title_en }}</h2>
+            <p class="project-summary">{{ (idea.summary_ar or idea.summary_en) if ar else idea.summary_en }}</p>
+            <p class="project-body">{{ (idea.body_ar or idea.body_en) if ar else idea.body_en }}</p>
+
+            {% if idea.skills %}
+            <div class="project-tags">
+                {% for skill in idea.skills[:3] %}<span>{{ skill }}</span>{% endfor %}
+            </div>
+            {% endif %}
+
+            {% if idea.reference_url %}
+            <div class="project-ref">
+                <span>{{ 'المرجع' if ar else 'Reference' }}</span>
+                <a href="{{ idea.reference_url }}" target="_blank" rel="noopener noreferrer">{{ idea.reference_title or idea.reference_url }} ↗</a>
+                {% if idea.reference_note_en %}
+                <small>{{ idea.reference_note_ar if ar else idea.reference_note_en }}</small>
+                {% endif %}
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="tools-empty">
+        <h2>{{ 'No ideas match these filters' if not ar else 'لا توجد أفكار تطابق هذه الفلاتر' }}</h2>
+        <p>{{ 'Try a broader search, or clear the filters.' if not ar else 'جرّب بحثًا أوسع أو امسح الفلاتر.' }}</p>
+        <a class="btn btn-primary" href="{{ url_for('campus_projects') }}">{{ 'All ideas' if not ar else 'كل الأفكار' }}</a>
+    </div>
+    {% endif %}
+
+    <section class="project-guide" aria-labelledby="project-guide-title">
+        <header class="tools-section-head">
+            <h2 id="project-guide-title">{{ 'How to turn an idea into a project' if not ar else 'كيف تحوّل الفكرة إلى مشروع' }}</h2>
+            <p>{{ 'The reference is the starting point, not the project. The contribution is the part you test, measure or build for your department.' if not ar else 'المرجع نقطة البداية لا المشروع. الإسهام هو ما تختبره أو تقيسه أو تبنيه لقسمك.' }}</p>
+        </header>
+        <ol class="project-steps">
+            <li><b>01</b><span>{{ 'Choose one idea and a user' if not ar else 'اختر فكرة ومستخدمًا' }}<small>{{ 'A student, a lecturer, the department office — write down their problem.' if not ar else 'طالب أو محاضر أو مكتب القسم — اكتب مشكلتهم.' }}</small></span></li>
+            <li><b>02</b><span>{{ 'Read the reference, then narrow it' if not ar else 'اقرأ المرجع ثم ضيّق' }}<small>{{ 'Keep one claim from the paper and test it in your setting.' if not ar else 'احتفظ بادعاء واحد من الورقة واختبره في سياقك.' }}</small></span></li>
+            <li><b>03</b><span>{{ 'Build a small baseline first' if not ar else 'ابنِ أساسًا صغيرًا أولًا' }}<small>{{ 'A simple search or rule-based version makes the AI result comparable.' if not ar else 'نسخة بحث أو قواعد بسيطة تجعل نتيجة الذكاء الاصطناعي قابلة للمقارنة.' }}</small></span></li>
+            <li><b>04</b><span>{{ 'Evaluate with real users' if not ar else 'قيّم مع مستخدمين حقيقيين' }}<small>{{ 'Ten real tasks and a clear error analysis beat a perfect demo.' if not ar else 'عشر مهام حقيقية وتحليل أخطاء واضح أفضل من عرض مثالي.' }}</small></span></li>
+        </ol>
+    </section>
+
+    <p class="nr-foot">
+        <a href="{{ url_for('campus_weekly') }}">{{ '← Back to the department' if not ar else '→ العودة إلى القسم' }}</a>
+    </p>
+</div>
+{% endblock %}
