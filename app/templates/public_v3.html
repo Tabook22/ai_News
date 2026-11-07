@@ -75,8 +75,8 @@
 
             <nav class="nav" aria-label="{{ 'أقسام المجلة' if lang_pref == 'ar' else 'Sections' }}">
                 <a href="{{ url_for('magazine_view') }}"
-                    class="{{ 'is-active' if request.endpoint in ['magazine_view', 'magazine_detail'] else '' }}"
-                    {% if request.endpoint in ['magazine_view', 'magazine_detail'] %}aria-current="page"{% endif %}>{{ 'العدد' if lang_pref == 'ar' else 'The Issue' }}</a>
+                    class="{{ 'is-active' if request.endpoint in ['magazine_view', 'magazine_detail', 'newsroom'] else '' }}"
+                    {% if request.endpoint in ['magazine_view', 'magazine_detail', 'newsroom'] %}aria-current="page"{% endif %}>{{ 'العدد' if lang_pref == 'ar' else 'The Issue' }}</a>
                 <a href="{{ url_for('campus_weekly') }}"
                     class="{{ 'is-active' if request.endpoint == 'campus_weekly' else '' }}">{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</a>
                 {% if reels_count %}
@@ -121,7 +121,7 @@
 
     <nav class="tabbar" aria-label="{{ 'تنقل سريع' if lang_pref == 'ar' else 'Quick navigation' }}">
         <a href="{{ url_for('magazine_view') }}"
-            {% if request.endpoint == 'magazine_view' %}aria-current="page"{% endif %}>
+            {% if request.endpoint in ['magazine_view', 'newsroom'] %}aria-current="page"{% endif %}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <path d="M4 5h16v14H4z"></path>
                 <path d="M8 9h8M8 13h5"></path>
