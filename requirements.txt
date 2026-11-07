@@ -10,3 +10,4 @@ openai
 google-api-python-client
 isodate
 qrcode[pil]
+gunicorn>=21.2

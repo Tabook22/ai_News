@@ -36,6 +36,7 @@ from flask import Flask, abort, render_template, request, redirect, url_for, fla
 from admin_i18n import admin_text
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 
 
@@ -98,6 +99,13 @@ app = Flask(
 )
 app.config.from_object(Config)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Behind Nginx the app can live under a subpath such as /ainews/.
+# Nginx sends X-Forwarded-Prefix; ProxyFix turns it into SCRIPT_NAME so url_for()
+# and static URLs include the prefix.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+app.config['APPLICATION_ROOT'] = os.environ.get('APPLICATION_ROOT', '/')
+app.config['SESSION_COOKIE_PATH'] = os.environ.get('SESSION_COOKIE_PATH', '/')
 
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB limit
@@ -1909,6 +1917,11 @@ def admin_dashboard():
                            recent=recent, days=days, peak=peak, attention=attention,
                            health=health, last_story=last_story,
                            today=datetime.datetime.now())
+
+
+@app.route('/healthz')
+def healthz():
+    return 'ok', 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
 @app.route('/')

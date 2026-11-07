@@ -1,0 +1,25 @@
+[Unit]
+Description=Nasser AI News (Flask/Gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/ainews
+EnvironmentFile=/var/www/ainews/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/var/www/ainews/venv/bin/gunicorn \
+    --workers 3 \
+    --threads 2 \
+    --bind 127.0.0.1:8000 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    wsgi:app
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

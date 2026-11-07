@@ -45,6 +45,25 @@
 </head>
 
 <body class="theme-{{ settings.theme if settings else 'slate' }} template-{{ settings.magazine_template if settings and settings.magazine_template else 'slate' }}">
+<script>
+(function () {
+    /* The app can be mounted under /ainews/ behind Nginx. Prefix absolute fetch() paths
+       so the admin/public JS keeps working without editing every call. */
+    var base = {{ request.script_root|tojson }};
+    if (base === '/') base = '';
+    if (base && base.charAt(base.length - 1) === '/') base = base.slice(0, -1);
+    window.APP_BASE = base;
+    if (!base || !window.fetch) return;
+    var originalFetch = window.fetch;
+    window.fetch = function (input, init) {
+        if (typeof input === 'string' && input.charAt(0) === '/' && input.indexOf(base + '/') !== 0) {
+            input = base + input;
+        }
+        return originalFetch.call(this, input, init);
+    };
+})();
+</script>
+
     {% block reader_chrome %}
     {% set ep = request.endpoint %}
     <header class="reader-bar">
