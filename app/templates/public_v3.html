@@ -36,6 +36,7 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/issue-v3.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/disclaimer.css') }}">
     {% block head_extra %}{% endblock %}
 </head>
 
@@ -232,10 +233,12 @@
             </div>
             <div class="footer-bottom">
                 <span>&copy; {{ now_year }} {{ settings.magazine_title if settings else 'Nasser AI News' }} · {{ 'جامعة ظفار' if lang_pref == 'ar' else 'Dhofar University' }}</span>
-                <span>{{ 'صُنع في قسم علوم الحاسوب' if lang_pref == 'ar' else 'Made in the Department of Computer Science' }}</span>
+                <span>{{ 'صُنع في قسم علوم الحاسوب' if lang_pref == 'ar' else 'Made in the Department of Computer Science' }} · <button type="button" class="footer-disclaimer" data-disclaimer-open>{{ 'إخلاء المسؤولية' if lang_pref == 'ar' else 'Disclaimer' }}</button></span>
             </div>
         </div>
     </footer>
+
+    {% include '_disclaimer_modal.html' %}
 
     <!-- search overlay -->
     <div class="search-sheet" id="v3-search-sheet" role="dialog" aria-modal="true"
@@ -292,6 +295,7 @@
             }
         };
     </script>
+    <script src="{{ url_for('static', filename='js/disclaimer.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/issue-v3.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>

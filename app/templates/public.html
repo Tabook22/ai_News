@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/templates.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/issue.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/disclaimer.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600;900&family=Playfair+Display:wght@400;600;700;900&family=Archivo+Black&family=Georgia&display=swap"
@@ -168,10 +169,13 @@
                 <div style="color: var(--text-muted); font-size: 0.85rem; font-family: monospace;">
                     v2.4.0 &copy;
                     <script>document.write(new Date().getFullYear())</script>
+                    <button type="button" class="footer-disclaimer" data-disclaimer-open style="margin-inline-start:8px;">{{ 'إخلاء المسؤولية' if lang_pref == 'ar' else 'Disclaimer' }}</button>
                 </div>
             </div>
         </div>
     </footer>
+
+    {% include '_disclaimer_modal.html' %}
 
     <!-- Global Source Modal — most publishers block being shown inside another site's page
          (VentureBeat, MSN, etc. all refused to embed when we tested this), so instead of a
@@ -613,7 +617,8 @@
         });
     </script>
 
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/disclaimer.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
 
 </html>

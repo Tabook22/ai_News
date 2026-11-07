@@ -1,0 +1,43 @@
+{% set is_ar = lang_pref == 'ar' %}
+<div class="disclaimer-overlay" id="disclaimer-overlay" hidden>
+    <div class="disclaimer-dialog" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
+        <button type="button" class="disclaimer-close" data-disclaimer-close
+            aria-label="{{ 'إغلاق' if is_ar else 'Close' }}">&times;</button>
+
+        <header class="disclaimer-head">
+            <span class="eyebrow">{{ 'قبل أن تبدأ القراءة' if is_ar else 'Before you read' }}</span>
+            <h2 id="disclaimer-title">{{ 'Welcome to Nasser AI News' if not is_ar else 'مرحبًا بكم في ناصر إيه آي نيوز' }}</h2>
+            <p class="disclaimer-sub">{{ 'A student-led, non-profit AI magazine · Dhofar University' if not is_ar else 'مجلة طلابية غير ربحية للذكاء الاصطناعي · جامعة ظفار' }}</p>
+        </header>
+
+        <div class="disclaimer-body">
+            <section class="disclaimer-lang {{ 'is-current' if not is_ar else '' }}" lang="en">
+                <div class="disclaimer-lang-head">
+                    <span>English</span>
+                    <b>Disclaimer</b>
+                </div>
+                <p>This student-led, non-profit magazine curates recent news and developments in artificial intelligence from around the world. Its purpose is to help Dhofar University students and other interested readers stay informed and learn about advances in AI.</p>
+                <p>Each entry provides a brief description or summary and a direct link to the original source so readers can explore the full story. The magazine’s summaries are separate from the original articles, which remain unchanged.</p>
+                <p>The magazine operates solely for educational and scientific purposes and generates no revenue or financial benefit for its contributors.</p>
+            </section>
+
+            <section class="disclaimer-lang {{ 'is-current' if is_ar else '' }}" lang="ar" dir="rtl">
+                <div class="disclaimer-lang-head">
+                    <span>العربية</span>
+                    <b>إخلاء المسؤولية</b>
+                </div>
+                <p>هذه مجلة طلابية غير ربحية تُعنى بجمع أخبار الذكاء الاصطناعي وتطوراته الحديثة من مختلف أنحاء العالم. وتهدف إلى مساعدة طلبة جامعة ظفار وغيرهم من القراء المهتمين على متابعة المستجدات والتعلّم عن تقدم الذكاء الاصطناعي.</p>
+                <p>يقدّم كل إدخال وصفًا موجزًا أو ملخصًا ورابطًا مباشرًا إلى المصدر الأصلي ليتمكن القارئ من الاطلاع على القصة كاملة. وملخصات المجلة مستقلة عن المقالات الأصلية التي تبقى دون تغيير.</p>
+                <p>تعمل المجلة لأغراض تعليمية وعلمية فقط، ولا تحقق أي إيرادات أو منفعة مالية للمساهمين فيها.</p>
+            </section>
+        </div>
+
+        <footer class="disclaimer-actions">
+            <p>{{ 'By continuing, you acknowledge this note.' if not is_ar else 'بالمتابعة، فإنك تُقرّ بهذه الملاحظة.' }}</p>
+            <button type="button" class="btn btn-primary" data-disclaimer-close>
+                {{ 'Enter the magazine' if not is_ar else 'ادخل إلى المجلة' }}
+                <span aria-hidden="true">→</span>
+            </button>
+        </footer>
+    </div>
+</div>
