@@ -907,6 +907,11 @@ def set_language():
     if lang not in LANG_CHOICES:
         lang = 'both'
     next_url = _safe_next(request.args.get('next'), url_for('magazine_view'))
+    # Nginx strips /ainews/ before proxying, so request.full_path is unprefixed.
+    # Put the mount prefix back before redirecting.
+    root = (request.script_root or '').rstrip('/')
+    if root and next_url.startswith('/') and next_url != root and not next_url.startswith(root + '/'):
+        next_url = root + next_url
     resp = redirect(next_url)
     resp.set_cookie(LANG_COOKIE, lang, max_age=60 * 60 * 24 * 365, samesite='Lax')
     return resp
