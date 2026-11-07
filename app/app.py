@@ -1925,9 +1925,10 @@ def healthz():
 
 
 @app.route('/')
-@login_required
 def newsroom():
     """The door between the two desks. Nothing from one desk is listed on the other."""
+    if not session.get("logged_in"):
+        return redirect(url_for("magazine_view"))
     campus_q = NewsItem.query.filter_by(wing='campus')
     world_q = NewsItem.query.filter(NewsItem.wing != 'campus')
     published = (NewsItem.query.filter_by(is_published=True)
