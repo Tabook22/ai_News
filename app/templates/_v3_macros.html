@@ -16,3 +16,16 @@
 {% macro desk(story, ar) -%}
 {{ story.desk_ar if ar else story.desk_en }}
 {%- endmacro %}
+
+{% macro glance(story, ar) -%}
+{% if story.glance %}
+<button type="button" class="glance-btn" data-glance="{{ story.glance | tojson | forceescape }}"
+    aria-label="{{ 'عن هذا الخبر' if ar else 'What this is about' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="8"></circle>
+        <path d="M12 11v5"></path>
+        <path d="M12 8h.01"></path>
+    </svg>
+</button>
+{% endif %}
+{%- endmacro %}

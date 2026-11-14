@@ -2,7 +2,7 @@
 {% set ar = lang_pref == 'ar' %}
 {% set diff_labels = {'starter': ('Starter', 'تمهيدي'), 'intermediate': ('Intermediate', 'متوسط'), 'advanced': ('Advanced', 'متقدم')} %}
 
-{% block page_title %}{{ 'مشاريع مقترحة' if ar else 'Recommended projects' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'مشاريع مقترحة' if ar else 'Recommended projects' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'أفكار مشاريع السنة الأخيرة لطلبة علوم الحاسوب، مع وصف بسيط ومرجع لكل فكرة.' if ar else 'Final-year project ideas for Computer Science students, each with a short description and a reference.' }}{% endblock %}
 
 {% block content %}

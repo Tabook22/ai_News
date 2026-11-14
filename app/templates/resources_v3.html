@@ -1,7 +1,7 @@
 {% extends "public_v3.html" %}
 {% set ar = lang_pref == 'ar' %}
 
-{% block page_title %}{{ 'ملفات القسم' if ar else 'Department downloads' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'ملفات القسم' if ar else 'Department downloads' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'ملاحظات المقررات والخطط والسياسات والنماذج التي يحتاجها طلبة قسم علوم الحاسوب.' if ar else 'Course notes, syllabi, policies and forms for Computer Science students.' }}{% endblock %}
 
 {% block content %}

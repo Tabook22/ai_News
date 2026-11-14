@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block page_title %}{{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}</title>
+    <title>{% block page_title %}{{ magazine_name }}{% endblock %}</title>
 
     <link rel="icon" type="image/svg+xml"
         href="{{ settings.logo_path if settings and settings.logo_path else url_for('static', filename='favicon.svg') }}">
@@ -17,7 +17,7 @@
     {% block meta %}
     <meta name="description" content="{{ meta_desc }}">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="{{ settings.magazine_title if settings else 'Nasser AI News' }}">
+    <meta property="og:site_name" content="{{ magazine_name }}">
     <meta property="og:title" content="{{ meta_title }}">
     <meta property="og:description" content="{{ meta_desc }}">
     <meta property="og:url" content="{{ request.url }}">
@@ -72,11 +72,12 @@
             {% if settings and settings.logo_path %}
             <img src="{{ settings.logo_path }}" alt="">
             {% endif %}
-            <span>{{ settings.magazine_title if settings else 'Nasser AI News' }}</span>
+            <span>{{ magazine_name }}</span>
         </a>
         <nav class="reader-links" aria-label="{{ 'أقسام الصحيفة' if lang_pref == 'ar' else 'Sections' }}">
             <a href="{{ url_for('magazine_view') }}" class="{{ 'active' if ep in ['magazine_view', 'magazine_detail'] else '' }}">{{ 'العدد' if lang_pref == 'ar' else 'The issue' }}</a>
             <a href="{{ url_for('campus_weekly') }}" class="{{ 'active' if ep == 'campus_weekly' else '' }}">{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</a>
+            <a href="{{ url_for('reference_library') }}" class="{{ 'active' if ep == 'reference_library' else '' }}">{{ 'مكتبة المراجع' if lang_pref == 'ar' else 'Reference library' }}</a>
             <a href="{{ url_for('campus_photos') }}" class="{{ 'active' if ep == 'campus_photos' else '' }}">{{ 'صور القسم' if lang_pref == 'ar' else 'Dept photos' }}</a>
             <a href="{{ url_for('news_photos') }}" class="{{ 'active' if ep == 'news_photos' else '' }}">{{ 'صور الأخبار' if lang_pref == 'ar' else 'News photos' }}</a>
             <a href="{{ url_for('watch_page') }}" class="{{ 'active' if ep == 'watch_page' else '' }}">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a>
@@ -147,7 +148,7 @@
         style="margin-top: auto; border-top: 1px solid var(--border-color); background: var(--overlay-chrome); backdrop-filter: blur(10px); padding: 3rem 0;">
         <div class="reader-footer-inner">
             <div>
-                <div class="reader-footer-brand">{{ settings.magazine_title if settings else 'Nasser AI' }}</div>
+                <div class="reader-footer-brand">{{ magazine_name }}</div>
                 <div class="reader-footer-place">
                     {{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب في جامعة ظفار.' if lang_pref == 'ar' else 'The AI magazine of Computer Science at Dhofar University.' }}
                 </div>
@@ -161,6 +162,7 @@
                         <a href="{{ url_for('watch_page') }}" style="font-size: 0.85rem;">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a>
                         <a href="{{ url_for('youtube_desk') }}" style="font-size: 0.85rem;">{{ 'يوتيوب' if lang_pref == 'ar' else 'YouTube' }}</a>
                         <a href="{{ url_for('tools_directory') }}" style="font-size: 0.85rem;">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a>
+                        <a href="{{ url_for('reference_library') }}" style="font-size: 0.85rem;">{{ 'مكتبة المراجع' if lang_pref == 'ar' else 'Reference library' }}</a>
                         <a href="{{ url_for('subscribe') }}" style="font-size: 0.85rem;">{{ 'اشترك' if lang_pref == 'ar' else 'Subscribe' }}</a>
                         <a href="{{ url_for('author_info') }}" style="font-size: 0.85rem;">{{ 'المحرر' if lang_pref == 'ar' else 'Editor' }}</a>
                     </div>
@@ -196,7 +198,7 @@
                 {% endif %}
                 <div style="min-width: 0; flex: 1;">
                     <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700;">
-                        {{ settings.magazine_title if settings else 'Nasser AI News' }}
+                        {{ magazine_name }}
                     </div>
                     <div id="source-modal-title"
                         style="font-size: 0.9rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">

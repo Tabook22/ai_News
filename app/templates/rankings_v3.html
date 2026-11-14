@@ -3,7 +3,7 @@
 {% macro cat_name(label) %}{{ label.split(' ', 1)[1] if ' ' in label else label }}{% endmacro %}
 {% set cat_ar = {'chatbot': 'المحادثة', 'coding': 'البرمجة', 'image': 'الصور', 'video': 'الفيديو', 'video_edit': 'المونتاج', 'writing': 'الكتابة', 'research': 'البحث', 'presentations': 'العروض', 'productivity': 'الإنتاجية', 'voice': 'الصوت', 'design': 'التصميم', 'education': 'التعلّم', 'agents': 'الوكلاء', 'platforms': 'المنصات', 'other': 'أخرى'} %}
 
-{% block page_title %}{{ 'ترتيب أدوات الذكاء الاصطناعي' if ar else 'AI Tools Ranking' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'ترتيب أدوات الذكاء الاصطناعي' if ar else 'AI Tools Ranking' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'ترتيب تحريري لأفضل أدوات الذكاء الاصطناعي للطلبة، مع المرجع لكل تقييم.' if ar else 'An editor-ranked list of the best AI tools for students, with a reference for every score.' }}{% endblock %}
 
 {% block content %}

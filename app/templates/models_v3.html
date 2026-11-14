@@ -1,7 +1,7 @@
 {% extends "public_v3.html" %}
 {% set ar = lang_pref == 'ar' %}
 
-{% block page_title %}{{ 'أكثر نماذج اللغة تحميلًا' if ar else 'Most-downloaded LLMs' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'أكثر نماذج اللغة تحميلًا' if ar else 'Most-downloaded LLMs' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'لقطة من أكثر نماذج اللغة المفتوحة تحميلًا على Hugging Face، مع روابط بطاقات النماذج والرخص.' if ar else 'A snapshot of the most-downloaded open language models on Hugging Face, with model-card and licence links.' }}{% endblock %}
 
 {% block content %}
@@ -85,8 +85,8 @@
                         <td class="model-number">{{ '{:,}'.format(model.likes) }}</td>
                         <td><span class="model-licence">{{ model.licence }}</span></td>
                         <td class="model-refs">
-                            <a href="{{ model.url }}" target="_blank" rel="noopener noreferrer">HF ↗</a>
-                            <a href="https://models.dev/?search={{ model.name|urlencode }}" target="_blank" rel="noopener noreferrer">specs ↗</a>
+                            <a href="{{ model.url }}" target="_blank" rel="noopener noreferrer">{{ 'النموذج' if ar else 'HF' }} ↗</a>
+                            <a href="https://models.dev/?search={{ model.name|urlencode }}" target="_blank" rel="noopener noreferrer">{{ 'المواصفات' if ar else 'specs' }} ↗</a>
                         </td>
                     </tr>
                     {% endfor %}

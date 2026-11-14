@@ -3,7 +3,7 @@ import os
 import isodate
 import datetime
 
-def search_youtube_videos(query, max_results=5, time_filter=None, errors=None):
+def search_youtube_videos(query, max_results=5, time_filter=None, errors=None, order="date"):
     """
     Searches YouTube for videos related to the query.
     Requires YOUTUBE_API_KEY in environment variables.
@@ -40,7 +40,7 @@ def search_youtube_videos(query, max_results=5, time_filter=None, errors=None):
             'part': 'id,snippet',
             'maxResults': max_results,
             'type': 'video',
-            'order': 'date'
+            'order': order if order in ("date", "relevance", "viewCount") else "date"
         }
         if published_after:
             search_args['publishedAfter'] = published_after

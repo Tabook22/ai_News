@@ -1,7 +1,7 @@
 {% extends "public_v3.html" %}
 {% set ar = lang_pref == 'ar' %}
 
-{% block page_title %}{{ 'عن المحرر' if ar else 'About the editor' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'عن المحرر' if ar else 'About the editor' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ (settings.author_bio_ar or settings.author_bio or settings.author_intro_ar or settings.author_intro or 'The editor of the AI magazine of Computer Science at Dhofar University.') | striptags | truncate(155) }}{% endblock %}
 
 {% block content %}

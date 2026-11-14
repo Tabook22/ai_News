@@ -1,10 +1,11 @@
 """
-Add today's five most important global AI stories to the magazine.
+Renew the magazine: five new AI stories, fresh YouTube shelves, and today's lead.
+
+Runs at midnight from the scheduled task "Nasser AI News Daily Brief".
+Older stories and clips stay in the archive, where search can still find them.
 
 Run by hand:
     venv\\Scripts\\python.exe daily_brief.py
-
-Or leave it to the daily scheduled task "Nasser AI News Daily Brief".
 """
 import datetime
 import importlib.util
@@ -32,7 +33,7 @@ spec.loader.exec_module(module)
 
 try:
     with module.app.app_context():
-        added = module.import_daily_top_stories(limit=5)
+        added = module.import_daily_top_stories(limit=5, force=True)
 except Exception as exc:
     _log(f"FAILED  {exc}")
     raise
@@ -50,3 +51,26 @@ try:
     _log("YouTube shelves: " + ", ".join(f"{lane}/{lang} {count}" for (lane, lang), count in shelves.items()))
 except Exception as exc:
     _log(f"YouTube desk failed: {exc.__class__.__name__}")
+
+try:
+    with module.app.app_context():
+        spot = module.refresh_day_spotlight()
+        lead_id = spot.news_id or "unchanged"
+        lead_video = spot.video_title or "unchanged"
+    _log(f"Front page: story {lead_id} · video {lead_video}")
+except Exception as exc:
+    _log(f"Front page spotlight failed: {exc.__class__.__name__}")
+
+try:
+    with module.app.app_context():
+        models = module.refresh_top_models(limit=10, force=True)
+    _log(f"Top models: {len(models)} from Hugging Face.")
+except Exception as exc:
+    _log(f"Top models failed: {exc.__class__.__name__}")
+
+try:
+    with module.app.app_context():
+        filed = module.file_previous_issue()
+    _log(f"Issue kept {filed['kept']} stories and moved {filed['archived']} older ones to the archive.")
+except Exception as exc:
+    _log(f"Archive step failed: {exc.__class__.__name__}")

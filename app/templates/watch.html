@@ -2,7 +2,7 @@
 {% set ar = lang_pref == 'ar' %}
 {% set page_title = (settings.section_title_reels_ar or 'يستحق المشاهدة') if ar else (settings.section_title_reels or 'Worth Watching') %}
 
-{% block page_title %}{{ page_title }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ page_title }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'مقاطع يوتيوب مختارة عن أخبار الذكاء الاصطناعي والتقنية، مع سبب مشاهدة كل مقطع.' if ar else 'Curated YouTube videos on AI news and technology, with a reason to watch each one.' }}{% endblock %}
 
 {% block content %}

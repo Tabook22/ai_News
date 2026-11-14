@@ -13,7 +13,7 @@
         <p class="issue-university" {% if ar %}dir="rtl"{% endif %}>
             {{ 'جامعة ظفار · قسم علوم الحاسوب' if ar else 'Dhofar University · Computer Science' }}
         </p>
-        <h1 class="issue-name">{{ settings.magazine_title if settings else 'Nasser AI' }}</h1>
+        <h1 class="issue-name">{{ magazine_name }}</h1>
         <p class="issue-dek" {% if ar %}dir="rtl"{% endif %}>
             {{ 'مجلة الذكاء الاصطناعي لطلبة القسم: حياة القسم في جهة، وأخبار العالم في الجهة الأخرى.' if ar else 'The AI magazine for this department. Student and department life on one side. The world’s AI news on the other.' }}
         </p>
@@ -51,6 +51,11 @@
     <a class="yt-invite" href="{{ url_for('youtube_desk') }}">
         <strong {% if ar %}dir="rtl"{% endif %}>{{ 'يوتيوب: أخبار الشركات، ودروس بناء الذكاء الاصطناعي.' if ar else 'YouTube: lab news, and lessons on building AI.' }}</strong>
         <span>{{ 'خمس بالعربية وخمس بالإنجليزية في كل جهة.' if ar else 'Five in Arabic and five in English on each shelf.' }}</span>
+    </a>
+
+    <a class="lib-invite" href="{{ url_for('reference_library') }}">
+        <strong {% if ar %}dir="rtl"{% endif %}>{{ 'مكتبة المراجع: كتب، وأبحاث، ومقررات، ومقالات، وبودكاست.' if ar else 'Reference library: books, papers, courses, essays, and podcasts.' }}</strong>
+        <span>{{ 'يُضاف إليها كلما ظهر مرجع أفضل.' if ar else 'It grows whenever a better reference appears.' }}</span>
     </a>
 
     <div id="continue-banner" class="continue-banner" hidden></div>

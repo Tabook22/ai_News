@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+
+{% block page_title %}{{ A('lib_edit') if item else A('lib_add') }}{% endblock %}
+
+{% block content %}
+{% set f = form %}
+<div class="dept-page" style="max-width: 920px;">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ A('lib_kicker') }}</p>
+            <h1>{{ A('lib_edit') if item else A('lib_add') }}</h1>
+            <p class="editor-dek">{{ A('lib_dek') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('library_admin') }}">{{ A('lib_back') }}</a>
+        </div>
+    </div>
+
+    <form method="POST">
+        <section class="editor-card">
+            <div class="editor-field">
+                <label for="shelf">{{ A('lib_shelf') }}</label>
+                <select id="shelf" name="shelf">
+                    {% set current = f.get('shelf') if f else (item.shelf if item else preset) %}
+                    {% for key, en, ar, dek_en, dek_ar in shelves %}
+                    <option value="{{ key }}" {{ 'selected' if current == key else '' }}>{{ ar if admin_ar else en }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="editor-field">
+                <label for="title">{{ 'العنوان' if admin_ar else 'Title' }} <span class="req">*</span></label>
+                <input id="title" name="title" type="text" maxlength="300" required
+                    value="{{ f.get('title') if f else (item.title if item else '') }}">
+            </div>
+            <div class="editor-field">
+                <label for="authors">{{ A('lib_authors') }}</label>
+                <input id="authors" name="authors" type="text" maxlength="300"
+                    value="{{ f.get('authors') if f else (item.authors if item else '') }}">
+            </div>
+            <div class="editor-field">
+                <label for="why">{{ A('lib_why') }}</label>
+                <textarea id="why" name="why" rows="3">{{ f.get('why') if f else (item.why if item else '') }}</textarea>
+            </div>
+            <div class="editor-field">
+                <label for="why_ar">{{ A('lib_why_ar') }}</label>
+                <textarea id="why_ar" name="why_ar" rows="3" dir="rtl" class="is-ar">{{ f.get('why_ar') if f else (item.why_ar if item else '') }}</textarea>
+            </div>
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="url">{{ A('lib_url') }} <span class="req">*</span></label>
+                    <input id="url" name="url" type="url" required placeholder="https://"
+                        value="{{ f.get('url') if f else (item.url if item else '') }}">
+                </div>
+                <div class="editor-field">
+                    <label for="source_label">{{ A('lib_label') }}</label>
+                    <input id="source_label" name="source_label" type="text" maxlength="160"
+                        value="{{ f.get('source_label') if f else (item.source_label if item else '') }}">
+                </div>
+            </div>
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="display_order">{{ A('lib_order') }}</label>
+                    <input id="display_order" name="display_order" type="number" min="0"
+                        value="{{ f.get('display_order') if f else (item.display_order if item else '') }}">
+                </div>
+                <div class="editor-field" style="align-self: end;">
+                    {% set shown = ('is_published' in f) if f else (item.is_published if item else True) %}
+                    <label class="check-line">
+                        <input type="checkbox" name="is_published" {{ 'checked' if shown else '' }}>
+                        {{ A('lib_show') }}
+                    </label>
+                    {% set on_issue = ('in_issue' in f) if f else (item.in_issue if item else False) %}
+                    <label class="check-line">
+                        <input type="checkbox" name="in_issue" {{ 'checked' if on_issue else '' }}>
+                        {{ A('lib_in_issue') }}
+                    </label>
+                </div>
+            </div>
+            <button class="btn btn-primary" type="submit">{{ A('lib_save') }}</button>
+        </section>
+    </form>
+</div>
+{% endblock %}

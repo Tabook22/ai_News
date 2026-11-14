@@ -4,6 +4,7 @@
 
     var V3 = window.V3 || { lang: "en", strings: {} };
     var S = V3.strings || {};
+    var glanceDialog = null;
     var STORE_SAVED = "nan_saved";
 
     /* ---------------------------------------------------------------- */
@@ -54,6 +55,7 @@
         if (event.key === "Escape") {
             closeSearch();
             closeAsk();
+            if (glanceDialog && glanceDialog.open) glanceDialog.close();
         }
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k" && sheet) {
             event.preventDefault();
@@ -218,6 +220,151 @@
         document.addEventListener("scroll", update, { passive: true });
         window.addEventListener("resize", update);
         update();
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* what this news is about                                          */
+    /* ---------------------------------------------------------------- */
+    glanceDialog = document.getElementById("glance-dialog");
+
+    function glanceList(node, points) {
+        if (!node) return;
+        node.innerHTML = "";
+        (points || []).forEach(function (point) {
+            var item = document.createElement("li");
+            item.textContent = point;
+            node.appendChild(item);
+        });
+        node.hidden = !points || !points.length;
+        var heading = node.previousElementSibling;
+        if (heading && heading.tagName === "H3") heading.hidden = node.hidden;
+    }
+
+    function setGlanceFocus(mode) {
+        if (!glanceDialog) return;
+        glanceDialog.setAttribute("data-focus", mode || "both");
+        glanceDialog.querySelectorAll("[data-glance-focus]").forEach(function (chip) {
+            chip.setAttribute("aria-pressed", chip.getAttribute("data-glance-focus") === mode ? "true" : "false");
+        });
+    }
+
+    function relatedKind(kind) {
+        var arabic = V3.lang === "ar";
+        if (kind === "video") return arabic ? "فيديو" : "Video";
+        if (kind === "listen") return arabic ? "استمع" : "Listen";
+        return arabic ? "مقال" : "Article";
+    }
+
+    function showRelated(items, waiting) {
+        var box = document.getElementById("glance-related");
+        var list = document.getElementById("glance-related-list");
+        var wait = document.getElementById("glance-related-wait");
+        if (wait) wait.hidden = !waiting;
+        if (!box || !list) return;
+        list.innerHTML = "";
+        (items || []).forEach(function (item) {
+            if (!item || !item.url) return;
+            var li = document.createElement("li");
+            var link = document.createElement("a");
+            link.href = item.url;
+            link.target = "_blank";
+            link.rel = "noopener";
+            var kind = document.createElement("span");
+            kind.className = "glance-kind glance-kind-" + (item.kind || "article");
+            kind.textContent = relatedKind(item.kind);
+            var title = document.createElement("span");
+            title.className = "glance-rel-title";
+            title.textContent = item.title || item.url;
+            link.appendChild(kind);
+            link.appendChild(title);
+            if (item.source) {
+                var source = document.createElement("small");
+                source.textContent = item.source;
+                link.appendChild(source);
+            }
+            li.appendChild(link);
+            list.appendChild(li);
+        });
+        box.hidden = !list.children.length;
+    }
+
+    function loadRelated(button, data) {
+        if (!data || !data.id || Array.isArray(data.related)) return;
+        fetch("/magazine/article/" + encodeURIComponent(data.id) + "/related")
+            .then(function (response) { return response.json(); })
+            .then(function (payload) {
+                var links = (payload && payload.related) || [];
+                data.related = links;
+                button.setAttribute("data-glance", JSON.stringify(data));
+                if (glanceDialog && glanceDialog.open) showRelated(links, false);
+            })
+            .catch(function () {
+                if (glanceDialog && glanceDialog.open) showRelated([], false);
+            });
+    }
+
+    function showGlance(data) {
+        if (!glanceDialog || !data) return;
+        var source = document.getElementById("glance-source");
+        var title = document.getElementById("glance-title");
+        var titleAr = document.getElementById("glance-title-ar");
+        var english = document.getElementById("glance-en");
+        var arabic = document.getElementById("glance-ar");
+        var wait = document.getElementById("glance-wait");
+        var open = document.getElementById("glance-open");
+        if (source) source.textContent = data.source || "";
+        if (title) title.textContent = data.title || "";
+        if (titleAr) {
+            titleAr.textContent = data.title_ar || "";
+            titleAr.hidden = !data.title_ar;
+        }
+        if (english) english.textContent = data.en || "";
+        if (arabic) arabic.textContent = data.ar || "";
+        glanceList(document.getElementById("glance-points-en"), data.points_en);
+        glanceList(document.getElementById("glance-points-ar"), data.points_ar);
+        showRelated(data.related || [], !data.related);
+        if (open) {
+            open.hidden = !data.id;
+            if (data.id) open.href = "/magazine/article/" + encodeURIComponent(data.id);
+        }
+        setGlanceFocus("both");
+        if (wait) wait.hidden = !data.thin;
+        if (!glanceDialog.open) glanceDialog.showModal();
+    }
+
+    document.addEventListener("click", function (event) {
+        var button = event.target.closest(".glance-btn");
+        if (!button) return;
+        event.preventDefault();
+        event.stopPropagation();
+        var raw = button.getAttribute("data-glance") || "{}";
+        var data = {};
+        try { data = JSON.parse(raw); } catch (error) { return; }
+        showGlance(data);
+        loadRelated(button, data);
+        if (!data.thin || !data.id) return;
+        fetch("/magazine/article/" + encodeURIComponent(data.id) + "/glance")
+            .then(function (response) { return response.json(); })
+            .then(function (richer) {
+                if (!richer) return;
+                button.setAttribute("data-glance", JSON.stringify(richer));
+                if (glanceDialog && glanceDialog.open) showGlance(richer);
+            })
+            .catch(function () {
+                var wait = document.getElementById("glance-wait");
+                if (wait) wait.hidden = true;
+            });
+    });
+
+    if (glanceDialog) {
+        glanceDialog.addEventListener("click", function (event) {
+            var chip = event.target.closest("[data-glance-focus]");
+            if (chip) {
+                setGlanceFocus(chip.getAttribute("data-glance-focus"));
+                return;
+            }
+            if (event.target === glanceDialog) glanceDialog.close();
+        });
     }
 })();
 

@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block page_title %}{{ A('lib_title') }}{% endblock %}
+
+{% block content %}
+<div class="res-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ A('lib_kicker') }}</p>
+            <h1>{{ A('lib_title') }}</h1>
+            <p class="editor-dek">{{ A('lib_dek') }} {{ A('lib_issue_note') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('reference_library') }}" target="_blank" rel="noopener">{{ A('preview') }}</a>
+            <form method="POST" action="{{ url_for('discover_library_references') }}">
+                <button class="btn btn-secondary" type="submit" title="{{ A('lib_discover_tip') }}">
+                    <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+                    {{ A('lib_discover') }}
+                </button>
+            </form>
+            <a class="btn btn-primary" href="{{ url_for('add_library_reference') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ A('lib_add') }}
+            </a>
+        </div>
+    </div>
+
+    <form class="lib-admin-search" method="get" action="{{ url_for('library_admin') }}" role="search">
+        <label class="sr-only" for="lib-admin-q">{{ A('lib_search') }}</label>
+        <input id="lib-admin-q" type="search" name="q" value="{{ q or '' }}" placeholder="{{ A('lib_search_ph') }}">
+        <button class="btn btn-secondary" type="submit">{{ A('lib_search') }}</button>
+        {% if q %}
+        <a class="btn btn-secondary" href="{{ url_for('library_admin') }}">{{ A('lib_clear') }}</a>
+        {% endif %}
+    </form>
+    {% if q and not shelves %}
+    <p class="folio-empty">{{ A('lib_none') }}</p>
+    {% endif %}
+
+    {% for shelf in shelves %}
+    <section class="dash-section" style="margin-top: 1.4rem;">
+        <div class="dash-section-head" style="display:flex; justify-content:space-between; gap:1rem; align-items:flex-end;">
+            <div>
+                <h2>{{ shelf.ar if admin_ar else shelf.en }}</h2>
+                <p>{{ shelf.dek_ar if admin_ar else shelf.dek_en }}</p>
+            </div>
+            <a class="btn btn-primary" href="{{ url_for('add_library_reference', shelf=shelf.key) }}">{{ A('lib_add_shelf') }}</a>
+        </div>
+        {% if shelf.entries %}
+        <div class="res-list">
+            {% for item in shelf.entries %}
+            <article class="res-row">
+                <div class="res-main">
+                    <b>{{ item.title }}</b>
+                    <small>{{ item.authors }}{% if item.source_label %} · {{ item.source_label }}{% endif %}</small>
+                </div>
+                <div class="res-actions lib-actions">
+                    <span class="lib-icon {{ 'is-live' if item.is_published else 'is-hidden' }}" title="{{ A('lib_live') if item.is_published else A('lib_hidden') }}{% if item.in_issue %} · {{ A('lib_issue_on') }}{% endif %}">
+                        <svg class="icon" aria-hidden="true"><use href="#{{ 'i-book' if item.is_published else 'i-eye-off' }}"></use></svg>
+                        <span class="sr-only">{{ A('lib_live') if item.is_published else A('lib_hidden') }}{% if item.in_issue %} · {{ A('lib_issue_on') }}{% endif %}</span>
+                    </span>
+                    <a class="lib-icon" href="{{ item.url }}" target="_blank" rel="noopener" title="{{ A('lib_open') }}" aria-label="{{ A('lib_open') }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg>
+                    </a>
+                    <a class="lib-icon" href="{{ url_for('edit_library_reference', item_id=item.id) }}" title="{{ A('edit') }}" aria-label="{{ A('edit') }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-pencil"></use></svg>
+                    </a>
+                    <form method="POST" action="{{ url_for('toggle_library_issue', item_id=item.id) }}">
+                        <button class="lib-icon {{ 'is-on' if item.in_issue else '' }}" type="submit" title="{{ A('lib_issue_remove') if item.in_issue else A('lib_issue_add') }}" aria-label="{{ A('lib_issue_remove') if item.in_issue else A('lib_issue_add') }}" aria-pressed="{{ 'true' if item.in_issue else 'false' }}">
+                            <svg class="icon" aria-hidden="true"><use href="#i-newspaper"></use></svg>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('toggle_library_reference', item_id=item.id) }}">
+                        <button class="lib-icon" type="submit" title="{{ A('lib_hide') if item.is_published else A('lib_unhide') }}" aria-label="{{ A('lib_hide') if item.is_published else A('lib_unhide') }}">
+                            <svg class="icon" aria-hidden="true"><use href="#{{ 'i-eye-off' if item.is_published else 'i-eye' }}"></use></svg>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('delete_library_reference', item_id=item.id) }}"
+                        onsubmit="return confirm({{ A('lib_remove_q')|tojson }});">
+                        <button class="lib-icon is-danger" type="submit" title="{{ 'حذف' if admin_ar else 'Delete' }}" aria-label="{{ 'حذف' if admin_ar else 'Delete' }}">
+                            <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>
+                        </button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="folio-empty">{{ A('lib_empty') }}</p>
+        {% endif %}
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}

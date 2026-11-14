@@ -263,6 +263,45 @@ def _from_search():
     return found
 
 
+def rank_front_stories(stories):
+    """Stories worth the front page, best first."""
+    if not stories:
+        return []
+    majors = (
+        "openai", "anthropic", "gemini", "claude", "deepmind", "nvidia",
+        "gpt-", "chatgpt",
+    )
+    substance = (
+        "regulation", "breakthrough", "researchers", "university",
+        "open-source", "open source", "model",
+    )
+    soft = (
+        "for brands", "creator", "outreach", "case study", "customer",
+        "how ", "tips ",
+    )
+
+    def rank(item):
+        blob = f"{item['title']} {item['summary']}".lower()
+        extra = 0
+        if any(word in blob for word in majors):
+            extra += 4
+        if any(word in blob for word in substance):
+            extra += 2
+        if any(word in blob for word in soft):
+            extra -= 6
+        if not _is_about_ai(blob):
+            extra -= 8
+        return item["score"] + extra
+
+    return sorted(stories, key=rank, reverse=True)
+
+
+def choose_front_story(stories):
+    """The one story that should lead the issue, not just the highest keyword score."""
+    ranked = rank_front_stories(stories)
+    return ranked[0] if ranked else None
+
+
 def gather_top_stories(limit=5):
     """Return up to `limit` distinct, high-signal AI stories for today."""
     pool = []

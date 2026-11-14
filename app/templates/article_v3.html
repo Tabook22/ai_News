@@ -3,7 +3,7 @@
 
 {% set ar = lang_pref == 'ar' %}
 
-{% block page_title %}{{ title }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ title }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ summary | striptags | truncate(158) }}{% endblock %}
 {% block og_type %}article{% endblock %}
 
@@ -30,7 +30,7 @@
   "url": request.base_url,
   "mainEntityOfPage": {"@type": "WebPage", "@id": request.base_url},
   "author": {"@type": "Person", "name": (settings.author_name if settings and settings.author_name else "Nasser")},
-  "publisher": {"@type": "Organization", "name": (settings.magazine_title if settings else "Nasser AI News")},
+  "publisher": {"@type": "Organization", "name": magazine_name},
   "image": ([item.image] if item.image else [])
 } | tojson }}
 </script>
@@ -55,7 +55,10 @@
             <span class="src-badge src-{{ item.source_kind }}">{{ item.source_kind_ar if ar else item.source_kind_en }}</span>
         </div>
 
-        <h1 class="article-title">{{ title }}</h1>
+        <div class="title-row">
+            <h1 class="article-title">{{ title }}</h1>
+            {{ m.glance(item, ar) }}
+        </div>
 
         {% if summary and has_body %}<p class="article-dek">{{ summary | plain_dek | truncate(260, true) }}</p>{% endif %}
 

@@ -5,14 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#fbfaf7">
-    <title>{% block page_title %}{{ settings.magazine_title if settings else 'Nasser AI News' }} — {{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب' if lang_pref == 'ar' else 'The AI magazine of Computer Science at Dhofar University' }}{% endblock %}</title>
+    <title>{% block page_title %}{{ magazine_name }} — {{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب' if lang_pref == 'ar' else 'The AI magazine of Computer Science at Dhofar University' }}{% endblock %}</title>
 
     {% block page_meta %}
     <meta name="description" content="{% block page_desc %}{{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب في جامعة ظفار. أخبار العالم والقسم بالعربية والإنجليزية.' if lang_pref == 'ar' else 'The AI magazine of Computer Science at Dhofar University. Department life and world AI news, in English and Arabic.' }}{% endblock %}">
     {% endblock %}
 
     <link rel="canonical" href="{{ request.base_url }}">
-    <meta property="og:site_name" content="{{ settings.magazine_title if settings else 'Nasser AI News' }}">
+    <meta property="og:site_name" content="{{ magazine_name }}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:title" content="{{ self.page_title() | trim }}">
     <meta property="og:description" content="{{ self.page_desc() | trim }}">
@@ -35,7 +35,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/issue-v3.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/issue-v3.css') }}?v=glance4">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/disclaimer.css') }}">
     {% block head_extra %}{% endblock %}
 </head>
@@ -65,13 +65,13 @@
     <header class="topbar">
         <div class="wrap topbar-in">
             <a class="brand" href="{{ url_for('magazine_view') }}"
-                aria-label="{{ settings.magazine_title if settings else 'Nasser AI News' }}">
+                aria-label="{{ magazine_name }}">
                 {% if settings and settings.logo_path %}
                 <img class="brand-logo" src="{{ settings.logo_path }}" alt="" width="32" height="32">
                 {% else %}
                 <span class="brand-mark" aria-hidden="true">N</span>
                 {% endif %}
-                <span class="brand-name">{{ settings.magazine_title if settings else 'Nasser AI News' }}</span>
+                <span class="brand-name">{{ magazine_name }}</span>
             </a>
 
             <nav class="nav" aria-label="{{ 'أقسام المجلة' if lang_pref == 'ar' else 'Sections' }}">
@@ -80,6 +80,9 @@
                     {% if request.endpoint in ['magazine_view', 'magazine_detail', 'newsroom'] %}aria-current="page"{% endif %}>{{ 'العدد' if lang_pref == 'ar' else 'The Issue' }}</a>
                 <a href="{{ url_for('campus_weekly') }}"
                     class="{{ 'is-active' if request.endpoint == 'campus_weekly' else '' }}">{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</a>
+                <a href="{{ url_for('reference_library') }}"
+                    class="{{ 'is-active' if request.endpoint == 'reference_library' else '' }}"
+                    {% if request.endpoint == 'reference_library' %}aria-current="page"{% endif %}>{{ 'مكتبة المراجع' if lang_pref == 'ar' else 'Reference library' }}</a>
                 {% if reels_count %}
                 <a href="{{ url_for('watch_page') }}"
                     class="{{ 'is-active' if request.endpoint == 'watch_page' else '' }}">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a>
@@ -143,6 +146,14 @@
             </svg>
             <span>{{ 'العالم' if lang_pref == 'ar' else 'World' }}</span>
         </a>
+        <a href="{{ url_for('reference_library') }}"
+            {% if request.endpoint == 'reference_library' %}aria-current="page"{% endif %}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3z"></path>
+                <path d="M5 4v16"></path>
+            </svg>
+            <span>{{ 'المكتبة' if lang_pref == 'ar' else 'Library' }}</span>
+        </a>
         <a href="{{ url_for('find_stories') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <path d="M4 6h16M4 12h16M4 18h10"></path>
@@ -190,7 +201,7 @@
         <div class="wrap">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <div class="wordmark">{{ settings.magazine_title if settings else 'Nasser AI News' }}</div>
+                    <div class="wordmark">{{ magazine_name }}</div>
                     <p>{{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب في جامعة ظفار. يكتبها ويحرّرها طلبة، لطلبة وأعضاء هيئة تدريس.' if lang_pref == 'ar' else 'The AI magazine of Computer Science at Dhofar University. Written and edited by students, for students and faculty.' }}</p>
                     <p class="disclosure" style="margin-top:14px;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -208,6 +219,7 @@
                         <li><a href="{{ url_for('campus_downloads') }}">{{ 'ملفات القسم' if lang_pref == 'ar' else 'Downloads' }}</a></li>
                         {% if reels_count %}<li><a href="{{ url_for('watch_page') }}">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a></li>{% endif %}
                         {% if tools_count %}<li><a href="{{ url_for('tools_directory') }}">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a></li>{% endif %}
+                        <li><a href="{{ url_for('reference_library') }}">{{ 'مكتبة المراجع' if lang_pref == 'ar' else 'Reference library' }}</a></li>
                         <li><a href="{{ url_for('find_stories') }}">{{ 'كل القصص' if lang_pref == 'ar' else 'All stories' }}</a></li>
                     </ul>
                 </div>
@@ -224,16 +236,16 @@
                 <div>
                     <h3>{{ 'تابع' if lang_pref == 'ar' else 'Follow' }}</h3>
                     <ul>
-                        {% if settings and settings.social_twitter %}<li><a href="{{ settings.social_twitter }}" rel="noopener">X / Twitter</a></li>{% endif %}
-                        {% if settings and settings.social_instagram %}<li><a href="{{ settings.social_instagram }}" rel="noopener">Instagram</a></li>{% endif %}
-                        {% if settings and settings.social_linkedin %}<li><a href="{{ settings.social_linkedin }}" rel="noopener">LinkedIn</a></li>{% endif %}
-                        {% if settings and settings.social_facebook %}<li><a href="{{ settings.social_facebook }}" rel="noopener">Facebook</a></li>{% endif %}
+                        {% if settings and settings.social_twitter %}<li><a href="{{ settings.social_twitter }}" rel="noopener">{{ 'إكس' if lang_pref == 'ar' else 'X / Twitter' }}</a></li>{% endif %}
+                        {% if settings and settings.social_instagram %}<li><a href="{{ settings.social_instagram }}" rel="noopener">{{ 'إنستغرام' if lang_pref == 'ar' else 'Instagram' }}</a></li>{% endif %}
+                        {% if settings and settings.social_linkedin %}<li><a href="{{ settings.social_linkedin }}" rel="noopener">{{ 'لينكدإن' if lang_pref == 'ar' else 'LinkedIn' }}</a></li>{% endif %}
+                        {% if settings and settings.social_facebook %}<li><a href="{{ settings.social_facebook }}" rel="noopener">{{ 'فيسبوك' if lang_pref == 'ar' else 'Facebook' }}</a></li>{% endif %}
                         <li><a href="{{ url_for('subscribe') }}">{{ 'اشترك في البريد' if lang_pref == 'ar' else 'Get the email' }}</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <span>&copy; {{ now_year }} {{ settings.magazine_title if settings else 'Nasser AI News' }} · {{ 'جامعة ظفار' if lang_pref == 'ar' else 'Dhofar University' }}</span>
+                <span>&copy; {{ now_year }} {{ magazine_name }} · {{ 'جامعة ظفار' if lang_pref == 'ar' else 'Dhofar University' }}</span>
                 <span>{{ 'صُنع في قسم علوم الحاسوب' if lang_pref == 'ar' else 'Made in the Department of Computer Science' }} · <button type="button" class="footer-disclaimer" data-disclaimer-open>{{ 'إخلاء المسؤولية' if lang_pref == 'ar' else 'Disclaimer' }}</button></span>
             </div>
         </div>
@@ -284,6 +296,56 @@
 
     <div class="toast" id="v3-toast" role="status" aria-live="polite"><span></span></div>
 
+    <dialog class="glance-dialog" id="glance-dialog" data-focus="both" aria-labelledby="glance-title">
+        <header class="glance-hero">
+            <div>
+                <p class="glance-kicker">{{ 'ملخص سريع' if lang_pref == 'ar' else 'Quick briefing' }}</p>
+                <p class="glance-source" id="glance-source"></p>
+            </div>
+            <form method="dialog" class="glance-close">
+                <button type="submit" aria-label="{{ 'إغلاق' if lang_pref == 'ar' else 'Close' }}">&times;</button>
+            </form>
+        </header>
+        <div class="glance-body">
+            <h2 id="glance-title"></h2>
+            <p class="glance-title-ar" id="glance-title-ar" dir="rtl"></p>
+            <div class="glance-switch" role="group" aria-label="{{ 'لغة الملخص' if lang_pref == 'ar' else 'Briefing language' }}">
+                <button type="button" data-glance-focus="both" aria-pressed="true">{{ 'معًا' if lang_pref == 'ar' else 'Both' }}</button>
+                <button type="button" data-glance-focus="en" aria-pressed="false">{{ 'الإنجليزية' if lang_pref == 'ar' else 'English' }}</button>
+                <button type="button" data-glance-focus="ar" aria-pressed="false">العربية</button>
+            </div>
+            <div class="glance-cols">
+                <section class="glance-panel glance-panel-en" lang="en">
+                    <div class="glance-lead">
+                        <h3>{{ 'في سطور' if lang_pref == 'ar' else 'In a few lines' }}</h3>
+                        <p id="glance-en"></p>
+                    </div>
+                    <div class="glance-points">
+                        <h3>{{ 'النقاط الرئيسية' if lang_pref == 'ar' else 'Main points' }}</h3>
+                        <ol id="glance-points-en"></ol>
+                    </div>
+                </section>
+                <section class="glance-panel glance-panel-ar" lang="ar" dir="rtl">
+                    <div class="glance-lead">
+                        <h3>في سطور</h3>
+                        <p id="glance-ar"></p>
+                    </div>
+                    <div class="glance-points">
+                        <h3>النقاط الرئيسية</h3>
+                        <ol id="glance-points-ar"></ol>
+                    </div>
+                </section>
+            </div>
+            <p class="glance-wait" id="glance-wait" hidden>{{ 'نجمع النقاط الرئيسية…' if lang_pref == 'ar' else 'Gathering the main points…' }}</p>
+            <section class="glance-related" id="glance-related" hidden>
+                <h3>{{ 'مقالات وفيديوهات ذات صلة' if lang_pref == 'ar' else 'Related articles and videos' }}</h3>
+                <ul id="glance-related-list"></ul>
+            </section>
+            <p class="glance-wait" id="glance-related-wait" hidden>{{ 'نبحث عن مصادر قريبة من هذا الموضوع…' if lang_pref == 'ar' else 'Looking for more on this topic…' }}</p>
+            <a class="glance-open" id="glance-open" href="#">{{ 'أكمل القراءة' if lang_pref == 'ar' else 'Continue reading' }}</a>
+        </div>
+    </dialog>
+
     <script>
         window.V3 = {
             lang: "{{ 'ar' if lang_pref == 'ar' else 'en' }}",
@@ -297,7 +359,7 @@
         };
     </script>
     <script src="{{ url_for('static', filename='js/disclaimer.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/issue-v3.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/issue-v3.js') }}?v=glance3"></script>
     {% block scripts %}{% endblock %}
 </body>
 

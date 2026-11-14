@@ -1,6 +1,6 @@
 {% extends "public.html" %}
 
-{% block page_title %}{{ 'يوتيوب' if lang_pref == 'ar' else 'YouTube' }} — {{ settings.magazine_title }}{% endblock %}
+{% block page_title %}{{ 'يوتيوب' if lang_pref == 'ar' else 'YouTube' }} — {{ magazine_name }}{% endblock %}
 
 {% block content %}
 {% set ar = lang_pref == 'ar' %}
@@ -66,7 +66,7 @@
         </div>
         {% if ar %}
             {{ shelf(news_ar, 'المقاطع العربية', 'نشرات وشرح إخباري بالعربية.', ar) }}
-            {{ shelf(news_en, 'المقاطع الإنجليزية', 'The English news clips.', ar) }}
+            {{ shelf(news_en, 'المقاطع الإنجليزية', 'مقاطع الأخبار بالإنجليزية.', ar) }}
         {% else %}
             {{ shelf(news_en, 'English clips', 'News clips from the big labs.', ar) }}
             {{ shelf(news_ar, 'Arabic clips', 'النشرات العربية.', ar) }}
@@ -83,7 +83,7 @@
         </div>
         {% if ar %}
             {{ shelf(edu_ar, 'الدروس العربية', 'شرح عربي للتدريب والبناء.', ar) }}
-            {{ shelf(edu_en, 'الدروس الإنجليزية', 'English lessons.', ar) }}
+            {{ shelf(edu_en, 'الدروس الإنجليزية', 'دروس بالإنجليزية.', ar) }}
         {% else %}
             {{ shelf(edu_en, 'English lessons', 'Local models, training, and apps.', ar) }}
             {{ shelf(edu_ar, 'Arabic lessons', 'الدروس العربية.', ar) }}

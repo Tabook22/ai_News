@@ -1,0 +1,73 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'مكتبة المراجع' if ar else 'Reference library' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'كتب وأبحاث ومقررات ومقالات وبودكاست يختارها المحرر لطلبة علوم الحاسوب.' if ar else 'Books, papers, courses, essays, and podcasts chosen for computer-science students.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap lib-page">
+    <header class="lib-mast">
+        <span class="eyebrow">{{ 'جامعة ظفار · قسم علوم الحاسوب' if ar else 'Dhofar University · Computer Science' }}</span>
+        <h1>{{ 'مكتبة المراجع' if ar else 'Reference library' }}</h1>
+        <p>{{ 'كتب وأبحاث ومقررات ومقالات وبودكاست يختارها المحرر. تبقى عناوين الأعمال بلغتها، ويُضاف إليها كلما ظهر مرجع أفضل.' if ar else 'Books, papers, courses, essays, and podcasts chosen for students and readers. Work titles stay in their own language, and the shelf grows as better references appear.' }}</p>
+    </header>
+
+    <form class="lib-search" method="get" action="{{ url_for('reference_library') }}" role="search">
+        <label class="sr-only" for="lib-q">{{ 'ابحث في المكتبة' if ar else 'Search the library' }}</label>
+        <input id="lib-q" type="search" name="q" value="{{ q or '' }}"
+            placeholder="{{ 'عنوان، مؤلف، أو موضوع' if ar else 'Title, author, or topic' }}">
+        <button class="btn btn-primary" type="submit">{{ 'بحث' if ar else 'Search' }}</button>
+        {% if q %}
+        <a class="btn btn-ghost" href="{{ url_for('reference_library') }}">{{ 'مسح' if ar else 'Clear' }}</a>
+        {% endif %}
+    </form>
+    {% if q %}
+    <p class="lib-search-note">
+        {% if matched %}
+        {{ matched }} {{ 'مرجع' if ar else 'references' }} · “{{ q }}”
+        {% else %}
+        {{ 'لا مرجع يطابق هذا البحث.' if ar else 'Nothing matched that search.' }}
+        {% endif %}
+    </p>
+    {% endif %}
+
+    <nav class="lib-jumps" aria-label="{{ 'رفوف المكتبة' if ar else 'Library shelves' }}">
+        {% for shelf in shelves %}
+        <a href="#lib-{{ shelf.key }}">{{ shelf.ar if ar else shelf.en }}</a>
+        {% endfor %}
+    </nav>
+
+    {% for shelf in shelves %}
+    <section class="section lib-shelf" id="lib-{{ shelf.key }}">
+        <header class="section-head">
+            <span class="num">0{{ loop.index }}</span>
+            <h2>{{ shelf.ar if ar else shelf.en }}</h2>
+            <p>{{ shelf.dek_ar if ar else shelf.dek_en }}</p>
+        </header>
+        {% if shelf.entries %}
+        <div class="lib-list">
+            {% for item in shelf.entries %}
+            <a class="lib-card" href="{{ item.url }}" target="_blank" rel="noopener">
+                <div>
+                    <p class="lib-authors">{{ item.authors }}</p>
+                    <h3>{{ item.title }}</h3>
+                    {% if ar %}
+                    <p class="lib-why">{{ item.why_ar or item.why }}</p>
+                    {% elif lang_pref == 'both' %}
+                    <p class="lib-why">{{ item.why }}</p>
+                    {% if item.why_ar %}<p class="lib-why lib-why-ar" dir="rtl">{{ item.why_ar }}</p>{% endif %}
+                    {% else %}
+                    <p class="lib-why">{{ item.why }}</p>
+                    {% endif %}
+                </div>
+                <span class="lib-go">{{ 'افتح' if ar else (item.source_label or 'Open') }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="lib-empty">{{ 'هذا الرف فارغ إلى أن يُضاف مرجع.' if ar else 'This shelf is empty until a reference is added.' }}</p>
+        {% endif %}
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}

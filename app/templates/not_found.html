@@ -1,7 +1,7 @@
 {% extends "public_v3.html" %}
 {% set ar = lang_pref == 'ar' %}
 
-{% block page_title %}{{ 'الصفحة غير موجودة' if ar else 'Page not found' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'الصفحة غير موجودة' if ar else 'Page not found' }} — {{ magazine_name }}{% endblock %}
 {% block page_meta %}<meta name="robots" content="noindex">{% endblock %}
 
 {% block content %}

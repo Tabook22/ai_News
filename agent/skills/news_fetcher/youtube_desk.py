@@ -272,6 +272,63 @@ def _pick(rows, lane, language, limit=5):
     return picked
 
 
+def _readable_title(title):
+    """The front-page video is for English and Arabic readers."""
+    text = title or ""
+    latin = sum(1 for ch in text if "a" <= ch.lower() <= "z")
+    arabic = sum(1 for ch in text if "\u0600" <= ch <= "\u06ff")
+    return latin >= 8 or arabic >= 8
+
+
+def gather_videos_of_the_day(limit=8):
+    """Important English or Arabic AI videos from the last few days, best first."""
+    youtube = _client()
+    if youtube is None:
+        return []
+    now = datetime.now(timezone.utc)
+    windows = (
+        (now - timedelta(hours=36)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        (now - timedelta(days=4)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    )
+    queries = NEWS_QUERIES["en"] + NEWS_QUERIES["ar"]
+    for published_after in windows:
+        pool = []
+        seen = set()
+        for query in queries:
+            language = "ar" if _has_arabic(query) else "en"
+            for row in _search(youtube, query, language, published_after):
+                if row["video_id"] in seen:
+                    continue
+                seen.add(row["video_id"])
+                pool.append(row)
+        ranked = []
+        for row in _hydrate(youtube, pool):
+            title = (row.get("title") or "").lower()
+            seconds = row.get("seconds") or 0
+            hype = ("leaked", "leak", "insane", "rumor", "rumour", "shocking", "you won't believe")
+            if "short" in title or seconds < 180 or any(word in title for word in hype):
+                continue
+            if not _readable_title(row.get("title")):
+                continue
+            points = _score(row, "news", "en", datetime.utcnow())
+            if points is None and _has_arabic(row.get("title")):
+                points = _score(row, "news", "ar", datetime.utcnow())
+            if points is None:
+                continue
+            row["score"] = points
+            ranked.append(row)
+        if ranked:
+            ranked.sort(key=lambda row: row["score"], reverse=True)
+            return ranked[:limit]
+    return []
+
+
+def gather_video_of_the_day():
+    """The single most important English or Arabic AI video from the last few days."""
+    videos = gather_videos_of_the_day(limit=1)
+    return videos[0] if videos else None
+
+
 def gather_youtube_desk():
     """Return {(lane, language): [up to five videos]}."""
     youtube = _client()

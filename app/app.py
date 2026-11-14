@@ -34,6 +34,8 @@ import json # Added for Gallery handling
 from collections import defaultdict
 from flask import Flask, abort, render_template, request, redirect, url_for, flash, jsonify
 from admin_i18n import admin_text
+from library_catalog import LIBRARY_SEED, LIBRARY_SHELVES
+from library_discover import discover_latest
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -256,6 +258,7 @@ class NewsItem(db.Model):
     attachment = db.Column(db.String(500))
     category = db.Column(db.String(50), default='sidebar')
     is_published = db.Column(db.Boolean, default=True) # New visibility toggle
+    on_issue = db.Column(db.Boolean, default=True) # Live magazine; older stories stay searchable
     display_order = db.Column(db.Integer, default=0)
     show_details = db.Column(db.Boolean, default=False) # New: Show full content in magazine
     article_type = db.Column(db.String(20), default='manual') # 'manual' or 'external'
@@ -290,6 +293,9 @@ class NewsItem(db.Model):
     lesson_gloss_ar = db.Column(db.Text, default="")
     lesson_ask = db.Column(db.Text, default="")
     lesson_ask_ar = db.Column(db.Text, default="")
+
+    # Short bilingual briefing: a few lines plus the main points. Blank until prepared.
+    glance_json = db.Column(db.Text, default="")
 
     # Relationship
     comments = db.relationship('Comment', backref='news_item', lazy=True, cascade="all, delete-orphan")
@@ -332,6 +338,7 @@ class NewsItem(db.Model):
             "lesson_gloss_ar": self.lesson_gloss_ar or "",
             "lesson_ask": self.lesson_ask or "",
             "lesson_ask_ar": self.lesson_ask_ar or "",
+            "glance_json": self.glance_json or "",
             "comments": [c.to_dict() for c in self.comments]
         }
 
@@ -721,6 +728,38 @@ class DepartmentResource(db.Model):
         }
 
 
+class LibraryReference(db.Model):
+    """A book, paper, course, essay, or podcast kept for students and readers."""
+    __tablename__ = 'library_references'
+    id = db.Column(db.Integer, primary_key=True)
+    shelf = db.Column(db.String(20), nullable=False, index=True, default='book')
+    title = db.Column(db.String(300), nullable=False)
+    authors = db.Column(db.String(300), default='')
+    why = db.Column(db.Text, default='')
+    why_ar = db.Column(db.Text, default='')
+    url = db.Column(db.Text, nullable=False)
+    source_label = db.Column(db.String(160), default='')
+    is_published = db.Column(db.Boolean, default=True)
+    in_issue = db.Column(db.Boolean, default=False)
+    display_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'shelf': self.shelf,
+            'title': self.title,
+            'authors': self.authors or '',
+            'why': self.why or '',
+            'why_ar': self.why_ar or '',
+            'url': self.url,
+            'source_label': self.source_label or '',
+            'is_published': bool(self.is_published),
+            'in_issue': bool(self.in_issue),
+            'display_order': self.display_order or 0,
+        }
+
+
 class OccasionAlbum(db.Model):
     """One department occasion: a semester, a name, a date, and its pictures."""
     __tablename__ = 'occasion_albums'
@@ -787,7 +826,23 @@ class YouTubePick(db.Model):
     view_count = db.Column(db.Integer, default=0)
     duration_seconds = db.Column(db.Integer, default=0)
     display_order = db.Column(db.Integer, default=0)
+    on_shelf = db.Column(db.Boolean, default=True)
     fetched_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+
+class DaySpotlight(db.Model):
+    """The day's top AI story and top YouTube video, chosen by the daily search."""
+    __tablename__ = 'day_spotlight'
+    id = db.Column(db.Integer, primary_key=True)
+    news_id = db.Column(db.String(36), default='')
+    video_id = db.Column(db.String(20), default='')
+    video_title = db.Column(db.String(300), default='')
+    video_title_ar = db.Column(db.String(300), default='')
+    video_summary = db.Column(db.Text, default='')
+    video_channel = db.Column(db.String(180), default='')
+    video_image = db.Column(db.String(500), default='')
+    video_url = db.Column(db.Text, default='')
+    refreshed_at = db.Column(db.DateTime)
 
 # --- Utils ---
 LANG_COOKIE = 'lang_pref'
@@ -882,9 +937,13 @@ def inject_global_vars():
             subscriber_count = Subscriber.query.filter_by(is_active=True).count() if is_logged else 0
         except Exception:
             reels_count = tools_count = subscriber_count = 0
+        settings = MagazineSettings.get_settings()
+        lang = get_lang_pref()
+        name_en = (settings.magazine_title if settings and settings.magazine_title else '') or 'Nasser AI News'
         return {
-            'settings': MagazineSettings.get_settings(),
-            'lang_pref': get_lang_pref(),
+            'settings': settings,
+            'lang_pref': lang,
+            'magazine_name': 'ناصر للذكاء الاصطناعي' if lang == 'ar' else name_en,
             'news_desks': NEWS_DESKS,
             'campus_kind_choices': ordered_campus_kind_choices(),
             'logged_in': is_logged,
@@ -898,7 +957,7 @@ def inject_global_vars():
         }
     except Exception:
         # DB might not be init yet
-        return {'settings': None, 'lang_pref': get_lang_pref(), 'news_desks': NEWS_DESKS, 'campus_kind_choices': CAMPUS_KIND_CHOICES, 'admin_desk': 'newsroom', 'admin_lang': 'en', 'admin_ar': False, 'now_year': datetime.datetime.now().year, 'reels_count': 0, 'tools_count': 0, 'subscriber_count': 0}
+        return {'settings': None, 'lang_pref': get_lang_pref(), 'magazine_name': 'ناصر للذكاء الاصطناعي' if get_lang_pref() == 'ar' else 'Nasser AI News', 'news_desks': NEWS_DESKS, 'campus_kind_choices': CAMPUS_KIND_CHOICES, 'admin_desk': 'newsroom', 'admin_lang': 'en', 'admin_ar': False, 'now_year': datetime.datetime.now().year, 'reels_count': 0, 'tools_count': 0, 'subscriber_count': 0}
 
 
 @app.template_global('A')
@@ -1192,6 +1251,7 @@ def assign_desk(story):
     story["source_kind_ar"] = labels[1]
     story["source_kind_note_en"] = labels[2]
     story["source_kind_note_ar"] = labels[3]
+    _attach_glance(story)
     return story
 
 def published_labels(value):
@@ -1279,6 +1339,281 @@ def _kind_rank():
 
 def _clip(value, limit):
     return (value or "").strip()[:limit]
+
+
+_GLANCE_SKIP = re.compile(
+    r"cookie|subscribe|sign up|newsletter|privacy policy|all rights reserved|"
+    r"advertisement|اشترك|سياسة الخصوصية",
+    re.I,
+)
+
+
+def _plain_sentences(text):
+    """Sentences a reader can scan. Drops links, menus, and one-word scraps."""
+    raw = re.sub(r"<[^>]+>", " ", text or "")
+    raw = plain_dek(raw)
+    raw = re.sub(r"\b(A|U)\.(I|S|K)\.", lambda match: match.group(0).replace(".", "\u0000"), raw)
+    raw = re.sub(r"\b(Mr|Ms|Mrs|Dr|Prof)\.", lambda match: match.group(0).replace(".", "\u0000"), raw)
+    parts = re.split(r"(?<=[.!?؟])\s+", raw)
+    found = []
+    for part in parts:
+        sentence = re.sub(r"\s+", " ", part).strip(" -•\t").replace("\u0000", ".")
+        if len(sentence) < 40 or len(sentence) > 240:
+            continue
+        if _GLANCE_SKIP.search(sentence):
+            continue
+        if sentence not in found:
+            found.append(sentence)
+    return found
+
+
+def _split_brief(summary, full):
+    """A few lines, then up to five later sentences as the main points."""
+    sentences = _plain_sentences(summary)
+    for sentence in _plain_sentences(full):
+        if sentence not in sentences:
+            sentences.append(sentence)
+    if not sentences:
+        short = plain_dek(re.sub(r"<[^>]+>", " ", summary or ""))
+        return (short[:420].rstrip() + ("…" if len(short) > 420 else "")), []
+    if len(sentences) >= 4:
+        lead = sentences[:2]
+        points = sentences[2:7]
+    elif len(sentences) >= 2:
+        lead = sentences[:1]
+        points = sentences[1:6]
+    else:
+        lead = sentences[:1]
+        points = []
+    text = " ".join(lead)
+    if len(text) > 420:
+        text = text[:417].rstrip() + "…"
+    return text, points[:5]
+
+
+def _glance_payload(story, ready=False):
+    saved = story.get("glance_json") or ""
+    if saved:
+        try:
+            data = json.loads(saved)
+        except (TypeError, ValueError):
+            data = None
+        if (
+            isinstance(data, dict)
+            and data.get("v") == 3
+            and len(data.get("points_en") or []) >= 3
+            and len(data.get("points_ar") or []) >= 3
+        ):
+            data["id"] = story.get("id")
+            data["thin"] = False
+            data["ready"] = True
+            return data
+    english, points_en = _split_brief(story.get("summary"), story.get("full_content"))
+    arabic, points_ar = _split_brief(story.get("summary_ar"), story.get("full_content_ar"))
+    return {
+        "id": story.get("id"),
+        "title": story.get("title") or "",
+        "title_ar": reader_line(story.get("title_ar") or ""),
+        "source": story.get("source") or "",
+        "en": english,
+        "ar": arabic,
+        "points_en": points_en,
+        "points_ar": points_ar,
+        "thin": len(points_en) < 3 and len(points_ar) < 3,
+        "ready": ready,
+        "v": 3,
+    }
+
+
+def _attach_glance(story):
+    story["glance"] = _glance_payload(story)
+
+
+def _page_brief_text(url):
+    """A few sentences from the report itself, enough for main points and no more."""
+    if not url:
+        return ""
+    try:
+        response = requests.get(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; NasserAINews/1.0)"},
+            timeout=8,
+        )
+        response.raise_for_status()
+    except Exception:
+        return ""
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(response.content, "html.parser")
+    except Exception:
+        return ""
+    for tag in soup.select("script, style, noscript, nav, footer, aside"):
+        tag.decompose()
+    paragraphs = []
+    for node in soup.select("article p, main p")[:10]:
+        line = re.sub(r"\s+", " ", node.get_text(" ", strip=True))
+        if len(line) >= 40:
+            paragraphs.append(line)
+    if not paragraphs:
+        meta = soup.find("meta", attrs={"name": "description"}) or soup.find("meta", attrs={"property": "og:description"})
+        if meta and meta.get("content"):
+            paragraphs.append(meta["content"])
+    return " ".join(paragraphs)[:1800]
+
+
+def _translate_glance(text, target):
+    text = (text or "").strip()
+    if not text:
+        return ""
+    try:
+        from agent.skills.translator.translation_api import translate
+        return (translate(text, target=target) or "").strip()
+    except Exception:
+        return ""
+
+
+def _related_query(title):
+    text = re.sub(r"\s+", " ", title or "").strip()
+    return text[:140]
+
+
+def _same_link(left, right):
+    def key(value):
+        value = (value or "").split("?")[0].rstrip("/").lower()
+        value = re.sub(r"^https?://(www\.)?", "", value)
+        return value
+    return key(left) == key(right) and key(left) != ""
+
+
+def story_related_links(item):
+    """A few real articles and videos on the same topic. Cached on the story."""
+    saved = {}
+    try:
+        saved = json.loads(item.glance_json or "")
+    except (TypeError, ValueError):
+        saved = {}
+    if not isinstance(saved, dict):
+        saved = {}
+    if "related" in saved:
+        return saved["related"]
+    query = _related_query(item.title or item.title_ar)
+    if not query:
+        return []
+    links = []
+    seen = []
+
+    stop = {
+        "the", "a", "an", "of", "and", "or", "to", "in", "on", "for", "with",
+        "its", "is", "are", "from", "after", "as", "by", "at", "gone", "most",
+        "this", "that", "what", "when", "into", "over", "than", "have", "has",
+    }
+    topic_words = [word.lower() for word in re.findall(r"[A-Za-z]{4,}", query) if word.lower() not in stop]
+
+    def on_topic(title):
+        blob = (title or "").lower()
+        hits = [word for word in topic_words if word in blob]
+        if len(hits) >= 2:
+            return True
+        lead = topic_words[0] if topic_words else ""
+        return bool(lead and lead in blob and ("ai" in blob or "nvidia" in blob or "ذكاء" in blob))
+
+    def add(title, url, source, kind):
+        url = (url or "").strip()
+        title = re.sub(r"\s+", " ", title or "").strip()
+        if not url.startswith("http") or not title or not on_topic(title):
+            return
+        if _same_link(url, item.url) or any(_same_link(url, old) for old in seen):
+            return
+        if _title_key(title) and _title_key(title) == _title_key(item.title or ""):
+            return
+        seen.append(url)
+        links.append({
+            "title": title[:180],
+            "url": url,
+            "source": (source or "")[:80],
+            "kind": kind,
+        })
+
+    topic = " ".join(topic_words[:3] + (["AI"] if re.search(r"\bA\.?\s?I\.?\b", query, re.I) else []))
+    try:
+        from agent.skills.news_fetcher.ddg_search import search_duckduckgo_news
+        rows = []
+        for news_query in (topic or query, query):
+            rows.extend(search_duckduckgo_news(news_query, time_limit="month") or [])
+            if len([link for link in links if link["kind"] == "article"]) >= 3:
+                break
+    except Exception:
+        rows = []
+    for row in rows:
+        url = row.get("url") or ""
+        kind = "video" if "youtube.com" in url or "youtu.be" in url else "article"
+        if "podcast" in url or "spotify.com" in url or "soundcloud.com" in url:
+            kind = "listen"
+        add(row.get("title"), url, row.get("source"), kind)
+        if len([row for row in links if row["kind"] == "article"]) >= 3:
+            break
+    video_query = topic or query
+    try:
+        from agent.skills.news_fetcher.youtube_search import search_youtube_videos
+        videos = search_youtube_videos(video_query or query, max_results=5, order="relevance") or []
+    except Exception:
+        videos = []
+    for row in videos:
+        add(row.get("title"), row.get("url"), row.get("source") or "YouTube", "video")
+        if len([row for row in links if row["kind"] == "video"]) >= 2:
+            break
+    saved["related"] = links[:5]
+    item.glance_json = json.dumps(saved, ensure_ascii=False)
+    db.session.commit()
+    return saved["related"]
+
+
+def prepare_story_glance(item):
+    """Fill a short bilingual briefing. Fetches the report only when the stored text is too thin."""
+    story = item.to_dict()
+    data = _glance_payload(story)
+    if data.get("ready") and not data.get("thin"):
+        return data
+    if data.get("thin") and item.url and not data.get("fetched"):
+        extra = _page_brief_text(item.url)
+        if extra:
+            lead, points = _split_brief(data.get("en") or item.summary, extra)
+            if lead:
+                data["en"] = lead
+            if len(points) >= len(data.get("points_en") or []):
+                data["points_en"] = points
+        data["fetched"] = True
+    if data.get("en") and not data.get("ar"):
+        data["ar"] = _translate_glance(data["en"], "ar")[:500]
+    if data.get("points_en") and len(data.get("points_ar") or []) < 3 and not data.get("ar_points_tried"):
+        try:
+            from agent.skills.translator.translation_api import translate
+            translated = translate(list(data["points_en"]), target="ar")
+        except Exception:
+            translated = []
+        data["points_ar"] = [piece.strip() for piece in translated if re.search(r"[\u0600-\u06ff]", piece or "")][:5]
+        data["ar_points_tried"] = True
+    if data.get("ar") and not data.get("en"):
+        data["en"] = _translate_glance(data["ar"], "en")[:500]
+    if data.get("points_ar") and not data.get("points_en"):
+        block = _translate_glance("\n".join(data["points_ar"]), "en")
+        data["points_en"] = [line.strip() for line in block.splitlines() if line.strip()][:5]
+    data["thin"] = len(data.get("points_en") or []) < 3 or len(data.get("points_ar") or []) < 3
+    if data.get("ar_points_tried") and len(data.get("points_en") or []) >= 3:
+        data["thin"] = False
+    data["ready"] = True
+    data["v"] = 3
+    data["id"] = item.id
+    if "related" not in data:
+        try:
+            previous = json.loads(item.glance_json or "")
+        except (TypeError, ValueError):
+            previous = {}
+        if isinstance(previous, dict) and "related" in previous:
+            data["related"] = previous["related"]
+    item.glance_json = json.dumps(data, ensure_ascii=False)
+    db.session.commit()
+    return data
 
 
 @app.template_filter("plain_dek")
@@ -3366,6 +3701,117 @@ def tools_ranked():
                            tools=[t.to_dict() for t in tools],
                            date=datetime.datetime.now().strftime("%Y-%m-%d"))
 
+MODEL_RANK_LINKS = (
+    {"name": "LM Arena", "name_ar": "ساحة LM Arena",
+     "url": "https://lmarena.ai/leaderboard",
+     "note": "Blind human votes", "note_ar": "تصويت بشري أعمى"},
+    {"name": "Artificial Analysis", "name_ar": "Artificial Analysis",
+     "url": "https://artificialanalysis.ai/leaderboards/models",
+     "note": "Quality, speed, and price", "note_ar": "الجودة والسرعة والسعر"},
+    {"name": "OpenRouter", "name_ar": "OpenRouter",
+     "url": "https://openrouter.ai/rankings",
+     "note": "What people call this week", "note_ar": "ما يستخدمه الناس هذا الأسبوع"},
+    {"name": "LiveBench", "name_ar": "LiveBench",
+     "url": "https://livebench.ai/",
+     "note": "A fresh monthly benchmark", "note_ar": "مقياس شهري جديد"},
+    {"name": "Hugging Face trending", "name_ar": "الرائج على Hugging Face",
+     "url": "https://huggingface.co/models?pipeline_tag=text-generation&sort=trending",
+     "note": "Rising this week", "note_ar": "الصاعد هذا الأسبوع"},
+    {"name": "models.dev", "name_ar": "models.dev",
+     "url": "https://models.dev/",
+     "note": "Specs and context windows", "note_ar": "المواصفات ونافذة السياق"},
+)
+
+_GPT2_NAMES = {"gpt2", "distilgpt2", "gpt2-medium", "gpt2-large", "gpt2-xl"}
+
+
+def _model_downloads_label(count):
+    count = int(count or 0)
+    if count >= 1000000:
+        return f"{count / 1000000:.1f}M"
+    if count >= 1000:
+        return f"{count / 1000:.0f}K"
+    return str(count)
+
+
+def refresh_top_models(limit=10, force=False):
+    """The ten most-downloaded language models on Hugging Face.
+
+    A page view uses the saved list when it is younger than a day. The midnight
+    job asks for a fresh list. GPT-2 is left out: it still leads raw downloads,
+    and it is not a current language model.
+    """
+    path = os.path.join(app.instance_path, "hf_top10.json")
+    cached = None
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as handle:
+                cached = json.load(handle)
+        except Exception:
+            cached = None
+    fresh = False
+    if cached and cached.get("fetched_at") and not force:
+        try:
+            when = datetime.datetime.fromisoformat(cached["fetched_at"])
+            fresh = datetime.datetime.utcnow() - when < datetime.timedelta(hours=20)
+        except Exception:
+            fresh = False
+    if fresh and cached.get("models"):
+        return cached["models"][:limit]
+    try:
+        response = requests.get(
+            "https://huggingface.co/api/models",
+            params={
+                "pipeline_tag": "text-generation",
+                "sort": "downloads",
+                "direction": "-1",
+                "limit": 40,
+            },
+            timeout=12,
+        )
+        response.raise_for_status()
+        rows = []
+        for item in response.json():
+            repo = (item.get("id") or "").strip()
+            if not repo or "/" not in repo:
+                continue
+            name = repo.split("/")[-1]
+            if name.lower() in _GPT2_NAMES:
+                continue
+            downloads = int(item.get("downloads") or 0)
+            rows.append({
+                "name": name,
+                "org": repo.split("/")[0],
+                "downloads": downloads,
+                "downloads_label": _model_downloads_label(downloads),
+                "likes": int(item.get("likes") or 0),
+                "url": f"https://huggingface.co/{repo}",
+            })
+            if len(rows) >= limit:
+                break
+        if rows:
+            os.makedirs(app.instance_path, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump({
+                    "fetched_at": datetime.datetime.utcnow().isoformat(timespec="seconds"),
+                    "models": rows,
+                }, handle)
+            return rows
+    except Exception as exc:
+        print(f"Hugging Face top models skipped: {exc.__class__.__name__}")
+    if cached and cached.get("models"):
+        return cached["models"][:limit]
+    stored = LLMModel.query.order_by(LLMModel.downloads.desc()).limit(limit).all()
+    return [{
+        "name": row.name,
+        "org": row.org or "",
+        "downloads": row.downloads or 0,
+        "downloads_label": _model_downloads_label(row.downloads or 0),
+        "likes": row.likes or 0,
+        "url": row.url,
+    } for row in stored]
+
+
 @app.route('/directory/models')
 def models_directory():
     settings = MagazineSettings.get_settings()
@@ -3624,7 +4070,7 @@ def ensure_bilingual_content(title_en, summary_en, full_content_html,
         summary_ar = "لا يوجد ملخص."
     return title_en, title_ar, summary_en, summary_ar, full_en, full_ar
 
-def import_daily_top_stories(limit=5):
+def import_daily_top_stories(limit=5, force=False):
     """
     Pull the day's most important global AI stories and file the new ones
     under Latest News. Stories already in the magazine are left alone.
@@ -3637,21 +4083,31 @@ def import_daily_top_stories(limit=5):
         for (url,) in db.session.query(NewsItem.url).all()
         if url
     }
-    cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=20)
-    already_today = NewsItem.query.filter(
-        NewsItem.timestamp >= cutoff,
-        NewsItem.article_type == "external",
-        NewsItem.category == "second",
-    ).count()
-    room = max(0, limit - already_today)
-    if room == 0:
-        return []
+    known_titles = set()
+    for title, title_ar in db.session.query(NewsItem.title, NewsItem.title_ar).all():
+        for value in (title, title_ar):
+            key = _title_key(value)
+            if key:
+                known_titles.add(key)
+    if force:
+        room = limit
+    else:
+        cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=20)
+        already_today = NewsItem.query.filter(
+            NewsItem.timestamp >= cutoff,
+            NewsItem.article_type == "external",
+            NewsItem.category == "second",
+        ).count()
+        room = max(0, limit - already_today)
+        if room == 0:
+            return []
 
     added = []
     for story in gather_top_stories(limit=limit + 8):
         if len(added) >= room:
             break
-        if story["url_key"] in existing:
+        title_key = _title_key(story["title"])
+        if story["url_key"] in existing or (title_key and title_key in known_titles):
             continue
 
         image = (story.get("image") or "")[:500]
@@ -3684,6 +4140,7 @@ def import_daily_top_stories(limit=5):
             category="second",
             article_type="external",
             is_published=True,
+            on_issue=True,
             topic="",
             published_at=published_at,
             wing=classify_wing(story.get("source"), story["title"], summary_en),
@@ -3692,11 +4149,214 @@ def import_daily_top_stories(limit=5):
             write_classroom_note(item)
         db.session.add(item)
         existing.add(story["url_key"])
+        if title_key:
+            known_titles.add(title_key)
         added.append(story["title"])
 
     if added:
         db.session.commit()
     return added
+
+
+def _find_story_by_title(title):
+    key = _title_key(title)
+    if not key:
+        return None
+    for item in NewsItem.query.all():
+        if _title_key(item.title) == key or _title_key(item.title_ar) == key:
+            return item
+    return None
+
+
+def _find_story_by_url(url):
+    from agent.skills.news_fetcher.daily_brief import normalize_url
+    target = normalize_url(url)
+    if not target:
+        return None
+    for item in NewsItem.query.filter(NewsItem.url.isnot(None)).all():
+        if normalize_url(item.url) == target:
+            return item
+    return None
+
+
+def _store_brief_story(story):
+    """Keep one searched story in the magazine and return the saved row."""
+    existing = _find_story_by_url(story["url"]) or _find_story_by_title(story["title"])
+    if existing:
+        return existing
+    image = (story.get("image") or "")[:500]
+    if not image and media_handler:
+        try:
+            image = (media_handler.get_image(story["url"]) or "")[:500]
+        except Exception as exc:
+            print(f"Daily brief image skipped: {exc}")
+            image = ""
+    _title, title_ar, summary_en, summary_ar, _body, _body_ar = ensure_bilingual_content(
+        title_en=story["title"],
+        summary_en=story["summary"],
+        full_content_html=None,
+    )
+    published_at = story.get("published_at")
+    if published_at is None:
+        from agent.skills.news_fetcher.daily_brief import lookup_published_at
+        published_at = lookup_published_at(story["url"])
+    if isinstance(published_at, datetime.datetime) and published_at.tzinfo is not None:
+        published_at = published_at.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    item = NewsItem(
+        title=story["title"][:490],
+        title_ar=(title_ar or "")[:490],
+        summary=summary_en,
+        summary_ar=summary_ar,
+        source=(story.get("source") or "World press")[:190],
+        url=story["url"],
+        image=image or "",
+        category="second",
+        article_type="external",
+        is_published=True,
+        topic="",
+        published_at=published_at,
+        wing=classify_wing(story.get("source"), story["title"], summary_en),
+    )
+    write_classroom_note(item)
+    db.session.add(item)
+    db.session.commit()
+    return item
+
+
+def refresh_day_spotlight():
+    """Search for today's most important AI story and YouTube video."""
+    from agent.skills.news_fetcher.daily_brief import rank_front_stories, gather_top_stories
+    from agent.skills.news_fetcher.youtube_desk import gather_videos_of_the_day
+
+    spot = DaySpotlight.query.get(1) or DaySpotlight(id=1)
+    known_story_titles = set()
+    for title, title_ar in db.session.query(NewsItem.title, NewsItem.title_ar).all():
+        for value in (title, title_ar):
+            key = _title_key(value)
+            if key:
+                known_story_titles.add(key)
+    for story in rank_front_stories(gather_top_stories(limit=8)):
+        title_key = _title_key(story.get("title"))
+        if title_key and title_key in known_story_titles:
+            existing = _find_story_by_title(story["title"])
+            if existing is not None:
+                spot.news_id = existing.id
+            break
+        item = _store_brief_story(story)
+        if item is not None:
+            spot.news_id = item.id
+            break
+    known_video_ids = {row.video_id for row in YouTubePick.query.all() if row.video_id}
+    known_video_titles = {_title_key(row.title) for row in YouTubePick.query.all()}
+    known_video_titles.discard("")
+    video = None
+    for candidate in gather_videos_of_the_day(limit=8):
+        video_id = candidate.get("video_id") or ""
+        video_key = _title_key(candidate.get("title"))
+        if video_key and video_key == _title_key(spot.video_title) and video_id == (spot.video_id or ""):
+            video = candidate
+            break
+        already = (video_id and video_id in known_video_ids) or (video_key and video_key in known_video_titles)
+        if already or (video_key and video_key == _title_key(spot.video_title)):
+            continue
+        video = candidate
+        break
+    if video:
+        spot.video_id = video.get("video_id") or ""
+        new_title = (video.get("title") or "")[:300]
+        if new_title != (spot.video_title or ""):
+            spot.video_title_ar = ""
+        spot.video_title = new_title
+        if new_title and not (spot.video_title_ar or "").strip():
+            spot.video_title_ar = (_translate_value(new_title, "ar") or "")[:300]
+            if spot.video_title_ar == new_title:
+                spot.video_title_ar = ""
+        spot.video_summary = (video.get("summary") or "")[:500]
+        spot.video_channel = (video.get("channel") or "")[:180]
+        spot.video_image = (video.get("image") or "")[:500]
+        spot.video_url = video.get("url") or ""
+    spot.refreshed_at = datetime.datetime.utcnow()
+    db.session.add(spot)
+    db.session.commit()
+    return spot
+
+
+def file_previous_issue():
+    """Keep today's top story, the latest five, and the latest story in each subject.
+
+    Older world stories stay in the archive, where search can still find them.
+    Department stories are left on the issue.
+    """
+    spot = DaySpotlight.query.get(1)
+    keep = set()
+    if spot and spot.news_id:
+        keep.add(spot.news_id)
+    externals = (NewsItem.query
+                 .filter(NewsItem.article_type == "external", NewsItem.wing != "campus")
+                 .order_by(NewsItem.timestamp.desc())
+                 .all())
+    latest = []
+    for item in externals:
+        if item.is_published is False:
+            continue
+        if spot and item.id == spot.news_id:
+            continue
+        latest.append(item)
+        if len(latest) >= 5:
+            break
+    keep.update(item.id for item in latest)
+    seen_desks = set()
+    for item in externals:
+        if item.is_published is False:
+            continue
+        story = assign_desk(item.to_dict())
+        desk = story.get("desk") or ""
+        if not desk or desk in seen_desks:
+            continue
+        seen_desks.add(desk)
+        keep.add(item.id)
+    moved = 0
+    for item in externals:
+        if item.is_published is False:
+            item.on_issue = False
+            continue
+        item.on_issue = item.id in keep
+        if not item.on_issue:
+            moved += 1
+    if spot and spot.news_id:
+        lead = NewsItem.query.get(spot.news_id)
+        if lead is not None and lead.wing != "campus":
+            lead.is_published = True
+            lead.on_issue = True
+            keep.add(lead.id)
+    db.session.commit()
+    return {"kept": len(keep), "archived": moved}
+
+
+def _day_spotlight():
+    """The stored story and video for the front page. Empty until the daily search runs."""
+    spot = DaySpotlight.query.get(1)
+    if spot is None:
+        return None, None
+    story = None
+    if spot.news_id:
+        item = NewsItem.query.get(spot.news_id)
+        if item is not None and item.is_published:
+            story = assign_desk(item.to_dict())
+    video = None
+    if spot.video_id and spot.video_url:
+        video = {
+            "title": spot.video_title,
+            "title_ar": spot.video_title_ar or "",
+            "summary": spot.video_summary,
+            "channel": spot.video_channel,
+            "image": spot.video_image,
+            "url": spot.video_url,
+        }
+    if story is None and video is None:
+        return None, None
+    return story, video
+
 
 @app.route('/daily_brief', methods=['POST'])
 @login_required
@@ -3734,7 +4394,7 @@ def _compact_minutes(seconds, arabic):
 
 
 def import_youtube_desk():
-    """Replace each YouTube shelf that returned fresh clips. Empty shelves stay as they were."""
+    """Put the latest five clips on each shelf. Older clips stay stored, off the shelf."""
     from agent.skills.news_fetcher.youtube_desk import gather_youtube_desk
     chosen = gather_youtube_desk()
     saved = {}
@@ -3742,30 +4402,56 @@ def import_youtube_desk():
         if not videos:
             saved[(lane, language)] = 0
             continue
-        YouTubePick.query.filter_by(lane=lane, language=language).delete()
-        for order, video in enumerate(videos):
-            db.session.add(YouTubePick(
-                video_id=video["video_id"],
-                lane=lane,
-                language=language,
-                title=video.get("title") or "",
-                summary=(video.get("summary") or "")[:500],
-                channel=video.get("channel") or "",
-                image=video.get("image") or "",
-                url=video.get("url") or "",
-                published_at=video.get("published_at"),
-                view_count=video.get("views") or 0,
-                duration_seconds=video.get("seconds") or 0,
-                display_order=order,
-            ))
-        saved[(lane, language)] = len(videos)
+        current = {
+            row.video_id: row
+            for row in YouTubePick.query.filter_by(lane=lane, language=language).all()
+        }
+        for row in current.values():
+            row.on_shelf = False
+        for order, video in enumerate(videos[:5]):
+            row = current.get(video["video_id"])
+            if row is None:
+                row = YouTubePick(
+                    video_id=video["video_id"],
+                    lane=lane,
+                    language=language,
+                )
+                db.session.add(row)
+            row.title = video.get("title") or ""
+            row.summary = (video.get("summary") or "")[:500]
+            row.channel = video.get("channel") or ""
+            row.image = video.get("image") or ""
+            row.url = video.get("url") or ""
+            row.published_at = video.get("published_at")
+            row.view_count = video.get("views") or 0
+            row.duration_seconds = video.get("seconds") or 0
+            row.display_order = order
+            row.on_shelf = True
+            row.fetched_at = datetime.datetime.utcnow()
+        placed = min(5, len(videos))
+        if placed < 5:
+            waiting = sorted(
+                (row for row in current.values() if not row.on_shelf),
+                key=lambda row: row.fetched_at or datetime.datetime.min,
+                reverse=True,
+            )
+            for row in waiting:
+                row.on_shelf = True
+                row.display_order = placed
+                placed += 1
+                if placed >= 5:
+                    break
+        saved[(lane, language)] = placed
     if any(saved.values()):
         db.session.commit()
     return saved
 
 
 def _youtube_shelves(arabic):
-    rows = YouTubePick.query.order_by(YouTubePick.display_order.asc()).all()
+    rows = (YouTubePick.query
+            .filter(YouTubePick.on_shelf.isnot(False))
+            .order_by(YouTubePick.display_order.asc())
+            .all())
     shelves = {}
     for row in rows:
         when = ""
@@ -4105,6 +4791,33 @@ def bulk_delete_news():
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@app.route('/magazine/article/<item_id>/related')
+def story_related(item_id):
+    """Articles and videos on the same topic, found when the briefing opens."""
+    item = NewsItem.query.get_or_404(item_id)
+    if item.is_published is False:
+        abort(404)
+    try:
+        return jsonify({"related": story_related_links(item)})
+    except Exception:
+        db.session.rollback()
+        return jsonify({"related": []})
+
+
+@app.route('/magazine/article/<item_id>/glance')
+def story_glance(item_id):
+    """A few lines and the main points, in Arabic and English."""
+    item = NewsItem.query.get_or_404(item_id)
+    if item.is_published is False:
+        abort(404)
+    try:
+        return jsonify(prepare_story_glance(item))
+    except Exception:
+        db.session.rollback()
+        story = assign_desk(item.to_dict())
+        return jsonify(story.get("glance") or {})
+
+
 @app.route('/magazine/article/<item_id>')
 def magazine_detail(item_id):
     # First-visit language gate: ask once, remember via cookie, never again.
@@ -4208,7 +4921,10 @@ def magazine_detail(item_id):
 # editor's picks. The previous templates stay available with ?classic=1.
 
 def _v3_story_rows():
-    rows = NewsItem.query.filter(NewsItem.is_published.isnot(False)).all()
+    rows = NewsItem.query.filter(
+        NewsItem.is_published.isnot(False),
+        NewsItem.on_issue.isnot(False),
+    ).all()
     stories = []
     for row in rows:
         story = row.to_dict()
@@ -4224,13 +4940,19 @@ def _v3_text(story, ar, en_key, ar_key, fallback=""):
     return (story.get(en_key) or story.get(ar_key) or fallback)
 
 
+def _title_key(title):
+    """The same headline, ignoring case, punctuation, and extra spaces."""
+    text = re.sub(r"[^0-9a-z\u0600-\u06ff]+", " ", (title or "").lower())
+    return re.sub(r"\s+", " ", text).strip()[:140]
+
+
 def _v3_dedupe(stories):
     """Drop syndicated copies of the same story so the issue never repeats itself."""
     seen = set()
     unique = []
     for story in stories:
-        key = re.sub(r"\s+", " ", (story.get("title") or "").strip().lower())[:90]
-        if key in seen:
+        key = _title_key(story.get("title")) or _title_key(story.get("title_ar"))
+        if not key or key in seen:
             continue
         seen.add(key)
         unique.append(story)
@@ -4267,6 +4989,23 @@ def _render_v3_issue():
     stories = _v3_dedupe(_v3_story_rows())
     world = [s for s in stories if (s.get('wing') or 'world') != 'campus' and s.get('category') != 'ads']
     campus = [s for s in stories if (s.get('wing') or '') == 'campus']
+    day_story, day_video = _day_spotlight()
+    taken = set()
+    if day_story:
+        taken.add(day_story.get("id"))
+        taken.add(_title_key(day_story.get("title")))
+        taken.add(_title_key(day_story.get("title_ar")))
+    if day_video:
+        taken.add(_title_key(day_video.get("title")))
+    taken.discard("")
+    taken.discard(None)
+
+    def _already_on_the_day(story):
+        if story.get("id") in taken:
+            return True
+        return _title_key(story.get("title")) in taken or _title_key(story.get("title_ar")) in taken
+
+    world = [story for story in world if not _already_on_the_day(story)]
 
     lead = None
     pin = (settings.cover_world_id or '').strip()
@@ -4357,12 +5096,17 @@ def _render_v3_issue():
         term=term,
         class_story=class_story,
         picks=picks,
+        issue_library=_issue_library_picks(),
         lead_what=lead_what,
         lead_why=lead_why,
         lead_ask=lead_ask,
         stats=stats,
         issue_label=('العدد %s' % week) if ar else ('Issue %s' % week),
         now=now,
+        day_story=day_story,
+        day_video=day_video,
+        top_models=refresh_top_models(limit=10),
+        model_rank_links=MODEL_RANK_LINKS,
         **edition
     )
 
@@ -4461,8 +5205,29 @@ def find_stories():
             continue
         stories.append(story)
 
+    videos = []
+    if q and wing != 'campus':
+        like = f"%{q}%"
+        clips = (YouTubePick.query
+                 .filter(db.or_(
+                     YouTubePick.title.ilike(like),
+                     YouTubePick.channel.ilike(like),
+                     YouTubePick.summary.ilike(like),
+                 ))
+                 .order_by(YouTubePick.fetched_at.desc())
+                 .limit(12)
+                 .all())
+        for clip in clips:
+            videos.append({
+                "title": clip.title,
+                "channel": clip.channel,
+                "url": clip.url,
+                "image": clip.image,
+                "on_shelf": clip.on_shelf is not False,
+            })
+
     return render_template('search_v3.html', q=q, wing=wing, desk=desk,
-                           stories=stories, total=len(stories))
+                           stories=stories, videos=videos, total=len(stories) + len(videos))
 
 
 @app.route('/magazine')
@@ -6147,6 +6912,245 @@ def save_search_result():
         flash(f"Error saving search result: {e}", "error")
         return redirect(url_for('search_page'))
 
+
+def _library_shelves():
+    return LIBRARY_SHELVES
+
+
+def _apply_library_form(item):
+    """Copy the editor form onto a reference. Returns an error key, or None."""
+    shelf = (request.form.get('shelf') or '').strip()
+    known = {row[0] for row in LIBRARY_SHELVES}
+    title = (request.form.get('title') or '').strip()[:300]
+    url = (request.form.get('url') or '').strip()
+    if shelf not in known or not title or not url.startswith(('http://', 'https://')):
+        return 'lib_need'
+    item.shelf = shelf
+    item.title = title
+    item.authors = (request.form.get('authors') or '').strip()[:300]
+    item.why = (request.form.get('why') or '').strip()
+    item.why_ar = (request.form.get('why_ar') or '').strip()
+    item.url = url
+    item.source_label = (request.form.get('source_label') or '').strip()[:160]
+    item.is_published = bool(request.form.get('is_published'))
+    item.in_issue = bool(request.form.get('in_issue'))
+    raw_order = (request.form.get('display_order') or '').strip()
+    if raw_order:
+        try:
+            item.display_order = int(raw_order)
+        except ValueError:
+            item.display_order = item.display_order or 0
+    elif not item.display_order:
+        last = (LibraryReference.query.filter_by(shelf=shelf)
+                .order_by(LibraryReference.display_order.desc()).first())
+        item.display_order = (last.display_order if last else 0) + 1
+    return None
+
+
+def seed_reference_library():
+    """Fill the five shelves once. Later additions stay under the editor."""
+    if LibraryReference.query.count():
+        return
+    for row in LIBRARY_SEED:
+        db.session.add(LibraryReference(
+            shelf=row['shelf'],
+            title=row['title'],
+            authors=row.get('authors', ''),
+            why=row.get('why', ''),
+            why_ar=row.get('why_ar', ''),
+            url=row['url'],
+            source_label=row.get('source_label', ''),
+            display_order=row.get('display_order', 0),
+            is_published=True,
+        ))
+    db.session.commit()
+    print(f"✅ Reference library seeded with {len(LIBRARY_SEED)} items.")
+
+
+def _issue_library_picks():
+    """References the editor chose for the magazine front. The rest stay in the library."""
+    rows = (LibraryReference.query
+            .filter_by(is_published=True, in_issue=True)
+            .order_by(LibraryReference.display_order.asc(), LibraryReference.id.asc())
+            .all())
+    by_shelf = {}
+    for row in rows:
+        by_shelf.setdefault(row.shelf, []).append(row)
+    picks = []
+    for key, en, ar, _dek_en, _dek_ar in LIBRARY_SHELVES:
+        entries = by_shelf.get(key) or []
+        if entries:
+            picks.append({'key': key, 'en': en, 'ar': ar, 'entries': entries})
+    return picks
+
+
+def _library_query():
+    return (request.args.get('q') or '').strip()
+
+
+def _library_matches(item, needle):
+    if not needle:
+        return True
+    blob = ' '.join([
+        item.title or '', item.authors or '', item.why or '',
+        item.why_ar or '', item.source_label or '',
+    ]).lower()
+    return needle.lower() in blob
+
+
+@app.route('/library')
+def reference_library():
+    needle = _library_query()
+    shelves = []
+    matched = 0
+    for key, en, ar, dek_en, dek_ar in LIBRARY_SHELVES:
+        items = (LibraryReference.query
+                 .filter_by(shelf=key, is_published=True)
+                 .order_by(LibraryReference.display_order.asc(), LibraryReference.id.asc())
+                 .all())
+        items = [item for item in items if _library_matches(item, needle)]
+        if needle and not items:
+            continue
+        matched += len(items)
+        shelves.append({
+            'key': key, 'en': en, 'ar': ar,
+            'dek_en': dek_en, 'dek_ar': dek_ar, 'entries': items,
+        })
+    return render_template('library.html', shelves=shelves, q=needle, matched=matched)
+
+
+@app.route('/desk/library')
+@login_required
+def library_admin():
+    needle = _library_query()
+    grouped = []
+    for key, en, ar, dek_en, dek_ar in LIBRARY_SHELVES:
+        items = (LibraryReference.query.filter_by(shelf=key)
+                 .order_by(LibraryReference.display_order.asc(), LibraryReference.id.asc())
+                 .all())
+        items = [item for item in items if _library_matches(item, needle)]
+        if needle and not items:
+            continue
+        grouped.append({
+            'key': key, 'en': en, 'ar': ar,
+            'dek_en': dek_en, 'dek_ar': dek_ar,
+            'entries': [item.to_dict() for item in items],
+        })
+    return render_template('library_admin.html', shelves=grouped, q=needle)
+
+
+@app.route('/desk/library/discover', methods=['POST'])
+@login_required
+def discover_library_references():
+    """Archive the two newest references on each shelf. The magazine stays unchanged."""
+    rows = LibraryReference.query.with_entities(
+        LibraryReference.url, LibraryReference.title).all()
+    found = discover_latest([url for url, _title in rows], [title for _url, title in rows])
+    arabic = get_admin_lang() == 'ar'
+    names = {key: (ar if arabic else en) for key, en, ar, _dek_en, _dek_ar in LIBRARY_SHELVES}
+    stamp = int(time.time())
+    added = 0
+    counts = []
+    for key, _en, _ar, _dek_en, _dek_ar in LIBRARY_SHELVES:
+        batch = found.get(key) or []
+        counts.append(f"{names[key]} {len(batch)}")
+        for offset, item in enumerate(batch):
+            db.session.add(LibraryReference(
+                shelf=key,
+                title=item['title'],
+                authors=item.get('authors') or '',
+                why=item.get('why') or '',
+                why_ar=item.get('why_ar') or '',
+                url=item['url'],
+                source_label=item.get('source_label') or '',
+                is_published=True,
+                in_issue=False,
+                display_order=-(stamp * 10 + len(batch) - offset),
+            ))
+            added += 1
+    if added:
+        db.session.commit()
+        detail = "، ".join(counts) if arabic else ", ".join(counts)
+        if arabic:
+            flash(f"أُضيف {added} مراجع جديدة إلى الأرشيف ({detail}). لن تظهر في العدد إلا إذا اخترتها.", 'success')
+        else:
+            flash(f"Added {added} new references to the archive ({detail}). They stay off the magazine until you choose them.", 'success')
+    else:
+        if arabic:
+            flash("لا يوجد أحدث مما هو محفوظ، أو أن أحد المصادر لم يجب هذه المرة.", 'error')
+        else:
+            flash("Nothing newer than the archive, or a source did not answer this time.", 'error')
+    return redirect(url_for('library_admin'))
+
+
+@app.route('/desk/library/new', methods=['GET', 'POST'])
+@login_required
+def add_library_reference():
+    if request.method == 'POST':
+        item = LibraryReference(url='https://example.com', title='x')
+        error = _apply_library_form(item)
+        if error:
+            flash(admin_text(get_admin_lang(), error), 'error')
+            return render_template('library_form.html', item=None, shelves=LIBRARY_SHELVES,
+                                   form=request.form, preset='book')
+        db.session.add(item)
+        db.session.commit()
+        flash(admin_text(get_admin_lang(), 'lib_saved'), 'success')
+        return redirect(url_for('library_admin'))
+    preset = (request.args.get('shelf') or 'book').strip()
+    if preset not in {row[0] for row in LIBRARY_SHELVES}:
+        preset = 'book'
+    return render_template('library_form.html', item=None, shelves=LIBRARY_SHELVES,
+                           form=None, preset=preset)
+
+
+@app.route('/desk/library/<int:item_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_library_reference(item_id):
+    item = LibraryReference.query.get_or_404(item_id)
+    if request.method == 'POST':
+        error = _apply_library_form(item)
+        if error:
+            flash(admin_text(get_admin_lang(), error), 'error')
+            return render_template('library_form.html', item=item, shelves=LIBRARY_SHELVES,
+                                   form=request.form, preset=item.shelf)
+        db.session.commit()
+        flash(admin_text(get_admin_lang(), 'lib_saved'), 'success')
+        return redirect(url_for('library_admin'))
+    return render_template('library_form.html', item=item, shelves=LIBRARY_SHELVES,
+                           form=None, preset=item.shelf)
+
+
+@app.route('/desk/library/<int:item_id>/issue', methods=['POST'])
+@login_required
+def toggle_library_issue(item_id):
+    item = LibraryReference.query.get_or_404(item_id)
+    item.in_issue = not bool(item.in_issue)
+    db.session.commit()
+    flash(admin_text(get_admin_lang(), 'lib_saved'), 'success')
+    return redirect(url_for('library_admin'))
+
+
+@app.route('/desk/library/<int:item_id>/toggle', methods=['POST'])
+@login_required
+def toggle_library_reference(item_id):
+    item = LibraryReference.query.get_or_404(item_id)
+    item.is_published = not bool(item.is_published)
+    db.session.commit()
+    flash(admin_text(get_admin_lang(), 'lib_saved'), 'success')
+    return redirect(url_for('library_admin'))
+
+
+@app.route('/desk/library/<int:item_id>/delete', methods=['POST'])
+@login_required
+def delete_library_reference(item_id):
+    item = LibraryReference.query.get_or_404(item_id)
+    db.session.delete(item)
+    db.session.commit()
+    flash(admin_text(get_admin_lang(), 'lib_removed'), 'success')
+    return redirect(url_for('library_admin'))
+
+
 # Initialize DB (Safe)
 with app.app_context():
     try:
@@ -6190,9 +7194,11 @@ with app.app_context():
                 'lesson_gloss_ar': "TEXT DEFAULT ''",
                 'lesson_ask': "TEXT DEFAULT ''",
                 'lesson_ask_ar': "TEXT DEFAULT ''",
+                'glance_json': "TEXT DEFAULT ''",
                 'event_on': "DATE",
                 'place': "VARCHAR(160) DEFAULT ''",
                 'course': "VARCHAR(120) DEFAULT ''",
+                'on_issue': "BOOLEAN DEFAULT 1",
             }
             for col, typedef in extra_news_columns.items():
                 if col not in columns:
@@ -6200,6 +7206,19 @@ with app.app_context():
                         conn.execute(db.text(f"ALTER TABLE news_items ADD COLUMN {col} {typedef}"))
                         conn.commit()
                     columns.append(col)
+            spot_columns = [c['name'] for c in inspector.get_columns('day_spotlight')]
+            if 'video_title_ar' not in spot_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text("ALTER TABLE day_spotlight ADD COLUMN video_title_ar VARCHAR(300) DEFAULT ''"))
+                    conn.commit()
+            yt_columns = [c['name'] for c in inspector.get_columns('youtube_picks')]
+            if 'on_shelf' not in yt_columns:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text("ALTER TABLE youtube_picks ADD COLUMN on_shelf BOOLEAN DEFAULT 1"))
+                    conn.commit()
+            spot = DaySpotlight.query.get(1)
+            if spot is not None and not (spot.video_title_ar or "").strip() and "Circular financing" in (spot.video_title or ""):
+                spot.video_title_ar = "فقاعة الذكاء الاصطناعي: «التمويل الدائري انتهى» | إد زيترون"
             for row in NewsItem.query.filter((NewsItem.wing.is_(None)) | (NewsItem.wing == '') | (NewsItem.wing == 'world')).all():
                 if classify_wing(row.source, row.title, row.summary) == 'research':
                     row.wing = 'research'
@@ -6312,7 +7331,23 @@ with app.app_context():
         except Exception as e:
             print(f"⚠️ Project track migration warning: {e}")
 
+        try:
+            inspector = db.inspect(db.engine)
+            if 'library_references' in inspector.get_table_names():
+                lib_columns = [c['name'] for c in inspector.get_columns('library_references')]
+                if 'in_issue' not in lib_columns:
+                    print("⚠️  library_references.in_issue missing. Adding...")
+                    with db.engine.connect() as conn:
+                        conn.execute(db.text(
+                            "ALTER TABLE library_references ADD COLUMN in_issue BOOLEAN DEFAULT 0"
+                        ))
+                        conn.commit()
+            print("✅ Reference library issue flag checked/completed.")
+        except Exception as e:
+            print(f"⚠️ Reference library issue flag warning: {e}")
+
         print("✅ Database tables created/verified.")
+        seed_reference_library()
     except Exception as e:
         print(f"❌ Database creation failed: {e}")
 

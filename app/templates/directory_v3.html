@@ -4,7 +4,7 @@
 {% macro cat_name(label) %}{{ label.split(' ', 1)[1] if ' ' in label else label }}{% endmacro %}
 {% set cat_ar = {'chatbot': 'المحادثة', 'coding': 'البرمجة', 'image': 'الصور', 'video': 'الفيديو', 'video_edit': 'المونتاج', 'presentations': 'العروض', 'writing': 'الكتابة', 'research': 'البحث', 'productivity': 'الإنتاجية', 'voice': 'الصوت', 'design': 'التصميم', 'education': 'التعلّم', 'agents': 'الوكلاء', 'platforms': 'المنصات', 'other': 'أخرى'} %}
 
-{% block page_title %}{{ 'دليل أدوات الذكاء الاصطناعي' if ar else 'AI Tools Directory' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'دليل أدوات الذكاء الاصطناعي' if ar else 'AI Tools Directory' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'دليل مختار لأدوات الذكاء الاصطناعي المفيدة للطلبة: ما تفعله، وهل لها خطة مجانية، وهل تدعم العربية.' if ar else 'A curated directory of AI tools for students: what each one does, whether it has a free tier, and whether it supports Arabic.' }}{% endblock %}
 
 {% block content %}

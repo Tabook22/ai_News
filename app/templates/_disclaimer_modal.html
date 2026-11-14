@@ -11,7 +11,7 @@
         </header>
 
         <div class="disclaimer-body">
-            <section class="disclaimer-lang {{ 'is-current' if not is_ar else '' }}" lang="en">
+            <section class="disclaimer-lang is-current" lang="en" {% if is_ar %}hidden{% endif %}>
                 <div class="disclaimer-lang-head">
                     <span>English</span>
                     <b>Disclaimer</b>
@@ -21,7 +21,7 @@
                 <p>The magazine operates solely for educational and scientific purposes and generates no revenue or financial benefit for its contributors.</p>
             </section>
 
-            <section class="disclaimer-lang {{ 'is-current' if is_ar else '' }}" lang="ar" dir="rtl">
+            <section class="disclaimer-lang is-current" lang="ar" dir="rtl" {% if not is_ar %}hidden{% endif %}>
                 <div class="disclaimer-lang-head">
                     <span>العربية</span>
                     <b>إخلاء المسؤولية</b>

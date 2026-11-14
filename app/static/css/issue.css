@@ -917,6 +917,104 @@ html[dir="rtl"] .cover-face-copy h2 {
     font-size: 0.92rem;
 }
 
+.lib-invite {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: -1.2rem 0 2.2rem;
+    padding: 0.9rem 1rem;
+    text-decoration: none;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-inline-start: 4px solid var(--accent-primary);
+    background: var(--world-soft);
+}
+
+.lib-invite strong {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+}
+
+.lib-invite span {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.lib-jumps {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.45rem;
+    margin: 1.3rem 0 2rem;
+}
+
+.lib-jumps a {
+    text-decoration: none;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.86rem;
+    font-weight: 700;
+    background: var(--bg-card);
+}
+
+.lib-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.lib-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 1.2rem;
+    align-items: center;
+    padding: 0.95rem 1.05rem;
+    text-decoration: none;
+    color: inherit;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+}
+
+.lib-card:hover {
+    border-color: var(--accent-primary);
+}
+
+.lib-authors {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.lib-card h3 {
+    margin: 0.12rem 0 0;
+    font-family: var(--font-serif);
+    font-size: 1.22rem;
+    line-height: 1.25;
+}
+
+.lib-why {
+    margin: 0.35rem 0 0;
+    line-height: 1.5;
+}
+
+.lib-why-ar {
+    color: var(--text-muted);
+    font-family: var(--font-ar);
+}
+
+.lib-go {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: var(--accent-primary);
+    text-align: end;
+}
+
 .yt-shelf {
     margin: 0 0 1.8rem;
 }
@@ -1593,9 +1691,14 @@ html[dir="rtl"] .cover-face-copy h2 {
         grid-template-columns: 1fr;
     }
 
-    .yt-invite {
+    .yt-invite,
+    .lib-invite {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .lib-card {
+        grid-template-columns: 1fr;
     }
 }
 

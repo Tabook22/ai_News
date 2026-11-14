@@ -89,6 +89,8 @@ body.disclaimer-open { overflow: hidden; }
     padding-inline-end: 4px;
 }
 
+.disclaimer-lang[hidden] { display: none; }
+
 .disclaimer-lang {
     padding: 16px 17px;
     background: #fff;

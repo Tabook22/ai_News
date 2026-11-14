@@ -1,7 +1,7 @@
 {% extends "public_v3.html" %}
 {% set ar = lang_pref == 'ar' %}
 
-{% block page_title %}{{ 'اشترك في النشرة' if ar else 'Subscribe to the newsletter' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'اشترك في النشرة' if ar else 'Subscribe to the newsletter' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'بريد واحد كل أحد: ملخص الأسبوع في الذكاء الاصطناعي، بالعربية والإنجليزية.' if ar else 'One email on Sunday: the week in AI, in Arabic and English.' }}{% endblock %}
 
 {% block content %}

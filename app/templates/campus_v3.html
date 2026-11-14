@@ -2,7 +2,7 @@
 {% import "_v3_macros.html" as m %}
 {% set ar = lang_pref == 'ar' %}
 
-{% block page_title %}{{ 'القسم' if ar else 'The department' }} — {{ settings.magazine_title if settings else 'Nasser AI News' }}{% endblock %}
+{% block page_title %}{{ 'القسم' if ar else 'The department' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'أخبار قسم علوم الحاسوب في جامعة ظفار: اختبارات، ورش، عمل الطلبة، ولوحة الإعلانات.' if ar else 'Computer Science at Dhofar University: exams, workshops, student work, and the notice board.' }}{% endblock %}
 
 {% block content %}

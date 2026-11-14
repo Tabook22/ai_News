@@ -3,7 +3,7 @@
 
 {% set ar = lang_pref == 'ar' %}
 
-{% block page_title %}{{ settings.magazine_title if settings else 'Nasser AI News' }} — {{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب' if ar else 'The AI magazine of Computer Science at Dhofar University' }}{% endblock %}
+{% block page_title %}{{ magazine_name }} — {{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب' if ar else 'The AI magazine of Computer Science at Dhofar University' }}{% endblock %}
 
 {% block page_desc %}{{ (lead.summary_ar or lead.summary) | striptags | truncate(155) if lead and ar else ((lead.summary or '') | striptags | truncate(155) if lead else ('مجلة الذكاء الاصطناعي لقسم علوم الحاسوب في جامعة ظفار.' if ar else 'The AI magazine of Computer Science at Dhofar University.')) }}{% endblock %}
 
@@ -21,7 +21,7 @@
 <div class="wrap">
 <div class="masthead">
     <span class="eyebrow">{{ 'جامعة ظفار · قسم علوم الحاسوب' if ar else 'Dhofar University · Computer Science' }}</span>
-    <h1 class="wordmark">{{ settings.magazine_title if settings else 'Nasser AI News' }}</h1>
+    <h1 class="wordmark">{{ magazine_name }}</h1>
     <div class="masthead-meta">
         <span><strong>{{ issue_label }}</strong></span>
         <span class="dot" aria-hidden="true"></span>
@@ -29,12 +29,97 @@
         <span class="dot" aria-hidden="true"></span>
         <span>{{ stats.total }} {{ 'قصة' if ar else 'stories' }} · {{ stats.campus }} {{ 'في القسم' if ar else 'on campus' }}</span>
         <span class="dot hide-sm" aria-hidden="true"></span>
+        <a href="{{ url_for('reference_library') }}">{{ 'مكتبة المراجع' if ar else 'Reference library' }}</a>
+        <span class="dot hide-sm" aria-hidden="true"></span>
         <a href="{{ url_for('find_stories') }}" class="hide-sm">{{ 'كل القصص' if ar else 'All stories' }}</a>
     </div>
     <div class="color-strip" aria-hidden="true">
         <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
 </div>
+
+{% if top_models %}
+<section class="model-column" aria-labelledby="models-top-title">
+    <header class="model-column-head">
+        <span class="eyebrow">Hugging Face</span>
+        <h2 id="models-top-title">{{ 'أفضل ١٠ نماذج مفتوحة' if ar else 'Top 10 open models' }}</h2>
+        <p>{{ 'الأكثر تحميلًا الآن على Hugging Face. التحميلات تعني الاستخدام، لا الجودة. نموذج GPT-2 القديم خارج القائمة.' if ar else 'The most-downloaded language models on Hugging Face right now. Downloads show use, not quality. The old GPT-2 baseline is left off.' }}</p>
+        <a href="{{ url_for('models_directory') }}">{{ 'الجدول الكامل' if ar else 'Full table' }}</a>
+    </header>
+    <ol class="model-column-list">
+        {% for model in top_models %}
+        <li>
+            <a href="{{ model.url }}" target="_blank" rel="noopener noreferrer">
+                <span class="mc-num" aria-hidden="true">{{ '%02d' % loop.index }}</span>
+                <span class="mc-copy">
+                    <b>{{ model.name }}</b>
+                    <span>{{ model.org }} · {{ model.downloads_label }} {{ 'تحميل' if ar else 'downloads' }}</span>
+                </span>
+            </a>
+        </li>
+        {% endfor %}
+    </ol>
+    <aside class="model-column-links" aria-labelledby="model-ranks-title">
+        <h3 id="model-ranks-title">{{ 'أحدث التصنيفات' if ar else 'Latest rankings' }}</h3>
+        <ul>
+            {% for link in model_rank_links %}
+            <li>
+                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">
+                    <b>{{ link.name_ar if ar else link.name }}</b>
+                    <span>{{ link.note_ar if ar else link.note }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+</section>
+{% endif %}
+
+{% if day_story or day_video %}
+<section class="day-of" aria-labelledby="day-title">
+    <header class="day-head">
+        <span class="eyebrow">{{ 'اليوم' if ar else 'Today' }}</span>
+        <h2 id="day-title">{{ 'الأهم في الذكاء الاصطناعي' if ar else 'The day in AI' }}</h2>
+        <p>{{ 'أهم خبر وأهم فيديو وجدناهما في بحث اليوم.' if ar else 'The most important story and video from today’s search.' }}</p>
+    </header>
+    <div class="day-grid">
+        {% if day_story %}
+        <article class="day-card">
+            <a class="media-link" href="{{ url_for('magazine_detail', item_id=day_story.id) }}">
+                {{ m.media(day_story, '16x9', True) }}
+                <span class="media-tag">{{ 'أهم خبر' if ar else 'Top story' }}</span>
+            </a>
+            <div class="day-copy">
+                <span class="b-src">{{ day_story.source or 'Nasser AI News' }}</span>
+                <div class="title-row">
+                    <h3><a href="{{ url_for('magazine_detail', item_id=day_story.id) }}">{{ m.title(day_story, ar) }}</a></h3>
+                    {{ m.glance(day_story, ar) }}
+                </div>
+                {% set day_dek = (day_story.summary_ar | reader_line or day_story.summary) if ar else day_story.summary %}
+                {% if day_dek %}<p>{{ day_dek | plain_dek | truncate(180, true) }}</p>{% endif %}
+            </div>
+        </article>
+        {% endif %}
+        {% if day_video %}
+        <article class="day-card day-video">
+            <a class="media-link" href="{{ day_video.url }}" target="_blank" rel="noopener">
+                <div class="media media-16x9{% if not day_video.image %} is-empty{% endif %}">
+                    {% if day_video.image %}
+                    <img src="{{ day_video.image }}" alt="" width="800" height="450">
+                    {% endif %}
+                    <span class="day-play" aria-hidden="true"></span>
+                </div>
+                <span class="media-tag">{{ 'أهم فيديو' if ar else 'Top video' }}</span>
+            </a>
+            <div class="day-copy">
+                <span class="b-src">{{ day_video.channel or 'YouTube' }}</span>
+                <h3><a href="{{ day_video.url }}" target="_blank" rel="noopener">{{ (day_video.title_ar or day_video.title) if ar else day_video.title }}</a></h3>
+            </div>
+        </article>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
 
 {% if brief_items %}
 <section class="brief" aria-labelledby="brief-title">
@@ -60,11 +145,40 @@
                     <span class="b-src">{{ story.source or 'Nasser AI News' }} · {{ m.desk(story, ar) }}</span>
                 </span>
             </a>
+            {{ m.glance(story, ar) }}
         </li>
         {% endfor %}
     </ol>
 </section>
 {% endif %}
+
+<section class="lib-issue" aria-labelledby="lib-issue-title">
+    <header class="lib-issue-head">
+        <div>
+            <span class="eyebrow">{{ 'للدراسة' if ar else 'For study' }}</span>
+            <h2 id="lib-issue-title">{{ 'مكتبة المراجع' if ar else 'Reference library' }}</h2>
+            <p>{{ 'ما اختاره المحرر لهذا العدد. المكتبة الكاملة فيها أكثر.' if ar else 'Chosen for this issue. The full library holds more.' }}</p>
+        </div>
+        <a href="{{ url_for('reference_library') }}">{{ 'المكتبة كاملة' if ar else 'Full library' }}</a>
+    </header>
+    {% if issue_library %}
+    {% for shelf in issue_library %}
+    <div class="lib-issue-shelf">
+        <h3>{{ shelf.ar if ar else shelf.en }}</h3>
+        <div class="lib-issue-list">
+            {% for item in shelf.entries %}
+            <a class="lib-issue-card" href="{{ item.url }}" target="_blank" rel="noopener">
+                <b>{{ item.title }}</b>
+                <span>{{ item.authors }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="lib-issue-empty">{{ 'سيظهر هنا ما يختاره المحرر من الكتب والأبحاث والمقررات.' if ar else 'Books, papers, and courses the editor picks for the issue will appear here.' }}</p>
+    {% endif %}
+</section>
 
 {% if lead %}
 <div class="lead-grid">
@@ -81,9 +195,12 @@
             <span class="src-badge src-{{ lead.source_kind }}">{{ lead.source_kind_ar if ar else lead.source_kind_en }}</span>
         </div>
 
-        <h2 class="lead-title">
-            <a href="{{ url_for('magazine_detail', item_id=lead.id) }}">{{ m.title(lead, ar) }}</a>
-        </h2>
+        <div class="title-row">
+            <h2 class="lead-title">
+                <a href="{{ url_for('magazine_detail', item_id=lead.id) }}">{{ m.title(lead, ar) }}</a>
+            </h2>
+            {{ m.glance(lead, ar) }}
+        </div>
 
         {% set lead_dek = (lead.summary_ar | reader_line or lead.summary) if ar else lead.summary %}
         {% if lead_dek %}<p class="lead-dek">{{ lead_dek | plain_dek | truncate(230, true) }}</p>{% endif %}
@@ -188,7 +305,10 @@
                 {{ m.media(story, '16x9') }}
             </a>
             <div class="kicker"><span class="desk-tag">{{ m.desk(story, ar) }}</span></div>
-            <h3 class="card-title"><a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a></h3>
+            <div class="title-row">
+                <h3 class="card-title"><a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a></h3>
+                {{ m.glance(story, ar) }}
+            </div>
             {% set dek = (story.summary_ar | reader_line or story.summary) if ar else story.summary %}
             {% if dek %}<p class="card-dek">{{ dek | plain_dek | truncate(150, true) }}</p>{% endif %}
             <div class="card-meta">{{ story.source or 'Nasser AI News' }} · {{ story.reading_minutes }} {{ 'دقائق' if ar else 'min' }}</div>
@@ -201,7 +321,10 @@
         {% for story in brief_rows %}
         <div class="brief-row desk-{{ story.desk }}">
             <span class="idx" aria-hidden="true">{{ '%02d' % (loop.index + brief_items|length + features|length + 1) }}</span>
-            <a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a>
+            <div class="title-row">
+                <a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a>
+                {{ m.glance(story, ar) }}
+            </div>
             <span class="src">{{ story.source or 'Nasser AI News' }}</span>
         </div>
         {% endfor %}
@@ -227,7 +350,10 @@
                     {{ m.media(story, '4x3') }}
                 </a>
                 <div>
-                    <h3><a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a></h3>
+                    <div class="title-row">
+                        <h3><a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a></h3>
+                        {{ m.glance(story, ar) }}
+                    </div>
                     {% set dek = (story.summary_ar | reader_line or story.summary) if ar else story.summary %}
                     {% if dek %}<p>{{ dek | plain_dek | truncate(150, true) }}</p>{% endif %}
                     <span class="when">{{ (story.kind_ar if ar else story.kind_en) or ('القسم' if ar else 'Department') }}{% if story.place %} · {{ story.place }}{% endif %}</span>
@@ -331,7 +457,10 @@
         <div class="most-item pick-{{ loop.index }} desk-{{ story.desk }}">
             <span class="rank" aria-hidden="true">{{ loop.index }}</span>
             <div>
-                <a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a>
+                <div class="title-row">
+                    <a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a>
+                    {{ m.glance(story, ar) }}
+                </div>
                 <span class="src">{{ story.source or 'Nasser AI News' }} · {{ m.desk(story, ar) }}</span>
             </div>
         </div>
