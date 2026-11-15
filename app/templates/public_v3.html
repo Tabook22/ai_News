@@ -40,7 +40,12 @@
     {% block head_extra %}{% endblock %}
 </head>
 
-<body class="v3">
+{% set _public_theme = settings.public_theme if settings and settings.public_theme else 'paper' %}
+{% set _bg_style = settings.background_style if settings and settings.background_style else 'aurora' %}
+{% set _bg_image = settings.background_image if settings and settings.background_image else '' %}
+{% set _real_bg = _bg_style if (_bg_style != 'custom' or _bg_image) else 'paper' %}
+<body class="v3 theme-{{ _public_theme }} bg-{{ _real_bg }}{% if settings and settings.background_fixed %} bg-fixed{% endif %}{% if _real_bg == 'custom' and _bg_image %} has-bg-image{% endif %}"
+    style="{% if settings and settings.background_color and settings.background_color != '#fbfaf7' %}--page-bg: {{ settings.background_color }};{% endif %}{% if _real_bg == 'custom' and _bg_image %} --bg-image: url('{{ _bg_image }}');{% endif %}">
 <script>
 (function () {
     /* The app can be mounted under /ainews/ behind Nginx. Prefix absolute fetch() paths

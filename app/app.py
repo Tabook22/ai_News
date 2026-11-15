@@ -174,6 +174,13 @@ class MagazineSettings(db.Model):
     language_mode = db.Column(db.String(20), default="bilingual") # 'bilingual', 'en', 'ar'
     theme = db.Column(db.String(20), default="slate") # 'slate', 'light', 'midnight', 'sepia'
     magazine_template = db.Column(db.String(30), default="slate") # 'slate', 'broadsheet', 'wire', 'quarterly'
+
+    # Public magazine appearance (the admin chrome has its own `theme` above).
+    public_theme = db.Column(db.String(30), default="paper")
+    background_style = db.Column(db.String(30), default="aurora")
+    background_image = db.Column(db.String(500), default="")
+    background_color = db.Column(db.String(20), default="#fbfaf7")
+    background_fixed = db.Column(db.Boolean, default=False)
     
     # Custom Overrides
     custom_text_color = db.Column(db.String(20), nullable=True)
@@ -3846,6 +3853,25 @@ def tool_detail(tool_id):
 
 MAGAZINE_TEMPLATES = {'slate', 'broadsheet', 'wire', 'quarterly', 'bloom', 'circuit', 'mission', 'halo', 'digital'}
 
+MAGAZINE_THEMES = [
+    ('paper', 'Paper', 'Warm editorial paper', '#fbfaf7', '#0b4f6c'),
+    ('ocean', 'Ocean', 'Cool blue, calm and clear', '#f2f8fb', '#075985'),
+    ('forest', 'Forest', 'Earthy green on cream', '#f4f7ef', '#1f5a3d'),
+    ('sunset', 'Sunset', 'Warm sand and terracotta', '#fdf5ef', '#9a3412'),
+    ('lilac', 'Lilac', 'Soft violet, modern', '#f7f4fb', '#6d4aa3'),
+]
+
+MAGAZINE_BACKGROUNDS = [
+    ('paper', 'Paper', 'A quiet paper texture'),
+    ('wash', 'Colour wash', 'Soft fields of colour behind the page'),
+    ('grid', 'Grid', 'Fine editorial grid lines'),
+    ('dots', 'Dots', 'A subtle dot matrix'),
+    ('aurora', 'Aurora', 'A bolder colour gradient'),
+    ('solid', 'Solid colour', 'One clean background colour'),
+    ('custom', 'Your image', 'Upload a photo as the page background'),
+]
+
+
 @app.route('/templates')
 @login_required
 def template_picker():
@@ -6660,7 +6686,40 @@ def settings_page():
             settings.magazine_title = request.form.get('magazine_title') or settings.magazine_title
             settings.version = request.form.get('version', '')
             settings.language_mode = request.form.get('language_mode') # New Setting
-            settings.theme = request.form.get('theme') # Theme Setting
+            settings.theme = request.form.get('theme') # Admin theme
+            public_theme = request.form.get('public_theme', 'paper')
+            if public_theme not in {key for key, _label, _desc, _bg, _accent in MAGAZINE_THEMES}:
+                public_theme = 'paper'
+            background_style = request.form.get('background_style', 'aurora')
+            if background_style not in {key for key, _label, _desc in MAGAZINE_BACKGROUNDS}:
+                background_style = 'aurora'
+            settings.public_theme = public_theme
+            settings.background_style = background_style
+            settings.background_fixed = bool(request.form.get('background_fixed'))
+            bg_color = (request.form.get('background_color') or '').strip()
+            settings.background_color = bg_color if re.match(r'^#[0-9a-fA-F]{6}$', bg_color) else '#fbfaf7'
+
+            bg_file = request.files.get('background_image')
+            if bg_file and bg_file.filename and allowed_file(bg_file.filename, {'png', 'jpg', 'jpeg', 'webp'}):
+                bg_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'images', 'backgrounds')
+                os.makedirs(bg_dir, exist_ok=True)
+                bg_name = secure_filename(f"bg_{uuid.uuid4().hex}_{bg_file.filename}")
+                bg_file.save(os.path.join(bg_dir, bg_name))
+                old_bg = settings.background_image
+                settings.background_image = f"/static/uploads/images/backgrounds/{bg_name}"
+                if old_bg and old_bg.startswith('/static/uploads/images/backgrounds/'):
+                    try:
+                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], old_bg.replace('/static/uploads/', '', 1)))
+                    except OSError:
+                        pass
+            if request.form.get('remove_background'):
+                old_bg = settings.background_image
+                settings.background_image = ''
+                if old_bg and old_bg.startswith('/static/uploads/images/backgrounds/'):
+                    try:
+                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], old_bg.replace('/static/uploads/', '', 1)))
+                    except OSError:
+                        pass
             
             # Custom Colors Logic
             if request.form.get('reset_colors'):
@@ -6825,7 +6884,8 @@ def settings_page():
     from agent.skills.content_processor.providers import public_status
     return render_template('settings.html', settings=settings,
                            api_providers=providers_status, custom_api_keys=custom_api_keys,
-                           ai_desk=public_status(),
+                           ai_desk=public_status(), magazine_themes=MAGAZINE_THEMES,
+                           magazine_backgrounds=MAGAZINE_BACKGROUNDS,
                            cover_world=_cover_choices(False, settings.cover_world_id),
                            cover_campus=_cover_choices(True, settings.cover_campus_id))
 
@@ -7259,6 +7319,11 @@ with app.app_context():
                 'cover_world_id': "VARCHAR(36) DEFAULT ''",
                 'cover_campus_id': "VARCHAR(36) DEFAULT ''",
                 'campus_kind_order': "TEXT DEFAULT ''",
+                'public_theme': "VARCHAR(30) DEFAULT 'paper'",
+                'background_style': "VARCHAR(30) DEFAULT 'aurora'",
+                'background_image': "VARCHAR(500) DEFAULT ''",
+                'background_color': "VARCHAR(20) DEFAULT '#fbfaf7'",
+                'background_fixed': "BOOLEAN DEFAULT 0",
             }
             
             with db.engine.connect() as conn:
