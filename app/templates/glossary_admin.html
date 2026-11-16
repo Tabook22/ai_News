@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block page_title %}{{ A('gl_title') }}{% endblock %}
+
+{% block content %}
+<div class="res-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ A('gl_kicker') }}</p>
+            <h1>{{ A('gl_title') }}</h1>
+            <p class="editor-dek">{{ A('gl_dek') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('learn_page') }}" target="_blank" rel="noopener">{{ A('gl_preview') }}</a>
+            <a class="btn btn-primary" href="{{ url_for('add_glossary_term') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ A('gl_add') }}
+            </a>
+        </div>
+    </div>
+
+    <form class="lib-admin-search" method="get" action="{{ url_for('glossary_admin') }}" role="search">
+        <label class="sr-only" for="gl-admin-q">{{ A('gl_search') }}</label>
+        <input id="gl-admin-q" type="search" name="q" value="{{ q or '' }}" placeholder="{{ A('gl_search_ph') }}">
+        <button class="btn btn-secondary" type="submit">{{ A('gl_search') }}</button>
+        {% if q %}<a class="btn btn-secondary" href="{{ url_for('glossary_admin') }}">{{ A('gl_clear') }}</a>{% endif %}
+    </form>
+    {% if q and not groups %}<p class="folio-empty">{{ A('gl_none') }}</p>{% endif %}
+
+    {% for group in groups %}
+    <section class="dash-section" style="margin-top: 1.4rem;">
+        <div class="dash-section-head">
+            <h2>{{ group.ar if admin_ar else group.en }} <small style="font-weight:500; color: var(--a-muted);">{{ group.terms|length }}</small></h2>
+        </div>
+        <div class="res-list">
+            {% for item in group.terms %}
+            <article class="res-row">
+                <div class="res-main">
+                    <b>{{ item.term_en }}{% if item.term_ar %} <span style="color: var(--a-muted); font-weight: 500;">&middot; <bdi dir="rtl">{{ item.term_ar }}</bdi></span>{% endif %}</b>
+                    <small>{{ item.def_en }}</small>
+                </div>
+                <div class="res-actions lib-actions">
+                    {% if item.is_seed %}<span class="res-status is-hidden" style="background:#eef4ff; color:#3538cd;">{{ A('gl_starter') }}</span>{% endif %}
+                    <span class="res-status {{ 'is-live' if item.is_published else 'is-hidden' }}">{{ A('gl_live') if item.is_published else A('gl_hidden') }}</span>
+                    <a href="{{ url_for('glossary_page') }}#term-{{ item.slug }}" target="_blank" rel="noopener">{{ A('gl_preview') }}</a>
+                    <a href="{{ url_for('edit_glossary_term', term_id=item.id) }}">{{ A('edit') }}</a>
+                    <form method="POST" action="{{ url_for('toggle_glossary_term', term_id=item.id) }}">
+                        <button type="submit">{{ A('gl_hide') if item.is_published else A('gl_show') }}</button>
+                    </form>
+                    {% if not item.is_seed %}
+                    <form method="POST" action="{{ url_for('delete_glossary_term', term_id=item.id) }}"
+                        onsubmit="return confirm({{ A('gl_remove_q')|tojson }});">
+                        <button class="is-danger" type="submit">{{ 'حذف' if admin_ar else 'Delete' }}</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}

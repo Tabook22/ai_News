@@ -36,6 +36,9 @@ from flask import Flask, abort, render_template, request, redirect, url_for, fla
 from admin_i18n import admin_text
 from library_catalog import LIBRARY_SEED, LIBRARY_SHELVES
 from library_discover import discover_latest
+from glossary_data import GLOSSARY_CATEGORIES, GLOSSARY_SEED
+import hashlib
+import html as html_lib
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -311,11 +314,12 @@ class NewsItem(db.Model):
         return {
             "id": self.id,
             "timestamp": self.timestamp.isoformat() if self.timestamp else "",
-            "title": self.title,
-            "summary": self.summary,
+            # Feeds sometimes store "&#8217;" in headlines; readers should see the apostrophe.
+            "title": html_lib.unescape(self.title) if self.title else self.title,
+            "summary": html_lib.unescape(self.summary) if self.summary else self.summary,
             "full_content": self.full_content,
-            "title_ar": self.title_ar,
-            "summary_ar": self.summary_ar,
+            "title_ar": html_lib.unescape(self.title_ar) if self.title_ar else self.title_ar,
+            "summary_ar": html_lib.unescape(self.summary_ar) if self.summary_ar else self.summary_ar,
             "full_content_ar": self.full_content_ar,
             "video_id": self.video_id,
             "content_format": self.content_format,
@@ -767,6 +771,90 @@ class LibraryReference(db.Model):
         }
 
 
+class GlossaryTerm(db.Model):
+    """One AI term, in English and Arabic, written for a first-year student."""
+    __tablename__ = 'glossary_terms'
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    category = db.Column(db.String(20), nullable=False, default='basics', index=True)
+    level = db.Column(db.Integer, default=1)
+    term_en = db.Column(db.String(160), nullable=False)
+    term_ar = db.Column(db.String(160), default='')
+    def_en = db.Column(db.Text, default='')
+    def_ar = db.Column(db.Text, default='')
+    example_en = db.Column(db.Text, default='')
+    example_ar = db.Column(db.Text, default='')
+    is_published = db.Column(db.Boolean, default=True)
+    is_seed = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'slug': self.slug,
+            'cat': self.category,
+            'level': self.level or 1,
+            'en': self.term_en,
+            'ar': self.term_ar or '',
+            'ar_name': _arabic_name(self.term_ar),
+            'def_en': self.def_en or '',
+            'def_ar': self.def_ar or '',
+            'ex_en': self.example_en or '',
+            'ex_ar': self.example_ar or '',
+        }
+
+
+def _arabic_name(text):
+    """The Arabic name alone: 'الهلوسة (Hallucination)' becomes 'الهلوسة'. The English sits beside it already."""
+    core = re.sub(r'\s*\([A-Za-z0-9 /\-\.\+]+\)\s*$', '', text or '').strip()
+    return core or (text or '')
+
+
+BOARD_KINDS = ('question', 'idea', 'link')
+BOARD_BODY_MAX = 600
+
+
+class BoardPost(db.Model):
+    """A student's question, idea, or useful link. Nothing shows until the editor approves it."""
+    __tablename__ = 'board_posts'
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(12), nullable=False, default='question', index=True)
+    nickname = db.Column(db.String(40), default='')
+    body = db.Column(db.Text, nullable=False)
+    link_url = db.Column(db.String(300), default='')
+    lang = db.Column(db.String(4), default='en')
+    status = db.Column(db.String(10), nullable=False, default='pending', index=True)
+    reply = db.Column(db.Text, default='')
+    replied_at = db.Column(db.DateTime)
+    pinned = db.Column(db.Boolean, default=False)
+    poster_hash = db.Column(db.String(16), default='')
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'kind': self.kind,
+            'nickname': self.nickname or '',
+            'body': self.body,
+            'link_url': self.link_url or '',
+            'link_host': _link_host(self.link_url),
+            'lang': self.lang or 'en',
+            'status': self.status,
+            'reply': self.reply or '',
+            'pinned': bool(self.pinned),
+            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else '',
+            'created_label': self.created_at.strftime('%d %b %Y') if self.created_at else '',
+            'created_label_ar': (f"{self.created_at.day} {ARABIC_MONTHS[self.created_at.month]} {self.created_at.year}"
+                                 if self.created_at else ''),
+        }
+
+
+def _link_host(url):
+    """The site a link points to, for showing 'example.com' instead of a long URL."""
+    match = re.match(r'https?://([^/?#]+)', url or '', re.I)
+    return match.group(1).lower().removeprefix('www.') if match else ''
+
+
 class OccasionAlbum(db.Model):
     """One department occasion: a semester, a name, a date, and its pictures."""
     __tablename__ = 'occasion_albums'
@@ -942,8 +1030,9 @@ def inject_global_vars():
             reels_count = CuratedReel.query.filter_by(status='published').count()
             tools_count = AITool.query.filter_by(is_published=True).count()
             subscriber_count = Subscriber.query.filter_by(is_active=True).count() if is_logged else 0
+            board_pending = BoardPost.query.filter_by(status='pending').count() if is_logged else 0
         except Exception:
-            reels_count = tools_count = subscriber_count = 0
+            reels_count = tools_count = subscriber_count = board_pending = 0
         settings = MagazineSettings.get_settings()
         lang = get_lang_pref()
         name_en = (settings.magazine_title if settings and settings.magazine_title else '') or 'Nasser AI News'
@@ -961,10 +1050,11 @@ def inject_global_vars():
             'reels_count': reels_count,
             'tools_count': tools_count,
             'subscriber_count': subscriber_count,
+            'board_pending': board_pending,
         }
     except Exception:
         # DB might not be init yet
-        return {'settings': None, 'lang_pref': get_lang_pref(), 'magazine_name': 'ناصر للذكاء الاصطناعي' if get_lang_pref() == 'ar' else 'Nasser AI News', 'news_desks': NEWS_DESKS, 'campus_kind_choices': CAMPUS_KIND_CHOICES, 'admin_desk': 'newsroom', 'admin_lang': 'en', 'admin_ar': False, 'now_year': datetime.datetime.now().year, 'reels_count': 0, 'tools_count': 0, 'subscriber_count': 0}
+        return {'settings': None, 'lang_pref': get_lang_pref(), 'magazine_name': 'ناصر للذكاء الاصطناعي' if get_lang_pref() == 'ar' else 'Nasser AI News', 'news_desks': NEWS_DESKS, 'campus_kind_choices': CAMPUS_KIND_CHOICES, 'admin_desk': 'newsroom', 'admin_lang': 'en', 'admin_ar': False, 'now_year': datetime.datetime.now().year, 'reels_count': 0, 'tools_count': 0, 'subscriber_count': 0, 'board_pending': 0}
 
 
 @app.template_global('A')
@@ -2566,6 +2656,9 @@ def sitemap_xml():
                    % url_for('models_directory', _external=True))
     entries.append("<url><loc>%s</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>"
                    % url_for('campus_projects', _external=True))
+    for endpoint in ('glossary_page', 'learn_page', 'student_board'):
+        entries.append("<url><loc>%s</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>"
+                       % url_for(endpoint, _external=True))
     for tool in AITool.query.filter_by(is_published=True).all():
         entries.append("<url><loc>%s</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>"
                        % url_for('tool_detail', tool_id=tool.id, _external=True))
@@ -4978,6 +5071,9 @@ def _v3_dedupe(stories):
     unique = []
     for story in stories:
         key = _title_key(story.get("title")) or _title_key(story.get("title_ar"))
+        if key and story.get("event_on"):
+            # The same workshop on two different dates is two events, not a syndicated copy.
+            key = f"{key}|{story['event_on']}"
         if not key or key in seen:
             continue
         seen.add(key)
@@ -5007,6 +5103,97 @@ def _v3_cover_worthy(story):
         return False
     source = (story.get("source") or "").strip().lower()
     return any(name in source for name in _V3_COVER_SOURCES)
+
+
+# Companies the "Top AI news" bar follows. Matched on the source name and headline only, with word
+# boundaries, so a story about "flaws" is not mistaken for AWS.
+_TICKER_COMPANIES = (
+    ('OpenAI', r'openai|chatgpt'),
+    ('Anthropic', r'anthropic|\bclaude\b'),
+    ('Google', r'\bgoogle\b|deepmind|\bgemini\b'),
+    ('Microsoft', r'microsoft'),
+    ('Meta', r'\bmeta\b|\bllama\b'),
+    ('NVIDIA', r'nvidia|jensen huang'),
+    ('Apple', r'\bapple\b'),
+    ('Amazon', r'\bamazon\b|\baws\b'),
+    ('Mistral', r'mistral'),
+    ('xAI', r'\bxai\b|\bgrok\b'),
+    ('DeepSeek', r'deepseek'),
+    ('Alibaba', r'alibaba|\bqwen\b'),
+    ('Hugging Face', r'hugging ?face'),
+)
+_TICKER_RES = tuple((name, re.compile(pattern, re.I)) for name, pattern in _TICKER_COMPANIES)
+_TICKER_DOMAINS = {
+    'OpenAI': 'openai.com', 'Anthropic': 'anthropic.com', 'Google': 'google.com', 'Microsoft': 'microsoft.com',
+    'Meta': 'meta.com', 'NVIDIA': 'nvidia.com', 'Apple': 'apple.com', 'Amazon': 'amazon.com',
+    'Mistral': 'mistral.ai', 'xAI': 'x.ai', 'DeepSeek': 'deepseek.com', 'Alibaba': 'alibaba.com',
+    'Hugging Face': 'huggingface.co',
+}
+
+
+def _ticker_pool(limit=150):
+    """Recent published world stories (not just this week's front page), without syndicated copies."""
+    rows = (NewsItem.query
+            .filter(NewsItem.is_published.isnot(False), db.or_(NewsItem.wing.is_(None), NewsItem.wing != 'campus'))
+            .order_by(NewsItem.timestamp.desc()).limit(limit).all())
+    return _v3_dedupe([row.to_dict() for row in rows])
+
+
+def _ticker_items(stories, limit=12, per_company=2):
+    """Newest stories from the big AI companies, for the scrolling bar. Falls back to the newest
+    illustrated world stories so the bar is never empty on a quiet week."""
+    from urllib.parse import urlparse
+    pool = [s for s in stories
+            if (s.get('wing') or 'world') != 'campus' and s.get('category') != 'ads' and s.get('image')]
+    pool.sort(key=lambda s: s.get('published_at') or s.get('timestamp') or '', reverse=True)
+
+    def company_of(story):
+        source = story.get('source') or ''
+        title = story.get('title') or ''
+        for name, rx in _TICKER_RES:
+            if rx.search(source):
+                return name, 4
+        for name, rx in _TICKER_RES:
+            if rx.search(title):
+                return name, 3
+        return None, 0
+
+    picked, used = [], {}
+    for story in pool:
+        name, _score = company_of(story)
+        if not name or used.get(name, 0) >= per_company:
+            continue
+        used[name] = used.get(name, 0) + 1
+        picked.append((story, name))
+        if len(picked) >= limit:
+            break
+    if len(picked) < 6:
+        have = {s['id'] for s, _n in picked}
+        for story in pool:
+            if len(picked) >= 8:
+                break
+            if story['id'] not in have:
+                picked.append((story, story.get('source') or ''))
+    if len(picked) < 4:
+        return []
+    items = []
+    for story, company in picked:
+        host = ''
+        url = story.get('url') or ''
+        if url.startswith(('http://', 'https://')):
+            host = (urlparse(url).hostname or '').removeprefix('www.')
+        source = (story.get('source') or company or 'AI').strip()
+        # The logo is the company's when the story is about one; otherwise the publisher's.
+        logo_host = _TICKER_DOMAINS.get(company) or host
+        label = company if (not company or company.lower() in source.lower()) else f"{company} · {source}"
+        items.append({
+            'id': story['id'], 'title': story.get('title') or '', 'title_ar': story.get('title_ar') or '',
+            'image': story['image'], 'source': label or source, 'company': company,
+            'domain': logo_host, 'initial': (company or source)[:1].upper(),
+        })
+    items.sort(key=lambda i: next((s.get('published_at') or s.get('timestamp') or '' for s, _n in picked if s['id'] == i['id']), ''),
+               reverse=True)
+    return items
 
 
 def _render_v3_issue():
@@ -5076,9 +5263,11 @@ def _render_v3_issue():
         _stamp_campus(story)
     campus.sort(key=lambda s: (s.get('event_on') or s.get('timestamp') or ''), reverse=True)
     campus_items = campus[:3]
-    agenda = campus[:3]
-    upcoming = sorted([s for s in campus if s.get('event_on')],
-                      key=lambda s: s.get('event_on') or '')[:3]
+    # "Coming up" is only for dates still ahead; a past workshop is news, not an invitation.
+    today_iso = _gulf_today().isoformat()
+    upcoming = sorted([s for s in campus if s.get('event_on') and s['event_on'] >= today_iso],
+                      key=lambda s: s['event_on'])[:3]
+    glossary_terms = published_glossary()
 
     term_story = next((s for s in stories if s.get('lesson_term') or s.get('lesson_term_ar')), None)
     term = None
@@ -5117,12 +5306,17 @@ def _render_v3_issue():
         features=features,
         brief_rows=brief_rows,
         campus_items=campus_items,
-        agenda=agenda,
         upcoming=upcoming,
         term=term,
+        ticker=_ticker_items(_ticker_pool()),
+        today_term=term_of_the_day(glossary_terms),
+        glossary_total=len(glossary_terms),
+        glossary_categories=glossary_categories(),
+        board_teaser=_board_teaser(2),
         class_story=class_story,
         picks=picks,
         issue_library=_issue_library_picks(),
+        library_spot=_library_spotlight(),
         lead_what=lead_what,
         lead_why=lead_why,
         lead_ask=lead_ask,
@@ -5195,6 +5389,7 @@ def _render_v3_article(item):
         ask=ask,
         term=term,
         gloss=gloss,
+        story_terms=glossary_hits(story, published_glossary()),
         related=related,
         reading_minutes=story.get('reading_minutes') or 1,
         published=story.get('published_ar') if ar else story.get('published_en'),
@@ -5252,8 +5447,19 @@ def find_stories():
                 "on_shelf": clip.on_shelf is not False,
             })
 
+    glossary_matches = []
+    if q and wing != 'campus' and not desk:
+        like = f"%{q}%"
+        glossary_matches = [row.to_dict() for row in (
+            GlossaryTerm.query.filter(
+                GlossaryTerm.is_published.is_(True),
+                db.or_(GlossaryTerm.term_en.ilike(like), GlossaryTerm.term_ar.ilike(like),
+                       GlossaryTerm.def_en.ilike(like), GlossaryTerm.def_ar.ilike(like)))
+            .order_by(GlossaryTerm.level.asc(), GlossaryTerm.term_en.asc()).limit(5).all())]
+
     return render_template('search_v3.html', q=q, wing=wing, desk=desk,
-                           stories=stories, videos=videos, total=len(stories) + len(videos))
+                           stories=stories, videos=videos, glossary_matches=glossary_matches,
+                           total=len(stories) + len(videos) + len(glossary_matches))
 
 
 @app.route('/magazine')
@@ -7044,6 +7250,26 @@ def _issue_library_picks():
     return picks
 
 
+def _library_spotlight(limit=3):
+    """When the editor has not picked references for the issue, show a rotating few so the band is never empty."""
+    rows = (LibraryReference.query.filter_by(is_published=True)
+            .order_by(LibraryReference.display_order.asc(), LibraryReference.id.asc()).all())
+    by_shelf = {}
+    for row in rows:
+        by_shelf.setdefault(row.shelf, []).append(row)
+    shelves = [(key, en, ar) for key, en, ar, _a, _b in LIBRARY_SHELVES if by_shelf.get(key)]
+    if not shelves:
+        return []
+    week = _gulf_today().isocalendar()[1]
+    picks = []
+    for i in range(min(limit, len(shelves))):
+        key, en, ar = shelves[(week + i) % len(shelves)]
+        entries = by_shelf[key]
+        entry = entries[week % len(entries)]
+        picks.append(entry.to_dict() | {'shelf_en': en, 'shelf_ar': ar})
+    return picks
+
+
 def _library_query():
     return (request.args.get('q') or '').strip()
 
@@ -7209,6 +7435,367 @@ def delete_library_reference(item_id):
     db.session.commit()
     flash(admin_text(get_admin_lang(), 'lib_removed'), 'success')
     return redirect(url_for('library_admin'))
+
+
+# ============================================================
+# Student platform: glossary, learn (flashcards + quiz), student board
+# ============================================================
+
+def seed_glossary():
+    """Add the starter glossary. Existing slugs are never overwritten, so editor changes stay."""
+    known = {slug for (slug,) in db.session.query(GlossaryTerm.slug).all()}
+    added = 0
+    for slug, cat, level, en, ar, def_en, def_ar, ex_en, ex_ar in GLOSSARY_SEED:
+        if slug in known:
+            continue
+        db.session.add(GlossaryTerm(
+            slug=slug, category=cat, level=level, term_en=en, term_ar=ar,
+            def_en=def_en, def_ar=def_ar, example_en=ex_en, example_ar=ex_ar,
+            is_published=True, is_seed=True,
+        ))
+        added += 1
+    if added:
+        db.session.commit()
+        print(f"✅ Glossary seeded with {added} terms.")
+
+
+def glossary_categories():
+    return [{'key': key, 'en': en, 'ar': ar, 'color': color}
+            for key, en, ar, color in GLOSSARY_CATEGORIES]
+
+
+app.jinja_env.globals['GLOSSARY_CAT'] = {c['key']: c for c in glossary_categories()}
+
+
+def published_glossary():
+    rows = (GlossaryTerm.query.filter_by(is_published=True)
+            .order_by(GlossaryTerm.level.asc(), GlossaryTerm.term_en.asc()).all())
+    return [row.to_dict() for row in rows]
+
+
+def _gulf_today():
+    """Oman is UTC+4. The term of the day should change at local midnight, not at 4 a.m."""
+    return (datetime.datetime.utcnow() + datetime.timedelta(hours=4)).date()
+
+
+def term_of_the_day(terms):
+    """The same term for every reader on a given day, walking through the whole glossary."""
+    if not terms:
+        return None
+    ordered = sorted(terms, key=lambda term: term['id'])
+    return ordered[_gulf_today().toordinal() % len(ordered)]
+
+
+# Terms that are ordinary words in other contexts ("a training workshop") or that
+# appear in nearly every story ("AI"), so they are never suggested automatically.
+_GLOSSARY_NO_AUTOMATCH = {
+    'artificial-intelligence', 'model', 'training', 'attention', 'temperature',
+    'algorithm', 'bias', 'alignment', 'inference', 'latency', 'parameters',
+}
+
+
+# Words that also mean something else (a crypto token, a financial benchmark, an electrical
+# transformer) are only suggested when the story is clearly about AI.
+_GLOSSARY_NEEDS_AI_CONTEXT = {'token', 'transformer', 'benchmark', 'prompt', 'guardrails', 'embedding'}
+_AI_CONTEXT_EN = re.compile(r'\b(AI|A\.I\.|artificial intelligence|machine learning|deep learning|LLMs?|'
+                            r'neural|chatbots?|language models?|OpenAI|ChatGPT|Gemini|Claude|generative)\b')
+_AI_CONTEXT_AR = re.compile(r'ذكاء اصطناعي|الذكاء الاصطناعي|تعلم الآلة|تعلّم الآلة|نموذج لغوي|النماذج اللغوية')
+
+
+def _term_english_labels(term):
+    name = term['en']
+    labels = set()
+    main = re.sub(r'\s*\(.*?\)', '', name).strip().lower()
+    for part in re.split(r'\s+and\s+', main):
+        part = part.strip()
+        if part:
+            labels.add(part)
+    for abbr in re.findall(r'\(([A-Z]{2,6})\)', name):
+        labels.add(abbr)
+    if name.isupper() and 2 <= len(name) <= 6:
+        labels.add(name)
+    return labels
+
+
+def glossary_hits(story, terms, limit=4):
+    """Glossary terms that appear in a story, so a student can look them up in one tap."""
+    def plain(value):
+        if not value:
+            return ''
+        try:
+            return BeautifulSoup(value, 'html.parser').get_text(' ')
+        except Exception:
+            return str(value)
+
+    head_en = f"{story.get('title') or ''} {story.get('summary') or ''}"
+    body_en = plain(story.get('full_content'))
+    head_ar = f"{story.get('title_ar') or ''} {story.get('summary_ar') or ''}"
+    body_ar = plain(story.get('full_content_ar'))
+    text_en = f"{head_en} {body_en}"
+    text_ar = f"{head_ar} {body_ar}"
+    lowered = text_en.lower()
+    about_ai = bool(_AI_CONTEXT_EN.search(text_en) or _AI_CONTEXT_AR.search(text_ar))
+    scored = []
+    for term in terms:
+        if term['slug'] in _GLOSSARY_NO_AUTOMATCH:
+            continue
+        if term['slug'] in _GLOSSARY_NEEDS_AI_CONTEXT and not about_ai:
+            continue
+        score = 0
+        for label in _term_english_labels(term):
+            if label.isupper():
+                pattern, hay = r'\b' + re.escape(label) + r'\b', text_en
+            else:
+                pattern, hay = r'\b' + re.escape(label) + r's?\b', lowered
+            found = re.search(pattern, hay)
+            if found:
+                score = max(score, 2 if re.search(pattern, head_en if label.isupper() else head_en.lower()) else 1)
+        ar_main = re.sub(r'\s*\(.*?\)', '', term.get('ar') or '').strip()
+        ar_core = ar_main[2:] if ar_main.startswith('ال') else ar_main
+        if len(ar_core) >= 5 and ar_core in text_ar:
+            score = max(score, 2 if ar_core in head_ar else 1)
+        if score:
+            scored.append((score, term))
+    scored.sort(key=lambda pair: (-pair[0], pair[1]['level'], pair[1]['en']))
+    return [term for _score, term in scored[:limit]]
+
+
+@app.route('/glossary')
+def glossary_page():
+    terms = published_glossary()
+    return render_template('glossary.html', terms=terms, categories=glossary_categories(),
+                           today_term=term_of_the_day(terms))
+
+
+@app.route('/learn')
+def learn_page():
+    terms = published_glossary()
+    return render_template('learn.html', terms=terms, categories=glossary_categories(),
+                           today_term=term_of_the_day(terms))
+
+
+# ---------- student board ----------
+
+_CONTROL_CHARS = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
+
+
+def _board_clean(value, limit):
+    text = _CONTROL_CHARS.sub('', value or '').replace('\r\n', '\n').strip()
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text[:limit]
+
+
+def _poster_hash():
+    """A short fingerprint of the poster's address so repeat spammers are visible without storing the address."""
+    raw = f"{app.config.get('SECRET_KEY', '')}|{request.remote_addr or ''}"
+    return hashlib.sha256(raw.encode('utf-8')).hexdigest()[:16]
+
+
+def _board_text(ar, en, ar_text):
+    return ar_text if ar else en
+
+
+@app.route('/board', methods=['GET', 'POST'])
+def student_board():
+    ar = get_lang_pref() == 'ar'
+    if request.method == 'POST':
+        def back(message, level):
+            flash(message, level)
+            return redirect(url_for('student_board'))
+
+        if request.form.get('website'):  # a hidden field only bots fill in
+            return back(_board_text(ar, 'Thank you! The editor will read it before it appears.',
+                                    'شكرًا لك! سيقرؤه المحرر قبل أن يظهر.'), 'success')
+
+        kind = request.form.get('kind') if request.form.get('kind') in BOARD_KINDS else 'question'
+        body = _board_clean(request.form.get('body'), BOARD_BODY_MAX)
+        nickname = _board_clean(request.form.get('nickname'), 40).replace('\n', ' ')
+        link = (request.form.get('link_url') or '').strip()
+
+        if len(body) < 8:
+            return back(_board_text(ar, 'Please write a little more (at least 8 characters).',
+                                    'اكتب أكثر قليلًا (٨ أحرف على الأقل).'), 'error')
+        if len(re.findall(r'https?://|www\.', body, re.I)) > 0:
+            return back(_board_text(ar, 'Put links in the link box, not in the message.',
+                                    'ضع الروابط في خانة الرابط، لا في الرسالة.'), 'error')
+        if kind == 'link' and not link:
+            return back(_board_text(ar, 'Please add the link you want to share.',
+                                    'أضف الرابط الذي تريد مشاركته.'), 'error')
+        if link and not re.match(r'^https?://[^\s<>"\']{4,280}$', link, re.I):
+            return back(_board_text(ar, 'The link must start with http:// or https://.',
+                                    'يجب أن يبدأ الرابط بـ http:// أو https://.'), 'error')
+        if _public_rate_limited('board', 3, 60 * 60):
+            return back(_board_text(ar, 'You have posted a few times already. Please try again in an hour.',
+                                    'نشرتَ عدة مرات. حاول مجددًا بعد ساعة.'), 'error')
+
+        db.session.add(BoardPost(
+            kind=kind, nickname=nickname, body=body, link_url=link if kind == 'link' or link else '',
+            lang='ar' if re.search(r'[؀-ۿ]', body) else 'en',
+            status='pending', poster_hash=_poster_hash(),
+        ))
+        db.session.commit()
+        return back(_board_text(ar, 'Thank you! The editor will read it before it appears.',
+                                'شكرًا لك! سيقرؤه المحرر قبل أن يظهر.'), 'success')
+
+    kind = request.args.get('kind') if request.args.get('kind') in BOARD_KINDS else ''
+    query = BoardPost.query.filter_by(status='approved')
+    if kind:
+        query = query.filter_by(kind=kind)
+    posts = [p.to_dict() for p in query.order_by(BoardPost.pinned.desc(), BoardPost.created_at.desc()).limit(60).all()]
+    total = BoardPost.query.filter_by(status='approved').count()
+    return render_template('board.html', posts=posts, kind=kind, total=total, body_max=BOARD_BODY_MAX)
+
+
+def _board_teaser(limit=2):
+    """The newest answered posts first, for the front page. Empty until the editor approves something."""
+    rows = (BoardPost.query.filter_by(status='approved')
+            .order_by(BoardPost.pinned.desc(), BoardPost.replied_at.is_(None), BoardPost.created_at.desc())
+            .limit(limit).all())
+    return [row.to_dict() for row in rows]
+
+
+@app.route('/desk/board')
+@login_required
+def board_admin():
+    tab = request.args.get('tab') if request.args.get('tab') in ('pending', 'approved', 'rejected') else 'pending'
+    counts = {key: BoardPost.query.filter_by(status=key).count() for key in ('pending', 'approved', 'rejected')}
+    order = BoardPost.created_at.asc() if tab == 'pending' else BoardPost.created_at.desc()
+    posts = BoardPost.query.filter_by(status=tab).order_by(order).limit(200).all()
+    return render_template('board_admin.html', posts=[p.to_dict() | {'poster': p.poster_hash} for p in posts],
+                           tab=tab, counts=counts)
+
+
+@app.route('/desk/board/<int:post_id>/<action>', methods=['POST'])
+@login_required
+def board_action(post_id, action):
+    post = BoardPost.query.get_or_404(post_id)
+    tab = request.form.get('tab') if request.form.get('tab') in ('pending', 'approved', 'rejected') else 'pending'
+    lang = get_admin_lang()
+    if action == 'approve':
+        post.status = 'approved'
+    elif action == 'reject':
+        post.status = 'rejected'
+        post.pinned = False
+    elif action == 'pin':
+        post.pinned = not bool(post.pinned)
+    elif action == 'reply':
+        reply = _board_clean(request.form.get('reply'), 1200)
+        post.reply = reply
+        post.replied_at = datetime.datetime.utcnow() if reply else None
+        if reply:
+            post.status = 'approved'
+    elif action == 'delete':
+        db.session.delete(post)
+        db.session.commit()
+        flash(admin_text(lang, 'board_deleted'), 'success')
+        return redirect(url_for('board_admin', tab=tab))
+    else:
+        abort(404)
+    db.session.commit()
+    flash(admin_text(lang, 'board_saved'), 'success')
+    return redirect(url_for('board_admin', tab=tab))
+
+
+# ---------- glossary admin ----------
+
+def _slugify(text):
+    slug = re.sub(r'[^a-z0-9]+', '-', (text or '').lower()).strip('-')
+    return slug[:70]
+
+
+def _apply_glossary_form(term, creating):
+    en = (request.form.get('term_en') or '').strip()[:160]
+    definition = (request.form.get('def_en') or '').strip()
+    category = request.form.get('category')
+    if not en or not definition:
+        return 'gl_need'
+    if category not in [c[0] for c in GLOSSARY_CATEGORIES]:
+        category = 'basics'
+    if creating:
+        slug = _slugify(en) or f"term-{int(time.time())}"
+        base, n = slug, 2
+        while GlossaryTerm.query.filter_by(slug=slug).first():
+            slug, n = f"{base}-{n}", n + 1
+        term.slug = slug
+    term.term_en = en
+    term.term_ar = (request.form.get('term_ar') or '').strip()[:160]
+    term.def_en = definition[:700]
+    term.def_ar = (request.form.get('def_ar') or '').strip()[:700]
+    term.example_en = (request.form.get('example_en') or '').strip()[:300]
+    term.example_ar = (request.form.get('example_ar') or '').strip()[:300]
+    term.category = category
+    term.level = 2 if request.form.get('level') == '2' else 1
+    term.is_published = bool(request.form.get('is_published'))
+    return None
+
+
+@app.route('/desk/glossary')
+@login_required
+def glossary_admin():
+    needle = (request.args.get('q') or '').strip().lower()
+    rows = GlossaryTerm.query.order_by(GlossaryTerm.category.asc(), GlossaryTerm.term_en.asc()).all()
+    if needle:
+        rows = [r for r in rows if needle in f"{r.term_en} {r.term_ar} {r.def_en}".lower()]
+    cats = {key: {'key': key, 'en': en, 'ar': ar, 'terms': []} for key, en, ar, _c in GLOSSARY_CATEGORIES}
+    for row in rows:
+        cats.setdefault(row.category, {'key': row.category, 'en': row.category, 'ar': row.category, 'terms': []})['terms'].append(row)
+    groups = [g for g in cats.values() if g['terms']]
+    return render_template('glossary_admin.html', groups=groups, q=needle, total=len(rows))
+
+
+@app.route('/desk/glossary/new', methods=['GET', 'POST'])
+@login_required
+def add_glossary_term():
+    term = GlossaryTerm(is_published=True, is_seed=False, level=1, category='basics')
+    if request.method == 'POST':
+        error = _apply_glossary_form(term, creating=True)
+        if error:
+            flash(admin_text(get_admin_lang(), error), 'error')
+            return render_template('glossary_form.html', term=term, categories=glossary_categories(), form=request.form)
+        db.session.add(term)
+        db.session.commit()
+        flash(admin_text(get_admin_lang(), 'gl_saved'), 'success')
+        return redirect(url_for('glossary_admin'))
+    return render_template('glossary_form.html', term=term, categories=glossary_categories(), form=None)
+
+
+@app.route('/desk/glossary/<int:term_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_glossary_term(term_id):
+    term = GlossaryTerm.query.get_or_404(term_id)
+    if request.method == 'POST':
+        error = _apply_glossary_form(term, creating=False)
+        if error:
+            db.session.rollback()
+            flash(admin_text(get_admin_lang(), error), 'error')
+            return render_template('glossary_form.html', term=term, categories=glossary_categories(), form=request.form)
+        db.session.commit()
+        flash(admin_text(get_admin_lang(), 'gl_saved'), 'success')
+        return redirect(url_for('glossary_admin'))
+    return render_template('glossary_form.html', term=term, categories=glossary_categories(), form=None)
+
+
+@app.route('/desk/glossary/<int:term_id>/toggle', methods=['POST'])
+@login_required
+def toggle_glossary_term(term_id):
+    term = GlossaryTerm.query.get_or_404(term_id)
+    term.is_published = not bool(term.is_published)
+    db.session.commit()
+    flash(admin_text(get_admin_lang(), 'gl_saved'), 'success')
+    return redirect(url_for('glossary_admin'))
+
+
+@app.route('/desk/glossary/<int:term_id>/delete', methods=['POST'])
+@login_required
+def delete_glossary_term(term_id):
+    term = GlossaryTerm.query.get_or_404(term_id)
+    if term.is_seed:
+        flash(admin_text(get_admin_lang(), 'gl_seed_keep'), 'error')
+        return redirect(url_for('glossary_admin'))
+    db.session.delete(term)
+    db.session.commit()
+    flash(admin_text(get_admin_lang(), 'gl_removed'), 'success')
+    return redirect(url_for('glossary_admin'))
 
 
 # Initialize DB (Safe)
@@ -7413,6 +8000,7 @@ with app.app_context():
 
         print("✅ Database tables created/verified.")
         seed_reference_library()
+        seed_glossary()
     except Exception as e:
         print(f"❌ Database creation failed: {e}")
 

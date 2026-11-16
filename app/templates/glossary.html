@@ -1,0 +1,71 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'مسرد الذكاء الاصطناعي' if ar else 'AI glossary' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'مصطلحات الذكاء الاصطناعي بلغة بسيطة، بالعربية والإنجليزية، لطلبة علوم الحاسوب.' if ar else 'AI terms in plain language, in English and Arabic, for computer-science students.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap st-page">
+    <header class="st-mast st-mast-learn">
+        <span class="eyebrow">{{ 'تعلّم' if ar else 'Learn' }}</span>
+        <h1>{{ 'مسرد الذكاء الاصطناعي' if ar else 'AI glossary' }}</h1>
+        <p>{{ 'كل مصطلح بتعريف قصير وواضح، بالعربية والإنجليزية. اقرأ مصطلحًا في الدقيقة، أو اختبر نفسك.' if ar else 'Every term in one clear sentence, in English and Arabic. Read one in a minute, or test yourself.' }}</p>
+        <div class="st-mast-actions">
+            <a class="btn btn-primary" href="{{ url_for('learn_page') }}#flashcards">{{ 'بطاقات المراجعة' if ar else 'Flashcards' }}</a>
+            <a class="btn btn-ghost" href="{{ url_for('learn_page') }}#quiz">{{ 'اختبر نفسك' if ar else 'Take the quiz' }}</a>
+        </div>
+    </header>
+
+    <div class="gl-tools" role="search">
+        <label class="sr-only" for="gl-q">{{ 'ابحث في المصطلحات' if ar else 'Search terms' }}</label>
+        <input id="gl-q" type="search" autocomplete="off" data-gl-search
+            placeholder="{{ 'ابحث: هلوسة، token، RAG…' if ar else 'Search: hallucination, token, RAG…' }}">
+        <div class="gl-chips" role="group" aria-label="{{ 'المجموعات' if ar else 'Groups' }}">
+            <button type="button" class="gl-chip is-on" data-gl-cat="" aria-pressed="true">{{ 'الكل' if ar else 'All' }} <span>{{ terms|length }}</span></button>
+            {% for cat in categories %}
+            {% set n = terms|selectattr('cat', 'equalto', cat.key)|list|length %}
+            {% if n %}
+            <button type="button" class="gl-chip" data-gl-cat="{{ cat.key }}" aria-pressed="false" style="--cc: var({{ cat.color }});">
+                {{ cat.ar if ar else cat.en }} <span>{{ n }}</span></button>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <p class="gl-count" data-gl-count aria-live="polite"></p>
+
+    <div class="gl-grid">
+        {% for t in terms %}
+        {% set cat = GLOSSARY_CAT.get(t.cat) or {'en': t.cat, 'ar': t.cat, 'color': '--brand'} %}
+        {% set primary = (t.ar_name or t.en) if ar else t.en %}
+        {% set other = t.en if ar else t.ar_name %}
+        {% set definition = (t.def_ar or t.def_en) if ar else t.def_en %}
+        {% set example = (t.ex_ar or t.ex_en) if ar else t.ex_en %}
+        <article class="gl-term" id="term-{{ t.slug }}" data-cat="{{ t.cat }}"
+            data-text="{{ (t.en ~ ' ' ~ t.ar ~ ' ' ~ t.def_en ~ ' ' ~ t.def_ar)|lower }}" style="--cc: var({{ cat.color }});">
+            <header>
+                <span class="gl-cat">{{ cat.ar if ar else cat.en }}</span>
+                {% if t.level == 1 %}<span class="gl-start">{{ 'ابدأ هنا' if ar else 'Start here' }}</span>{% endif %}
+            </header>
+            <h2 {% if ar and t.ar %}lang="ar"{% endif %}>{{ primary }}</h2>
+            {% if other %}<p class="gl-alt" {% if ar %}dir="ltr" lang="en"{% else %}dir="rtl" lang="ar"{% endif %}>{{ other }}</p>{% endif %}
+            <p class="gl-def">{{ definition }}</p>
+            {% if example %}<p class="gl-ex"><b>{{ 'مثال' if ar else 'Example' }}</b> {{ example }}</p>{% endif %}
+            {% set second = t.def_en if ar else t.def_ar %}
+            {% if second %}
+            <details class="gl-more">
+                <summary>{{ 'English definition' if ar else 'التعريف بالعربية' }}</summary>
+                <p {% if ar %}dir="ltr" lang="en"{% else %}dir="rtl" lang="ar"{% endif %}>{{ second }}</p>
+            </details>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+
+    <p class="gl-empty" data-gl-empty hidden>{{ 'لا مصطلح يطابق بحثك. جرّب كلمة أخرى.' if ar else 'No term matches that. Try another word.' }}</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/learn-v3.js') }}?v=learn3" defer></script>
+{% endblock %}

@@ -9,6 +9,25 @@
 </div>
 {%- endmacro %}
 
+{% macro kind_tile(story) -%}
+{% set kind = story.campus_kind or 'work' %}
+<span class="kind-tile kind-{{ kind }}" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        {% if kind == 'video' %}
+        <rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="m10 9 5 3-5 3z"></path>
+        {% elif kind in ('workshop', 'conference', 'meeting', 'occasion') %}
+        <path d="M12 3v3M5.6 5.6l2.1 2.1M3 12h3M18.4 5.6l-2.1 2.1M21 12h-3"></path><path d="M9 18h6M10 21h4M8.5 14.5A5 5 0 1 1 15.5 14.5c-.9.7-1.5 1.5-1.5 2.5h-4c0-1-.6-1.8-1.5-2.5z"></path>
+        {% elif kind == 'exam' %}
+        <path d="M8 3h8l3 3v15H5V3z"></path><path d="M9 11h6M9 15h6M9 7h3"></path>
+        {% elif kind == 'summary' %}
+        <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3z"></path><path d="M9 9h6M9 13h6"></path>
+        {% else %}
+        <path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path>
+        {% endif %}
+    </svg>
+</span>
+{%- endmacro %}
+
 {% macro title(story, ar) -%}
 {{ (story.title_ar | reader_line or story.title) if ar else story.title }}
 {%- endmacro %}

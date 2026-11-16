@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block page_title %}{{ A('board_title') }}{% endblock %}
+
+{% block content %}
+<style>
+    .bd-card { margin-bottom: 12px; }
+    .bd-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; font-size: .72rem; color: var(--a-muted); }
+    .bd-kind { padding: 2px 9px; border-radius: 999px; font-weight: 700; font-size: .66rem; color: #fff; background: var(--a-primary); }
+    .bd-kind.is-idea { background: var(--a-accent); }
+    .bd-kind.is-link { background: var(--a-warning); }
+    .bd-pin { color: var(--a-warning); font-weight: 700; }
+    .bd-body { margin: 0 0 10px; font-size: .92rem; line-height: 1.6; color: var(--a-ink); white-space: pre-line; overflow-wrap: anywhere; }
+    .bd-link { display: inline-block; margin: 0 0 10px; font-size: .78rem; color: var(--a-primary-dark); overflow-wrap: anywhere; }
+    .bd-reply { display: grid; gap: 8px; margin: 12px 0; }
+    .bd-reply textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--a-line); border-radius: 9px; font: inherit; font-size: .84rem; resize: vertical; }
+    .bd-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .bd-actions form { margin: 0; }
+    .bd-danger { color: var(--a-danger) !important; }
+    .bd-code { font-family: ui-monospace, Consolas, monospace; }
+</style>
+
+<div class="res-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ A('board_kicker') }}</p>
+            <h1>{{ A('board_title') }}</h1>
+            <p class="editor-dek">{{ A('board_dek') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('student_board') }}" target="_blank" rel="noopener">{{ A('board_view') }}</a>
+        </div>
+    </div>
+
+    <div class="dept-tabs" role="tablist">
+        {% for key, label in (('pending', A('board_tab_pending')), ('approved', A('board_tab_approved')), ('rejected', A('board_tab_rejected'))) %}
+        <a class="dept-tab {{ 'is-active' if tab == key else '' }}" role="tab" aria-selected="{{ 'true' if tab == key else 'false' }}"
+            href="{{ url_for('board_admin', tab=key) }}">{{ label }} <span>{{ counts[key] }}</span></a>
+        {% endfor %}
+    </div>
+
+    {% if not posts %}
+    <p class="folio-empty">{{ A('board_empty_pending') if tab == 'pending' else A('board_empty_other') }}</p>
+    {% endif %}
+
+    {% for p in posts %}
+    <article class="editor-card bd-card">
+        <div class="bd-meta">
+            <span class="bd-kind is-{{ p.kind }}">{{ A('board_kind_' ~ p.kind) }}</span>
+            <span>{{ p.nickname or A('board_anon') }}</span>
+            <span>&middot; {{ p.created_label }}</span>
+            <span class="bd-code" title="{{ p.poster }}">&middot; #{{ (p.poster or '')[:6] }}</span>
+            {% if p.pinned %}<span class="bd-pin">&middot; {{ A('board_pin') }}</span>{% endif %}
+        </div>
+
+        <p class="bd-body" dir="auto">{{ p.body }}</p>
+        {% if p.link_url %}
+        <a class="bd-link" href="{{ p.link_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ p.link_url }} &#8599;</a>
+        {% endif %}
+
+        <form class="bd-reply" method="POST" action="{{ url_for('board_action', post_id=p.id, action='reply') }}">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            <label class="sr-only" for="reply-{{ p.id }}">{{ A('board_reply') }}</label>
+            <textarea id="reply-{{ p.id }}" name="reply" rows="2" maxlength="1200" dir="auto"
+                placeholder="{{ A('board_reply_ph') }}">{{ p.reply }}</textarea>
+            <div><button class="btn btn-secondary" type="submit">{{ A('board_reply_save') }}</button></div>
+        </form>
+
+        <div class="bd-actions">
+            {% if p.status != 'approved' %}
+            <form method="POST" action="{{ url_for('board_action', post_id=p.id, action='approve') }}">
+                <input type="hidden" name="tab" value="{{ tab }}">
+                <button class="btn btn-primary" type="submit">{{ A('board_approve') }}</button>
+            </form>
+            {% endif %}
+            {% if p.status != 'rejected' %}
+            <form method="POST" action="{{ url_for('board_action', post_id=p.id, action='reject') }}">
+                <input type="hidden" name="tab" value="{{ tab }}">
+                <button class="btn btn-secondary" type="submit">{{ A('board_reject') }}</button>
+            </form>
+            {% endif %}
+            {% if p.status == 'approved' %}
+            <form method="POST" action="{{ url_for('board_action', post_id=p.id, action='pin') }}">
+                <input type="hidden" name="tab" value="{{ tab }}">
+                <button class="btn btn-secondary" type="submit">{{ A('board_unpin') if p.pinned else A('board_pin') }}</button>
+            </form>
+            {% endif %}
+            <form method="POST" action="{{ url_for('board_action', post_id=p.id, action='delete') }}"
+                onsubmit="return confirm({{ A('board_delete_q')|tojson }});">
+                <input type="hidden" name="tab" value="{{ tab }}">
+                <button class="btn btn-secondary bd-danger" type="submit">{{ A('board_delete') }}</button>
+            </form>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}

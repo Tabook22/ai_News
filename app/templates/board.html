@@ -1,0 +1,101 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'لوحة الطلبة' if ar else 'Student board' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'اسأل سؤالًا، أو شارك فكرة أو رابطًا مفيدًا مع زملائك. يراجع المحرر كل منشور قبل ظهوره.' if ar else 'Ask a question, share an idea, or pass on a useful link. The editor reads every post before it appears.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap st-page">
+    <header class="st-mast st-mast-board">
+        <span class="eyebrow">{{ 'من الطلبة، إلى الطلبة' if ar else 'From students, for students' }}</span>
+        <h1>{{ 'لوحة الطلبة' if ar else 'Student board' }}</h1>
+        <p>{{ 'اسأل سؤالًا عن الذكاء الاصطناعي أو المقررات، أو شارك فكرة، أو رابطًا نفعك. يقرأ المحرر كل منشور قبل ظهوره ويرد على الأسئلة الجيدة. بلا حساب، وبلا حاجة إلى اسمك الحقيقي.' if ar else 'Ask about AI or your courses, share an idea, or pass on a link that helped you. The editor reads every post before it appears and answers the good questions. No account, and no real name needed.' }}</p>
+        <div class="st-mast-actions">
+            <a class="btn btn-primary" href="#ask">{{ 'اكتب منشورًا' if ar else 'Write a post' }}</a>
+            <a class="btn btn-ghost" href="#posts">{{ 'اقرأ المنشورات' if ar else 'Read the posts' }}</a>
+        </div>
+    </header>
+
+    <div class="bd-layout">
+        <section class="bd-form-card" id="ask" aria-labelledby="bd-form-title">
+            <h2 id="bd-form-title">{{ 'اكتب منشورًا' if ar else 'Write a post' }}</h2>
+            <form method="POST" action="{{ url_for('student_board') }}" data-bd-form>
+                <fieldset class="bd-kinds">
+                    <legend class="sr-only">{{ 'نوع المنشور' if ar else 'Type of post' }}</legend>
+                    <label class="bd-kind-opt"><input type="radio" name="kind" value="question" checked><span>{{ 'سؤال' if ar else 'Question' }}</span></label>
+                    <label class="bd-kind-opt"><input type="radio" name="kind" value="idea"><span>{{ 'فكرة' if ar else 'Idea' }}</span></label>
+                    <label class="bd-kind-opt"><input type="radio" name="kind" value="link"><span>{{ 'رابط مفيد' if ar else 'Useful link' }}</span></label>
+                </fieldset>
+
+                <label class="bd-label" for="bd-body">{{ 'رسالتك' if ar else 'Your message' }}</label>
+                <textarea id="bd-body" name="body" rows="5" maxlength="{{ body_max }}" required dir="auto"
+                    placeholder="{{ 'مثال: ما الفرق بين الذكاء الاصطناعي وتعلّم الآلة؟' if ar else 'For example: what is the difference between AI and machine learning?' }}"></textarea>
+                <p class="bd-count"><span data-bd-count>0</span> / {{ body_max }}</p>
+
+                <div class="bd-link-row" data-bd-link-row hidden>
+                    <label class="bd-label" for="bd-link">{{ 'الرابط' if ar else 'Link' }}</label>
+                    <input id="bd-link" name="link_url" type="url" inputmode="url" maxlength="300" dir="ltr"
+                        placeholder="https://">
+                    <p class="bd-hint">{{ 'يفتح الرابط في نافذة جديدة. لا ننشر ملفات.' if ar else 'The link opens in a new tab. We do not host files.' }}</p>
+                </div>
+
+                <label class="bd-label" for="bd-nick">{{ 'اسم مستعار (اختياري)' if ar else 'Nickname (optional)' }}</label>
+                <input id="bd-nick" name="nickname" type="text" maxlength="40" autocomplete="nickname"
+                    placeholder="{{ 'مثال: طالب سنة ثانية' if ar else 'For example: second-year student' }}">
+
+                <div class="bd-trap" aria-hidden="true">
+                    <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                </div>
+
+                <button class="btn btn-primary" type="submit">{{ 'أرسل للمراجعة' if ar else 'Send for review' }}</button>
+                <p class="bd-hint">{{ 'لا تكتب بياناتك الشخصية. يقرأ المحرر المنشور أولًا، وقد لا ينشر كل ما يصله.' if ar else 'Please keep personal details out. The editor reads each post first and may not publish everything.' }}</p>
+            </form>
+        </section>
+
+        <section class="bd-posts" id="posts" aria-labelledby="bd-posts-title">
+            <div class="bd-posts-head">
+                <h2 id="bd-posts-title">{{ 'من اللوحة' if ar else 'On the board' }} <span>{{ total }}</span></h2>
+                <nav class="bd-filter" aria-label="{{ 'تصفية المنشورات' if ar else 'Filter posts' }}">
+                    <a href="{{ url_for('student_board', _anchor='posts') }}" class="{{ 'is-on' if not kind else '' }}">{{ 'الكل' if ar else 'All' }}</a>
+                    <a href="{{ url_for('student_board', kind='question', _anchor='posts') }}" class="{{ 'is-on' if kind == 'question' else '' }}">{{ 'أسئلة' if ar else 'Questions' }}</a>
+                    <a href="{{ url_for('student_board', kind='idea', _anchor='posts') }}" class="{{ 'is-on' if kind == 'idea' else '' }}">{{ 'أفكار' if ar else 'Ideas' }}</a>
+                    <a href="{{ url_for('student_board', kind='link', _anchor='posts') }}" class="{{ 'is-on' if kind == 'link' else '' }}">{{ 'روابط' if ar else 'Links' }}</a>
+                </nav>
+            </div>
+
+            {% for p in posts %}
+            <article class="bd-post bd-post-{{ p.kind }}">
+                <div class="bd-post-meta">
+                    <span class="bd-badge">{{ {'question': ('سؤال' if ar else 'Question'), 'idea': ('فكرة' if ar else 'Idea'), 'link': ('رابط' if ar else 'Link')}[p.kind] }}</span>
+                    <span>{{ p.nickname or ('طالب' if ar else 'A student') }}</span>
+                    <span aria-hidden="true">&middot;</span>
+                    <time datetime="{{ p.created_at }}">{{ p.created_label_ar if ar else p.created_label }}</time>
+                    {% if p.pinned %}<span class="bd-pinned">{{ 'مثبّت' if ar else 'Pinned' }}</span>{% endif %}
+                </div>
+                <p class="bd-post-body" dir="auto">{{ p.body }}</p>
+                {% if p.link_url %}
+                <a class="bd-url" href="{{ p.link_url }}" target="_blank" rel="noopener noreferrer nofollow ugc">
+                    <span dir="ltr">{{ p.link_host or p.link_url }}</span> &#8599;</a>
+                {% endif %}
+                {% if p.reply %}
+                <div class="bd-reply">
+                    <span class="bd-reply-by">{{ 'ردّ المحرر' if ar else 'Editor’s reply' }}</span>
+                    <p dir="auto">{{ p.reply }}</p>
+                </div>
+                {% endif %}
+            </article>
+            {% else %}
+            <div class="bd-empty">
+                <b>{{ 'لا منشورات بعد.' if ar else 'Nothing here yet.' }}</b>
+                <p>{{ 'كن أول من يسأل. سؤالك غالبًا يسأله زملاؤك أيضًا.' if ar else 'Be the first to ask. Your question is probably one your classmates have too.' }}</p>
+                <a class="btn btn-primary" href="#ask">{{ 'اكتب منشورًا' if ar else 'Write a post' }}</a>
+            </div>
+            {% endfor %}
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/learn-v3.js') }}?v=learn3" defer></script>
+{% endblock %}

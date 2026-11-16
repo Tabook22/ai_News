@@ -42,6 +42,22 @@
         {% endif %}
     </p>
 
+    {% if glossary_matches %}
+    <h2 class="search-videos-title">{{ 'من المسرد' if ar else 'From the glossary' }}</h2>
+    <div class="result-list">
+        {% for t in glossary_matches %}
+        {% set cat = GLOSSARY_CAT.get(t.cat) or {'en': '', 'ar': ''} %}
+        <article class="result-row no-thumb">
+            <div>
+                <h2><a href="{{ url_for('glossary_page') }}#term-{{ t.slug }}">{{ (t.ar_name or t.en) if ar else t.en }}</a></h2>
+                <p class="dek">{{ (t.def_ar or t.def_en) if ar else t.def_en }}</p>
+            </div>
+            <div class="meta">{{ 'المسرد' if ar else 'Glossary' }}<br>{{ cat.ar if ar else cat.en }}</div>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     {% if videos %}
     <h2 class="search-videos-title">{{ 'فيديوهات' if ar else 'Videos' }}</h2>
     <div class="result-list">
@@ -80,7 +96,7 @@
         </article>
         {% endfor %}
     </div>
-    {% elif not videos %}
+    {% elif not videos and not glossary_matches %}
     <div class="empty-state">
         <h2>{{ 'لا نتائج' if ar else 'No results' }}</h2>
         <p>{{ 'جرّب كلمة أعم، أو ابحث في كل القصص.' if ar else 'Try a broader word, or browse all stories.' }}</p>

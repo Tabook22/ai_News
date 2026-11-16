@@ -28,158 +28,53 @@
         <span>{{ edition_date_ar if ar else edition_date_en }}</span>
         <span class="dot" aria-hidden="true"></span>
         <span>{{ stats.total }} {{ 'قصة' if ar else 'stories' }} · {{ stats.campus }} {{ 'في القسم' if ar else 'on campus' }}</span>
-        <span class="dot hide-sm" aria-hidden="true"></span>
-        <a href="{{ url_for('reference_library') }}">{{ 'مكتبة المراجع' if ar else 'Reference library' }}</a>
-        <span class="dot hide-sm" aria-hidden="true"></span>
-        <a href="{{ url_for('find_stories') }}" class="hide-sm">{{ 'كل القصص' if ar else 'All stories' }}</a>
     </div>
     <div class="color-strip" aria-hidden="true">
         <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
 </div>
 
-{% if top_models %}
-<section class="model-column" aria-labelledby="models-top-title">
-    <header class="model-column-head">
-        <span class="eyebrow">Hugging Face</span>
-        <h2 id="models-top-title">{{ 'أفضل ١٠ نماذج مفتوحة' if ar else 'Top 10 open models' }}</h2>
-        <p>{{ 'الأكثر تحميلًا الآن على Hugging Face. التحميلات تعني الاستخدام، لا الجودة. نموذج GPT-2 القديم خارج القائمة.' if ar else 'The most-downloaded language models on Hugging Face right now. Downloads show use, not quality. The old GPT-2 baseline is left off.' }}</p>
-        <a href="{{ url_for('models_directory') }}">{{ 'الجدول الكامل' if ar else 'Full table' }}</a>
-    </header>
-    <ol class="model-column-list">
-        {% for model in top_models %}
-        <li>
-            <a href="{{ model.url }}" target="_blank" rel="noopener noreferrer">
-                <span class="mc-num" aria-hidden="true">{{ '%02d' % loop.index }}</span>
-                <span class="mc-copy">
-                    <b>{{ model.name }}</b>
-                    <span>{{ model.org }} · {{ model.downloads_label }} {{ 'تحميل' if ar else 'downloads' }}</span>
-                </span>
-            </a>
-        </li>
-        {% endfor %}
-    </ol>
-    <aside class="model-column-links" aria-labelledby="model-ranks-title">
-        <h3 id="model-ranks-title">{{ 'أحدث التصنيفات' if ar else 'Latest rankings' }}</h3>
-        <ul>
-            {% for link in model_rank_links %}
-            <li>
-                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">
-                    <b>{{ link.name_ar if ar else link.name }}</b>
-                    <span>{{ link.note_ar if ar else link.note }}</span>
+{# ---------- 0. Moving bar: the newest news from the big AI companies ---------- #}
+{% if ticker %}
+<section class="tk" data-ticker aria-label="{{ 'أبرز أخبار شركات الذكاء الاصطناعي' if ar else 'Top AI company news' }}">
+    <div class="tk-label">
+        <span class="st-live" aria-hidden="true"></span>
+        <b>{{ 'أبرز الأخبار' if ar else 'Top AI news' }}</b>
+        <button type="button" class="tk-pause" data-ticker-pause aria-pressed="false"
+            aria-label="{{ 'إيقاف الحركة' if ar else 'Pause scrolling' }}"
+            data-label-pause="{{ 'إيقاف الحركة' if ar else 'Pause scrolling' }}"
+            data-label-play="{{ 'تشغيل الحركة' if ar else 'Resume scrolling' }}">
+            <svg class="tk-i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>
+            <svg class="tk-i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+        </button>
+    </div>
+    <div class="tk-view">
+        <ul class="tk-track" style="--tk-dur: {{ ticker|length * 7 }}s;">
+            {% for copy in (0, 1) %}
+            {% for it in ticker %}
+            <li{% if copy %} aria-hidden="true"{% endif %}>
+                <a class="tk-card" href="{{ url_for('magazine_detail', item_id=it.id) }}"{% if copy %} tabindex="-1"{% endif %}>
+                    <span class="tk-img">
+                        <img src="{{ it.image }}" alt="" width="72" height="72" loading="lazy" onerror="this.remove()">
+                        <span class="tk-logo" title="{{ it.source }}">
+                            <span>{{ it.initial }}</span>
+                            {% if it.domain %}<img src="https://www.google.com/s2/favicons?domain={{ it.domain }}&amp;sz=64" alt="" width="20" height="20" loading="lazy" onerror="this.remove()">{% endif %}
+                        </span>
+                    </span>
+                    <span class="tk-copy">
+                        <span class="tk-src">{{ it.source }}</span>
+                        <span class="tk-title">{{ m.title(it, ar) }}</span>
+                    </span>
                 </a>
             </li>
             {% endfor %}
-        </ul>
-    </aside>
-</section>
-{% endif %}
-
-{% if day_story or day_video %}
-<section class="day-of" aria-labelledby="day-title">
-    <header class="day-head">
-        <span class="eyebrow">{{ 'اليوم' if ar else 'Today' }}</span>
-        <h2 id="day-title">{{ 'الأهم في الذكاء الاصطناعي' if ar else 'The day in AI' }}</h2>
-        <p>{{ 'أهم خبر وأهم فيديو وجدناهما في بحث اليوم.' if ar else 'The most important story and video from today’s search.' }}</p>
-    </header>
-    <div class="day-grid">
-        {% if day_story %}
-        <article class="day-card">
-            <a class="media-link" href="{{ url_for('magazine_detail', item_id=day_story.id) }}">
-                {{ m.media(day_story, '16x9', True) }}
-                <span class="media-tag">{{ 'أهم خبر' if ar else 'Top story' }}</span>
-            </a>
-            <div class="day-copy">
-                <span class="b-src">{{ day_story.source or 'Nasser AI News' }}</span>
-                <div class="title-row">
-                    <h3><a href="{{ url_for('magazine_detail', item_id=day_story.id) }}">{{ m.title(day_story, ar) }}</a></h3>
-                    {{ m.glance(day_story, ar) }}
-                </div>
-                {% set day_dek = (day_story.summary_ar | reader_line or day_story.summary) if ar else day_story.summary %}
-                {% if day_dek %}<p>{{ day_dek | plain_dek | truncate(180, true) }}</p>{% endif %}
-            </div>
-        </article>
-        {% endif %}
-        {% if day_video %}
-        <article class="day-card day-video">
-            <a class="media-link" href="{{ day_video.url }}" target="_blank" rel="noopener">
-                <div class="media media-16x9{% if not day_video.image %} is-empty{% endif %}">
-                    {% if day_video.image %}
-                    <img src="{{ day_video.image }}" alt="" width="800" height="450">
-                    {% endif %}
-                    <span class="day-play" aria-hidden="true"></span>
-                </div>
-                <span class="media-tag">{{ 'أهم فيديو' if ar else 'Top video' }}</span>
-            </a>
-            <div class="day-copy">
-                <span class="b-src">{{ day_video.channel or 'YouTube' }}</span>
-                <h3><a href="{{ day_video.url }}" target="_blank" rel="noopener">{{ (day_video.title_ar or day_video.title) if ar else day_video.title }}</a></h3>
-            </div>
-        </article>
-        {% endif %}
-    </div>
-</section>
-{% endif %}
-
-{% if brief_items %}
-<section class="brief" aria-labelledby="brief-title">
-    <div class="brief-head">
-        <span class="eyebrow">{{ 'ابدأ من هنا' if ar else 'Start here' }}</span>
-        <h2 id="brief-title">{{ 'الملخص في ٩٠ ثانية' if ar else 'The 90-second brief' }}</h2>
-        <p>{{ 'خمسة أشياء حدثت هذا الأسبوع، مرتبة حسب أهميتها. اضغط أي سطر لقراءة الموجز.' if ar else 'Five things that happened this week, in the order they matter. Tap any line to open the story.' }}</p>
-        <span class="stamp">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 7v5l3 2"></path>
-            </svg>
-            {{ edition_minutes }} {{ 'دقائق قراءة' if ar else 'min read' }}
-        </span>
-    </div>
-    <ol class="brief-list">
-        {% for story in brief_items %}
-        <li>
-            <a href="{{ url_for('magazine_detail', item_id=story.id) }}">
-                <span class="b-num" aria-hidden="true">{{ '%02d' % loop.index }}</span>
-                <span>
-                    <span class="b-title">{{ m.title(story, ar) }}</span>
-                    <span class="b-src">{{ story.source or 'Nasser AI News' }} · {{ m.desk(story, ar) }}</span>
-                </span>
-            </a>
-            {{ m.glance(story, ar) }}
-        </li>
-        {% endfor %}
-    </ol>
-</section>
-{% endif %}
-
-<section class="lib-issue" aria-labelledby="lib-issue-title">
-    <header class="lib-issue-head">
-        <div>
-            <span class="eyebrow">{{ 'للدراسة' if ar else 'For study' }}</span>
-            <h2 id="lib-issue-title">{{ 'مكتبة المراجع' if ar else 'Reference library' }}</h2>
-            <p>{{ 'ما اختاره المحرر لهذا العدد. المكتبة الكاملة فيها أكثر.' if ar else 'Chosen for this issue. The full library holds more.' }}</p>
-        </div>
-        <a href="{{ url_for('reference_library') }}">{{ 'المكتبة كاملة' if ar else 'Full library' }}</a>
-    </header>
-    {% if issue_library %}
-    {% for shelf in issue_library %}
-    <div class="lib-issue-shelf">
-        <h3>{{ shelf.ar if ar else shelf.en }}</h3>
-        <div class="lib-issue-list">
-            {% for item in shelf.entries %}
-            <a class="lib-issue-card" href="{{ item.url }}" target="_blank" rel="noopener">
-                <b>{{ item.title }}</b>
-                <span>{{ item.authors }}</span>
-            </a>
             {% endfor %}
-        </div>
+        </ul>
     </div>
-    {% endfor %}
-    {% else %}
-    <p class="lib-issue-empty">{{ 'سيظهر هنا ما يختاره المحرر من الكتب والأبحاث والمقررات.' if ar else 'Books, papers, and courses the editor picks for the issue will appear here.' }}</p>
-    {% endif %}
 </section>
+{% endif %}
 
+{# ---------- 1. Cover story, with the term of the day beside it ---------- #}
 {% if lead %}
 <div class="lead-grid">
     <article class="lead desk-{{ lead.desk }}">
@@ -240,37 +135,73 @@
     </article>
 
     <aside class="aside" aria-label="{{ 'في هذا العدد' if ar else 'In this issue' }}">
-        {% if agenda %}
-        <section class="panel">
-            <div class="panel-head">
-                <h3>{{ 'هذا الأسبوع في القسم' if ar else 'This week in the department' }}</h3>
-                <a href="{{ url_for('campus_weekly') }}">{{ 'القسم' if ar else 'Department' }}</a>
+        {% if brief_items %}
+        <section class="panel st-brief" aria-labelledby="brief-title">
+            <div class="st-brief-head">
+                <div>
+                    <span class="eyebrow">{{ 'ابدأ من هنا' if ar else 'Start here' }}</span>
+                    <h3 id="brief-title">{{ 'الملخص في ٩٠ ثانية' if ar else 'The 90-second brief' }}</h3>
+                </div>
+                <span class="stamp">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 7v5l3 2"></path>
+                    </svg>
+                    {{ edition_minutes }} {{ 'د' if ar else 'min' }}
+                </span>
             </div>
-            <ol class="agenda">
-                {% for story in agenda %}
+            <ol class="brief-list">
+                {% for story in brief_items %}
                 <li>
-                    <time datetime="{{ (story.event_on or story.timestamp)[:10] }}">
-                        <b>{{ (story.event_on or story.timestamp)[8:10] | int }}</b>
-                        <span>{{ month_short(story.event_on or story.timestamp, ar) }}</span>
-                    </time>
-                    <div>
-                        <a href="{{ story.watch_url or url_for('magazine_detail', item_id=story.id) }}"
-                            {% if story.watch_url %}target="_blank" rel="noopener"{% endif %}>{{ m.title(story, ar) }}</a>
-                        <em>{{ story.place or (story.kind_ar if ar else story.kind_en) or ('القسم' if ar else 'Department') }}</em>
-                    </div>
+                    <a href="{{ url_for('magazine_detail', item_id=story.id) }}">
+                        <span class="b-num" aria-hidden="true">{{ '%02d' % loop.index }}</span>
+                        <span>
+                            <span class="b-title">{{ m.title(story, ar) }}</span>
+                            <span class="b-src">{{ story.source or 'Nasser AI News' }} · {{ m.desk(story, ar) }}</span>
+                        </span>
+                    </a>
+                    {{ m.glance(story, ar) }}
                 </li>
                 {% endfor %}
             </ol>
         </section>
         {% endif %}
 
-        {% if term %}
-        <section class="panel term-card">
-            <div class="eyebrow">{{ 'مصطلح اليوم' if ar else 'Term of the day' }}</div>
-            <div class="term">{{ (term.term_ar or term.term) if ar else term.term }}</div>
-            {% set gloss = (term.gloss_ar or term.gloss) if ar else (term.gloss or term.gloss_ar) %}
-            {% if gloss %}<p>{{ gloss }}</p>{% endif %}
-            <a href="{{ url_for('magazine_detail', item_id=term.id) }}">{{ 'اقرأ القصة' if ar else 'Read the story' }} →</a>
+        {% if today_term %}
+        {% set tcat = GLOSSARY_CAT.get(today_term.cat) or {'en': '', 'ar': '', 'color': '--brand'} %}
+        <section class="panel term-card st-term" style="--cc: var({{ tcat.color }});">
+            <div class="st-term-top">
+                <span class="eyebrow">{{ 'مصطلح اليوم' if ar else 'Term of the day' }}</span>
+                <span class="st-cat-chip">{{ tcat.ar if ar else tcat.en }}</span>
+            </div>
+            <div class="term">{{ (today_term.ar_name or today_term.en) if ar else today_term.en }}</div>
+            {% set alt = today_term.en if ar else today_term.ar_name %}
+            {% if alt %}<span class="st-term-alt" {% if ar %}dir="ltr" lang="en"{% else %}dir="rtl" lang="ar"{% endif %}>{{ alt }}</span>{% endif %}
+            <p>{{ (today_term.def_ar or today_term.def_en) if ar else today_term.def_en }}</p>
+            <a href="{{ url_for('glossary_page') }}#term-{{ today_term.slug }}">{{ 'اقرأ المزيد في المسرد' if ar else 'More in the glossary' }} →</a>
+        </section>
+        {% endif %}
+
+        {% if upcoming %}
+        <section class="panel">
+            <div class="panel-head">
+                <h3>{{ 'قادم في القسم' if ar else 'Coming up in the department' }}</h3>
+                <a href="{{ url_for('campus_weekly') }}">{{ 'الكل' if ar else 'See all' }}</a>
+            </div>
+            <ol class="agenda">
+                {% for story in upcoming %}
+                <li>
+                    <time datetime="{{ story.event_on[:10] }}">
+                        <b>{{ story.event_on[8:10] | int }}</b>
+                        <span>{{ month_short(story.event_on, ar) }}</span>
+                    </time>
+                    <div>
+                        <a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a>
+                        <em dir="auto">{{ story.place or (story.kind_ar if ar else story.kind_en) or ('القسم' if ar else 'Department') }}</em>
+                    </div>
+                </li>
+                {% endfor %}
+            </ol>
         </section>
         {% endif %}
 
@@ -289,6 +220,42 @@
 </div>
 {% endif %}
 
+{# ---------- 3. Today: one story and one video, kept slim ---------- #}
+{% if day_story or day_video %}
+<section class="st-day" aria-labelledby="day-title">
+    <header class="st-day-head">
+        <span class="st-live" aria-hidden="true"></span>
+        <h2 id="day-title">{{ 'اليوم في الذكاء الاصطناعي' if ar else 'Today in AI' }}</h2>
+    </header>
+    <div class="st-day-grid">
+        {% if day_story %}
+        <a class="st-day-card" href="{{ url_for('magazine_detail', item_id=day_story.id) }}">
+            <span class="st-day-thumb">{{ m.media(day_story, '16x9') }}</span>
+            <span class="st-day-copy">
+                <span class="st-day-tag">{{ 'أهم خبر' if ar else 'Top story' }} · {{ day_story.source or 'Nasser AI News' }}</span>
+                <span class="st-day-title">{{ m.title(day_story, ar) }}</span>
+            </span>
+        </a>
+        {% endif %}
+        {% if day_video %}
+        <a class="st-day-card st-day-video" href="{{ day_video.url }}" target="_blank" rel="noopener">
+            <span class="st-day-thumb">
+                <span class="media media-16x9{% if not day_video.image %} is-empty{% endif %}">
+                    {% if day_video.image %}<img src="{{ day_video.image }}" alt="" width="800" height="450" loading="lazy">{% endif %}
+                    <span class="day-play" aria-hidden="true"></span>
+                </span>
+            </span>
+            <span class="st-day-copy">
+                <span class="st-day-tag">{{ 'أهم فيديو' if ar else 'Top video' }} · {{ day_video.channel or 'YouTube' }}</span>
+                <span class="st-day-title">{{ (day_video.title_ar or day_video.title) if ar else day_video.title }}</span>
+            </span>
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+{# ---------- 4. The world ---------- #}
 {% if features %}
 <section class="section section-world" id="the-world" aria-labelledby="world-title">
     <header class="section-head">
@@ -301,7 +268,7 @@
     <div class="cards">
         {% for story in features %}
         <article class="card desk-{{ story.desk }}">
-            <a class="media-link" href="{{ url_for('magazine_detail', item_id=story.id) }}">
+            <a class="media-link" href="{{ url_for('magazine_detail', item_id=story.id) }}" tabindex="-1" aria-hidden="true">
                 {{ m.media(story, '16x9') }}
             </a>
             <div class="kicker"><span class="desk-tag">{{ m.desk(story, ar) }}</span></div>
@@ -317,28 +284,66 @@
     </div>
 
     {% if brief_rows %}
-    <div class="briefs">
+    <ul class="st-more">
         {% for story in brief_rows %}
-        <div class="brief-row desk-{{ story.desk }}">
-            <span class="idx" aria-hidden="true">{{ '%02d' % (loop.index + brief_items|length + features|length + 1) }}</span>
+        <li class="desk-{{ story.desk }}">
+            <span class="st-more-dot" aria-hidden="true"></span>
             <div class="title-row">
                 <a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a>
                 {{ m.glance(story, ar) }}
             </div>
             <span class="src">{{ story.source or 'Nasser AI News' }}</span>
-        </div>
+        </li>
         {% endfor %}
-    </div>
+    </ul>
     {% endif %}
 </section>
 {% endif %}
 
-{% if campus_items %}
+{# ---------- 5. Learn ---------- #}
+{% if glossary_total %}
+<section class="learn-band" aria-labelledby="learn-title">
+    <div class="learn-band-in">
+        <div class="learn-band-copy">
+            <span class="eyebrow">{{ 'تعلّم الذكاء الاصطناعي' if ar else 'Learn AI' }}</span>
+            <h2 id="learn-title">{{ 'دقيقتان في اليوم تكفيان.' if ar else 'Two minutes a day is enough.' }}</h2>
+            <p>{{ glossary_total }} {{ 'مصطلحًا بلغة بسيطة، بالعربية والإنجليزية. اقلب البطاقات، أو اختبر نفسك، أو ابحث عن أي مصطلح.' if ar else 'plain-language terms, in English and Arabic. Flip the flashcards, test yourself, or look anything up.' }}</p>
+        </div>
+        <div class="learn-tiles">
+            <a class="learn-tile" href="{{ url_for('learn_page') }}#flashcards">
+                <span class="learn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="14" height="12" rx="2"></rect><path d="M7 3h12a2 2 0 0 1 2 2v10"></path></svg></span>
+                <b>{{ 'بطاقات المراجعة' if ar else 'Flashcards' }}</b>
+                <span data-learn-line="known" data-fallback="{{ 'اقلب وراجع وكرّر' if ar else 'Flip, revise, repeat' }}" data-template="{{ '{n} من {total} أتقنتُها' if ar else '{n} of {total} learned' }}" data-total="{{ glossary_total }}">{{ 'اقلب وراجع وكرّر' if ar else 'Flip, revise, repeat' }}</span>
+            </a>
+            <a class="learn-tile" href="{{ url_for('learn_page') }}#quiz">
+                <span class="learn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"></path><path d="M12 17h.01"></path></svg></span>
+                <b>{{ 'اختبار سريع' if ar else 'Quick quiz' }}</b>
+                <span data-learn-line="best" data-fallback="{{ '١٠ أسئلة، دقيقتان' if ar else '10 questions, 2 minutes' }}" data-template="{{ 'أفضل نتيجة: {n} من 10' if ar else 'Your best: {n} out of 10' }}">{{ '١٠ أسئلة، دقيقتان' if ar else '10 questions, 2 minutes' }}</span>
+            </a>
+            <a class="learn-tile" href="{{ url_for('glossary_page') }}">
+                <span class="learn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3z"></path><path d="M9 9h6M9 13h4"></path></svg></span>
+                <b>{{ 'المسرد' if ar else 'Glossary' }}</b>
+                <span>{{ 'ابحث عن أي مصطلح' if ar else 'Look up any term' }}</span>
+            </a>
+        </div>
+    </div>
+    {% if class_story and (class_story.lesson_ask or class_story.lesson_ask_ar) %}
+    <a class="learn-class" href="{{ url_for('magazine_detail', item_id=class_story.id) }}">
+        <span class="eyebrow">{{ 'سؤال للقاعة' if ar else 'For class this week' }}</span>
+        <b>{{ (class_story.lesson_ask_ar or class_story.lesson_ask) if ar else (class_story.lesson_ask or class_story.lesson_ask_ar) }}</b>
+        <span>{{ m.title(class_story, ar) | truncate(70, true) }} →</span>
+    </a>
+    {% endif %}
+</section>
+{% endif %}
+
+{# ---------- 6. The department, and the student board beside it ---------- #}
+{% if campus_items or board_teaser is defined %}
 <section class="section section-department" id="the-department" aria-labelledby="dept-title">
     <header class="section-head">
         <span class="num" aria-hidden="true">02</span>
         <h2 id="dept-title">{{ 'داخل القسم' if ar else 'Inside the department' }}</h2>
-        <p>{{ 'اختبارات وورش وعمل الطلبة ولوحة الإعلانات. مكتوبة مع القسم، لا عنه.' if ar else 'Exams, workshops, student work, and the board. Written with the department, not about it.' }}</p>
+        <p>{{ 'اختبارات وورش وعمل الطلبة. مكتوبة مع القسم، لا عنه.' if ar else 'Exams, workshops, and student work. Written with the department, not about it.' }}</p>
         <a class="more" href="{{ url_for('campus_weekly') }}">{{ 'عدد القسم' if ar else 'The department issue' }} →</a>
     </header>
 
@@ -346,8 +351,8 @@
         <div class="dept-list">
             {% for story in campus_items %}
             <article class="dept-item desk-campus">
-                <a class="thumb" href="{{ url_for('magazine_detail', item_id=story.id) }}">
-                    {{ m.media(story, '4x3') }}
+                <a class="thumb" href="{{ url_for('magazine_detail', item_id=story.id) }}" tabindex="-1" aria-hidden="true">
+                    {% if story.image %}{{ m.media(story, '4x3') }}{% else %}{{ m.kind_tile(story) }}{% endif %}
                 </a>
                 <div>
                     <div class="title-row">
@@ -356,99 +361,100 @@
                     </div>
                     {% set dek = (story.summary_ar | reader_line or story.summary) if ar else story.summary %}
                     {% if dek %}<p>{{ dek | plain_dek | truncate(150, true) }}</p>{% endif %}
-                    <span class="when">{{ (story.kind_ar if ar else story.kind_en) or ('القسم' if ar else 'Department') }}{% if story.place %} · {{ story.place }}{% endif %}</span>
+                    <span class="when" dir="auto">{{ (story.kind_ar if ar else story.kind_en) or ('القسم' if ar else 'Department') }}{% if story.place %} · {{ story.place }}{% endif %}</span>
                 </div>
             </article>
             {% endfor %}
         </div>
 
-        {% if upcoming %}
-        <div>
-            <div class="panel" style="padding:0; border:0;">
-                <div class="panel-head">
-                    <h3>{{ 'قادم' if ar else 'Coming up' }}</h3>
-                    <a href="{{ url_for('campus_weekly') }}">{{ 'الكل' if ar else 'See all' }}</a>
-                </div>
-                <ol class="agenda">
-                    {% for story in upcoming %}
-                    <li>
-                        <time datetime="{{ (story.event_on or story.timestamp)[:10] }}">
-                            <b>{{ (story.event_on or story.timestamp)[8:10] | int }}</b>
-                            <span>{{ month_short(story.event_on or story.timestamp, ar) }}</span>
-                        </time>
-                        <div>
-                            <a href="{{ url_for('magazine_detail', item_id=story.id) }}">{{ m.title(story, ar) }}</a>
-                            <em>{{ story.place or ('القسم' if ar else 'Department') }}</em>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ol>
-            </div>
-            <div class="panel" style="padding:18px 0 0; border:0;">
-                <div class="eyebrow">{{ 'من لوحة الطلبة' if ar else 'From the student board' }}</div>
-                <p style="margin-top:8px; font-family:var(--body); font-size:.94rem; line-height:1.55; color:var(--ink-2);">
-                    {{ 'هل يستمر القسم في استخدام كواشف الذكاء الاصطناعي للواجبات؟ صوّت على لوحة القسم.' if ar else 'Should the department keep using AI detectors for assignments? Vote on the department board.' }}
-                </p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</section>
-{% endif %}
-
-{% if class_story %}
-<section class="class-band class-band-color" aria-labelledby="class-title">
-    <div class="wrap class-in">
-        <div>
-            <span class="eyebrow">{{ 'مقرر الأسبوع' if ar else 'Course of the week' }}</span>
-            <h2 id="class-title">{{ 'حوّل أخبار هذا الأسبوع إلى مراجعة الأسبوع القادم.' if ar else 'Turn this week’s news into next week’s revision.' }}</h2>
-            <p class="lede">{{ 'كل قصة غلاف تأتي مع مصطلح وسؤال نقاش وما يهم في المقرر. بلا تسجيل، وبلا تطبيق.' if ar else 'Every cover story carries a glossary term, a discussion question, and the course line. No login, no app.' }}</p>
-            <div class="cta-row">
-                <a class="btn btn-primary" href="{{ url_for('magazine_detail', item_id=class_story.id) }}">{{ 'اقرأ الدرس' if ar else 'Open the lesson' }}</a>
-                <a class="btn btn-ghost" href="{{ url_for('campus_weekly') }}">{{ 'ملاحظات القسم' if ar else 'Department notes' }}</a>
-            </div>
-        </div>
-        <div class="slots">
-            <a class="slot" href="{{ url_for('magazine_detail', item_id=class_story.id) }}">
-                <small>{{ 'القصة' if ar else 'Story' }}</small>
-                <b>{{ m.title(class_story, ar) | truncate(60, true) }}</b>
-                <span>{{ class_story.source or 'Nasser AI News' }} · {{ class_story.reading_minutes }} {{ 'دقائق' if ar else 'min' }}</span>
-            </a>
-            {% if term %}
-            <div class="slot">
-                <small>{{ 'المصطلح' if ar else 'Term' }}</small>
-                <b>{{ (term.term_ar or term.term) if ar else term.term }}</b>
-                <span>{{ 'المسرد' if ar else 'Glossary' }}</span>
-            </div>
+        <div class="st-board-card" role="group" aria-labelledby="board-card-title">
+            <span class="eyebrow">{{ 'لوحة الطلبة' if ar else 'Student board' }}</span>
+            <h3 id="board-card-title">{{ 'عندك سؤال؟ اسأله هنا.' if ar else 'Got a question? Ask it here.' }}</h3>
+            {% if board_teaser %}
+            <ul class="st-board-list">
+                {% for p in board_teaser %}
+                <li>
+                    <p dir="auto">{{ p.body | truncate(120, true) }}</p>
+                    {% if p.reply %}<span class="st-board-reply">{{ 'ردّ المحرر' if ar else 'Editor replied' }}</span>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="st-board-none">{{ 'اسأل عن الذكاء الاصطناعي أو المقررات، أو شارك رابطًا نفعك. يقرأ المحرر كل منشور ويرد على الأسئلة الجيدة.' if ar else 'Ask about AI or your courses, or share a link that helped you. The editor reads every post and answers the good questions.' }}</p>
             {% endif %}
-            {% if class_story.course %}
-            <div class="slot">
-                <small>{{ 'المقرر' if ar else 'Course' }}</small>
-                <b>{{ class_story.course }}</b>
-                <span>{{ 'مقرر القسم' if ar else 'Department course' }}</span>
+            <div class="st-board-actions">
+                <a class="btn btn-primary" href="{{ url_for('student_board', _anchor='ask') }}">{{ 'اسأل أو شارك' if ar else 'Ask or share' }}</a>
+                {% if board_teaser %}<a class="btn btn-ghost" href="{{ url_for('student_board', _anchor='posts') }}">{{ 'اقرأ اللوحة' if ar else 'Read the board' }}</a>{% endif %}
             </div>
-            {% endif %}
-            {% if class_story.lesson_ask or class_story.lesson_ask_ar %}
-            <div class="slot">
-                <small>{{ 'للنقاش' if ar else 'For discussion' }}</small>
-                <b>{{ (class_story.lesson_ask_ar or class_story.lesson_ask) if ar else (class_story.lesson_ask or class_story.lesson_ask_ar) }}</b>
-                <span>{{ 'سؤال القاعة' if ar else 'Class question' }}</span>
-            </div>
-            {% endif %}
-            <a class="slot" href="{{ url_for('campus_weekly') }}">
-                <small>{{ 'المزيد' if ar else 'More' }}</small>
-                <b>{{ 'ملاحظات القسم' if ar else 'Department notes' }}</b>
-                <span>{{ 'كل ما يخص القسم' if ar else 'Everything from the department' }}</span>
-            </a>
         </div>
     </div>
 </section>
 {% endif %}
 
+{# ---------- 7. Keep learning: the library, tools, and models ---------- #}
+<section class="st-keep" aria-labelledby="keep-title">
+    <header class="section-head">
+        <span class="num" aria-hidden="true">03</span>
+        <h2 id="keep-title">{{ 'واصل التعلّم' if ar else 'Keep learning' }}</h2>
+        <p>{{ 'مراجع اختارها المحرر، وأدوات تجرّبها، ونماذج يستخدمها العالم.' if ar else 'References the editor picked, tools to try, and the models the world is using.' }}</p>
+    </header>
+    <div class="st-keep-grid">
+        <div class="st-keep-lib">
+            <div class="st-keep-sub">
+                <h3>{{ 'من المكتبة' if ar else 'From the library' }}</h3>
+                <a href="{{ url_for('reference_library') }}">{{ 'المكتبة كاملة' if ar else 'Full library' }} →</a>
+            </div>
+            {% if issue_library %}
+            {% for shelf in issue_library %}
+            {% for item in shelf.entries %}
+            <a class="st-ref" href="{{ item.url }}" target="_blank" rel="noopener">
+                <span class="st-ref-shelf">{{ shelf.ar if ar else shelf.en }}</span>
+                <b>{{ item.title }}</b>
+                <span>{{ item.authors }}</span>
+            </a>
+            {% endfor %}
+            {% endfor %}
+            {% else %}
+            {% for item in library_spot %}
+            <a class="st-ref" href="{{ item.url }}" target="_blank" rel="noopener">
+                <span class="st-ref-shelf">{{ item.shelf_ar if ar else item.shelf_en }}</span>
+                <b>{{ item.title }}</b>
+                <span>{{ item.authors }}</span>
+                {% set why = (item.why_ar or item.why) if ar else item.why %}
+                {% if why %}<em>{{ why | truncate(110, true) }}</em>{% endif %}
+            </a>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="st-keep-tools">
+            <div class="st-keep-sub">
+                <h3>{{ 'أدوات ونماذج' if ar else 'Tools & models' }}</h3>
+            </div>
+            <div class="st-tool-links">
+                {% if tools_count %}
+                <a href="{{ url_for('tools_directory') }}"><b>{{ 'دليل أدوات الذكاء الاصطناعي' if ar else 'AI tools directory' }}</b><span>{{ tools_count }} {{ 'أداة، مع بدائل' if ar else 'tools, with alternatives' }}</span></a>
+                {% endif %}
+                <a href="{{ url_for('tools_ranked') }}"><b>{{ 'تصنيف ناصر للأدوات' if ar else 'Nasser AI ranking' }}</b><span>{{ 'أدوات مقيَّمة بمراجعها' if ar else 'Scored tools, with references' }}</span></a>
+            </div>
+            {% if top_models %}
+            <h4 class="st-models-title">{{ 'الأكثر تحميلًا على Hugging Face' if ar else 'Most downloaded on Hugging Face' }}</h4>
+            <ol class="st-models">
+                {% for model in top_models[:5] %}
+                <li><a href="{{ model.url }}" target="_blank" rel="noopener noreferrer"><b>{{ model.name }}</b><span>{{ model.downloads_label }}</span></a></li>
+                {% endfor %}
+            </ol>
+            <a class="st-models-more" href="{{ url_for('models_directory') }}">{{ 'الجدول الكامل' if ar else 'Full table' }} →</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{# ---------- 8. Editor's picks and the newsletter ---------- #}
 {% if picks %}
 <section class="section section-picks" aria-labelledby="picks-title">
     <header class="section-head">
-        <span class="num" aria-hidden="true">03</span>
+        <span class="num" aria-hidden="true">04</span>
         <h2 id="picks-title">{{ 'اختيارات المحرر' if ar else "Editor's picks" }}</h2>
         <p>{{ 'ثلاث قصص كنا سنكلّف بها لو درّسنا المقرر — اختيرت لما تشرحه، لا لمدى انتشارها.' if ar else 'Three stories we would assign if we taught the course — chosen for what they explain, not how much they trended.' }}</p>
     </header>
@@ -467,25 +473,32 @@
         {% endfor %}
     </div>
 
-    <div class="subscribe" id="subscribe">
-        <div>
-            <h2>{{ 'بريد واحد كل أحد. أسبوع الذكاء الاصطناعي، بالعربية والإنجليزية.' if ar else 'One email on Sunday. The week in AI, in Arabic and English.' }}</h2>
-            <p>{{ 'الملخص، وقصة الغلاف، وما هو قادم في القسم. مجانًا، ويمكنك الانصراف بنقرة.' if ar else 'The brief, the cover story, and what is coming up in the department. Free, and you can leave in one click.' }}</p>
-        </div>
-        <div>
-            <form action="{{ url_for('subscribe') }}" method="POST">
-                <input type="hidden" name="source" value="web">
-                <label class="visually-hidden" for="v3-email">{{ 'بريدك الإلكتروني' if ar else 'Your email' }}</label>
-                <input id="v3-email" type="email" name="email" required
-                    placeholder="{{ 'بريدك@du.edu.om' if ar else 'you@du.edu.om' }}">
-                <button class="btn btn-primary" type="submit">{{ 'اشترك' if ar else 'Subscribe' }}</button>
-            </form>
-            <p class="note">{{ 'نحفظ بريدك لإرسال الملخص. رابط إلغاء الاشتراك في كل عدد.' if ar else 'We store your email to send the digest. Unsubscribe link in every issue.' }}</p>
-        </div>
-    </div>
 </section>
 {% endif %}
+
+<section class="section st-subscribe" aria-label="{{ 'النشرة البريدية' if ar else 'Newsletter' }}">
+    <div class="subscribe" id="subscribe">
+    <div>
+        <h2>{{ 'بريد واحد كل أحد. أسبوع الذكاء الاصطناعي، بالعربية والإنجليزية.' if ar else 'One email on Sunday. The week in AI, in Arabic and English.' }}</h2>
+        <p>{{ 'الملخص، وقصة الغلاف، وما هو قادم في القسم. مجانًا، ويمكنك الانصراف بنقرة.' if ar else 'The brief, the cover story, and what is coming up in the department. Free, and you can leave in one click.' }}</p>
+    </div>
+    <div>
+        <form action="{{ url_for('subscribe') }}" method="POST">
+            <input type="hidden" name="source" value="web">
+            <label class="visually-hidden" for="v3-email">{{ 'بريدك الإلكتروني' if ar else 'Your email' }}</label>
+            <input id="v3-email" type="email" name="email" required
+                placeholder="{{ 'بريدك@du.edu.om' if ar else 'you@du.edu.om' }}">
+            <button class="btn btn-primary" type="submit">{{ 'اشترك' if ar else 'Subscribe' }}</button>
+        </form>
+        <p class="note">{{ 'نحفظ بريدك لإرسال الملخص. رابط إلغاء الاشتراك في كل عدد.' if ar else 'We store your email to send the digest. Unsubscribe link in every issue.' }}</p>
+    </div>
+</div>
+</section>
 </div>
 {% endblock %}
 
 {% block pre_footer %}{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/learn-v3.js') }}?v=learn3" defer></script>
+{% endblock %}

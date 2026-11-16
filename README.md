@@ -65,6 +65,9 @@ newsletter band — plus a new article page, public search, and a real departmen
 - `/campus/projects` — recommended final-year projects with references
 - `/watch` — curated YouTube videos on AI news and technology
 - `/find` — public search and every published story
+- `/learn` — flashcards and a 10-question quiz on AI terms (progress is kept on the reader's own device)
+- `/glossary` — the bilingual AI glossary: 49 starter terms, searchable, with a term of the day on the front page
+- `/board` — the student board: questions, ideas, and useful links from students, published only after the editor approves them
 - `/directory` — the AI tools directory (search, filters, 96 curated tools)
 - `/directory/<id>` — one tool, with alternatives and related coverage
 - `/directory/ranked` — the Nasser AI ranking, 30 scored tools with references
@@ -80,6 +83,8 @@ article URL. See `design-review/IMPLEMENTATION.md` for what changed and
 - `/admin` — the editor's control room (login required)
 - `/` — the newsroom landing page (login required)
 - `/tools` — manage the AI tools directory
+- `/desk/board` — review student posts: publish, reply, pin, decline, or delete (a badge in the sidebar shows how many are waiting)
+- `/desk/glossary` — edit, hide, or add glossary terms (starter terms can be hidden but not deleted)
 - `/settings` — magazine settings, with per-section help
 - `/subscribe` — the public newsletter sign-up page (point your door QR code here)
 - `/qr` — admin page to view/download/print the QR code for `/subscribe`

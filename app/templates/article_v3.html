@@ -152,6 +152,31 @@
         </section>
         {% endif %}
 
+        {% if story_terms %}
+        <section class="story-terms" aria-labelledby="terms-title">
+            <div class="story-terms-head">
+                <h2 id="terms-title">{{ 'كلمات في هذه القصة' if ar else 'Words in this story' }}</h2>
+                <a href="{{ url_for('learn_page') }}">{{ 'اختبر نفسك' if ar else 'Test yourself' }} &rarr;</a>
+            </div>
+            <ul>
+                {% for t in story_terms %}
+                {% set cat = GLOSSARY_CAT.get(t.cat) or {'en': t.cat, 'ar': t.cat, 'color': '--brand'} %}
+                {% set other = t.en if ar else t.ar_name %}
+                <li style="--cc: var({{ cat.color }});">
+                    <details>
+                        <summary>
+                            <b>{{ (t.ar_name or t.en) if ar else t.en }}</b>
+                            {% if other %}<span {% if ar %}dir="ltr" lang="en"{% else %}dir="rtl" lang="ar"{% endif %}>{{ other }}</span>{% endif %}
+                        </summary>
+                        <p>{{ (t.def_ar or t.def_en) if ar else t.def_en }}</p>
+                        <a href="{{ url_for('glossary_page') }}#term-{{ t.slug }}">{{ 'في المسرد' if ar else 'In the glossary' }} &rarr;</a>
+                    </details>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
         <div class="source-box">
             <p>
                 <b>{{ 'التقرير الأصلي:' if ar else 'Original reporting:' }}</b>

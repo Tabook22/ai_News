@@ -52,6 +52,10 @@
     'qr_page': A('qr'),
     'template_picker': A('look'),
     'library_admin': A('lib_title'),
+    'glossary_admin': A('gl_title'),
+    'add_glossary_term': A('gl_add'),
+    'edit_glossary_term': A('gl_edit'),
+    'board_admin': A('board_title'),
     'add_library_reference': A('lib_add'),
     'edit_library_reference': A('lib_edit'),
     'author_info': t('Author profile', 'ملف المؤلف')
@@ -200,6 +204,11 @@
                         <svg class="icon" aria-hidden="true"><use href="#i-book"></use></svg>
                         {{ A('lib_nav') }}
                     </a>
+                    <a href="{{ url_for('glossary_admin') }}"
+                        class="{{ 'is-active' if request.endpoint in ['glossary_admin', 'add_glossary_term', 'edit_glossary_term'] else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-type"></use></svg>
+                        {{ A('gl_nav') }}
+                    </a>
                     <a href="{{ url_for('archive_page', desk='world') }}"
                         class="{{ 'is-active' if request.endpoint == 'archive_page' else '' }}">
                         <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg>
@@ -214,6 +223,12 @@
                         <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>
                         {{ A('subscribers') }}
                         {% if subscriber_count %}<span class="count">{{ subscriber_count }}</span>{% endif %}
+                    </a>
+                    <a href="{{ url_for('board_admin') }}"
+                        class="{{ 'is-active' if request.endpoint == 'board_admin' else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-bell"></use></svg>
+                        {{ A('board_nav') }}
+                        {% if board_pending %}<span class="count">{{ board_pending }}</span>{% endif %}
                     </a>
                     <a href="{{ url_for('digest_preview') }}"
                         class="{{ 'is-active' if request.endpoint == 'digest_preview' else '' }}">

@@ -1,0 +1,130 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'تعلّم الذكاء الاصطناعي' if ar else 'Learn AI' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'بطاقات مراجعة واختبار قصير لمصطلحات الذكاء الاصطناعي، بالعربية والإنجليزية.' if ar else 'Flashcards and a short quiz on AI terms, in English and Arabic.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap st-page">
+    <header class="st-mast st-mast-learn">
+        <span class="eyebrow">{{ 'تعلّم' if ar else 'Learn' }}</span>
+        <h1>{{ 'تعلّم الذكاء الاصطناعي في دقيقتين' if ar else 'Learn AI in two minutes' }}</h1>
+        <p>{{ 'بطاقات تقلبها، واختبار من عشرة أسئلة. يحفظ جهازك تقدّمك، ولا حاجة إلى حساب.' if ar else 'Flip a card, take a ten-question quiz. Your device remembers your progress, and no account is needed.' }}</p>
+        <div class="learn-stats" data-learn-stats>
+            <div><b data-stat="known">0</b><span>{{ 'مصطلحًا أتقنتُه' if ar else 'terms learned' }}</span></div>
+            <div><b data-stat="best">&ndash;</b><span>{{ 'أفضل نتيجة' if ar else 'best quiz score' }}</span></div>
+            <div><b data-stat="streak">0</b><span>{{ 'أيام متتالية' if ar else 'day streak' }}</span></div>
+        </div>
+    </header>
+
+    <nav class="learn-tabs" aria-label="{{ 'أقسام التعلّم' if ar else 'Learn sections' }}">
+        <a href="#flashcards">{{ 'بطاقات المراجعة' if ar else 'Flashcards' }}</a>
+        <a href="#quiz">{{ 'اختبار' if ar else 'Quiz' }}</a>
+        <a href="{{ url_for('glossary_page') }}">{{ 'المسرد الكامل' if ar else 'Full glossary' }}</a>
+    </nav>
+
+    <section class="learn-block" id="flashcards" aria-labelledby="fc-title">
+        <header class="learn-block-head">
+            <h2 id="fc-title">{{ 'بطاقات المراجعة' if ar else 'Flashcards' }}</h2>
+            <p>{{ 'اضغط البطاقة لقلبها. اختر «أتقنتُه» أو «ما زلت أتعلّم» وسنُرجع إليك ما تحتاج مراجعته.' if ar else 'Tap the card to flip it. Pick “I know it” or “Still learning” and we will bring back what you need to revise.' }}</p>
+        </header>
+
+        <div class="fc" data-fc>
+            <div class="fc-filters" role="group" aria-label="{{ 'اختر مجموعة' if ar else 'Choose a group' }}">
+                <button type="button" class="gl-chip is-on" data-fc-cat="" aria-pressed="true">{{ 'الكل' if ar else 'All' }}</button>
+                {% for cat in categories %}
+                <button type="button" class="gl-chip" data-fc-cat="{{ cat.key }}" aria-pressed="false" style="--cc: var({{ cat.color }});">{{ cat.ar if ar else cat.en }}</button>
+                {% endfor %}
+                <label class="fc-only"><input type="checkbox" data-fc-learning> {{ 'ما زلت أتعلّمه فقط' if ar else 'Only what I’m still learning' }}</label>
+            </div>
+
+            <div class="fc-stage">
+                <button type="button" class="fc-card" data-fc-card aria-label="{{ 'اقلب البطاقة' if ar else 'Flip the card' }}">
+                    <span class="fc-face fc-front">
+                        <span class="fc-cat" data-fc-cat-label></span>
+                        <span class="fc-term" data-fc-term></span>
+                        <span class="fc-alt" data-fc-alt></span>
+                        <span class="fc-hint">{{ 'اضغط للقلب' if ar else 'Tap to flip' }}</span>
+                    </span>
+                    <span class="fc-face fc-back">
+                        <span class="fc-def" data-fc-def></span>
+                        <span class="fc-ex" data-fc-ex></span>
+                    </span>
+                </button>
+            </div>
+
+            <div class="fc-controls">
+                <button type="button" class="btn btn-ghost" data-fc-prev aria-label="{{ 'السابقة' if ar else 'Previous' }}">{{ '→' if ar else '←' }}</button>
+                <button type="button" class="btn btn-ghost fc-learning" data-fc-mark="learning">{{ 'ما زلت أتعلّم' if ar else 'Still learning' }}</button>
+                <button type="button" class="btn btn-primary fc-known" data-fc-mark="known">{{ 'أتقنتُه' if ar else 'I know it' }}</button>
+                <button type="button" class="btn btn-ghost" data-fc-next aria-label="{{ 'التالية' if ar else 'Next' }}">{{ '←' if ar else '→' }}</button>
+            </div>
+            <p class="fc-meta"><span data-fc-pos></span> &middot; <button type="button" class="link-btn" data-fc-shuffle>{{ 'اخلط البطاقات' if ar else 'Shuffle' }}</button></p>
+            <p class="fc-empty" data-fc-empty hidden>{{ 'أتقنتَ كل البطاقات في هذه المجموعة. أحسنت! جرّب الاختبار.' if ar else 'You know every card in this group. Well done! Try the quiz.' }}</p>
+        </div>
+    </section>
+
+    <section class="learn-block" id="quiz" aria-labelledby="qz-title">
+        <header class="learn-block-head">
+            <h2 id="qz-title">{{ 'اختبر نفسك' if ar else 'Test yourself' }}</h2>
+            <p>{{ 'عشرة أسئلة: لكل سؤال تعريف، واختر المصطلح الصحيح. تظهر الإجابة فور اختيارك.' if ar else 'Ten questions. Each one gives a definition and you pick the right term. You see the answer straight away.' }}</p>
+        </header>
+
+        <div class="qz" data-qz>
+            <div class="qz-start" data-qz-start>
+                <p data-qz-best-line></p>
+                <button type="button" class="btn btn-primary" data-qz-begin>{{ 'ابدأ الاختبار' if ar else 'Start the quiz' }}</button>
+            </div>
+
+            <div class="qz-run" data-qz-run hidden>
+                <div class="qz-bar" aria-hidden="true"><span data-qz-bar></span></div>
+                <p class="qz-pos" data-qz-pos></p>
+                <p class="qz-q" data-qz-q></p>
+                <div class="qz-opts" data-qz-opts role="group" aria-label="{{ 'الخيارات' if ar else 'Choices' }}"></div>
+                <div class="qz-feedback" data-qz-feedback aria-live="polite" hidden></div>
+                <button type="button" class="btn btn-primary" data-qz-next hidden>{{ 'التالي' if ar else 'Next' }}</button>
+            </div>
+
+            <div class="qz-done" data-qz-done hidden>
+                <p class="qz-score"><b data-qz-score></b><span>/ <span data-qz-total></span></span></p>
+                <p class="qz-msg" data-qz-msg></p>
+                <div class="qz-actions">
+                    <button type="button" class="btn btn-primary" data-qz-again>{{ 'جرّب مرة أخرى' if ar else 'Try again' }}</button>
+                    <a class="btn btn-ghost" data-qz-share href="#" target="_blank" rel="noopener">{{ 'شارك نتيجتك' if ar else 'Share your score' }}</a>
+                </div>
+                <div class="qz-review" data-qz-review hidden>
+                    <h3>{{ 'راجع ما أخطأت فيه' if ar else 'Review what you missed' }}</h3>
+                    <ul data-qz-review-list></ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <p class="learn-foot">{{ 'تريد الاطلاع على كل شيء؟' if ar else 'Want to read everything?' }}
+        <a href="{{ url_for('glossary_page') }}">{{ 'افتح المسرد الكامل' if ar else 'Open the full glossary' }} &rarr;</a></p>
+</div>
+
+<script type="application/json" id="learn-data">{{ terms|tojson }}</script>
+<script type="application/json" id="learn-cats">{{ categories|tojson }}</script>
+<script type="application/json" id="learn-strings">{{ {
+    'cardOf': 'بطاقة {n} من {total}' if ar else 'Card {n} of {total}',
+    'bestLine': 'أفضل نتيجة لك: {best} من {of}.' if ar else 'Your best score: {best} out of {of}.',
+    'noBest': 'لم تجرّب الاختبار بعد.' if ar else 'You have not taken the quiz yet.',
+    'correct': 'صحيح!' if ar else 'Correct!',
+    'wrong': 'ليست هذه. الصحيح: {term}.' if ar else 'Not quite. It is {term}.',
+    'q': 'أي مصطلح يطابق هذا التعريف؟' if ar else 'Which term matches this definition?',
+    'pos': 'السؤال {n} من {total}' if ar else 'Question {n} of {total}',
+    'finish': 'اعرض النتيجة' if ar else 'See my score',
+    'next': 'التالي' if ar else 'Next',
+    'msgTop': 'ممتاز! أنت تعرف مصطلحاتك.' if ar else 'Excellent! You know your terms.',
+    'msgMid': 'جيد جدًا. راجع ما فاتك وستصل.' if ar else 'Good going. Review what you missed and you will get there.',
+    'msgLow': 'بداية جيدة. جرّب البطاقات ثم أعد الاختبار.' if ar else 'A good start. Try the flashcards, then take it again.',
+    'share': 'حصلتُ على {score} من {total} في اختبار مصطلحات الذكاء الاصطناعي في «{name}». هل تتفوّق عليّ؟' if ar else 'I scored {score}/{total} on the AI terms quiz at {name}. Can you beat me?',
+    'name': magazine_name,
+    'streakDays': 'أيام متتالية' if ar else 'day streak'
+} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/learn-v3.js') }}?v=learn3" defer></script>
+{% endblock %}

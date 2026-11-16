@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+
+{% block page_title %}{{ A('gl_edit') if term.id else A('gl_add') }}{% endblock %}
+
+{% block content %}
+{% set f = form %}
+<div class="dept-page" style="max-width: 920px;">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ A('gl_kicker') }}</p>
+            <h1>{{ A('gl_edit') if term.id else A('gl_add') }}</h1>
+            <p class="editor-dek">{{ A('gl_dek') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('glossary_admin') }}">{{ A('gl_back') }}</a>
+        </div>
+    </div>
+
+    <form method="POST">
+        <section class="editor-card">
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="term_en">{{ A('gl_f_term_en') }} <span class="req">*</span></label>
+                    <input id="term_en" name="term_en" type="text" maxlength="160" required
+                        value="{{ f.get('term_en') if f else term.term_en or '' }}">
+                </div>
+                <div class="editor-field">
+                    <label for="term_ar">{{ A('gl_f_term_ar') }}</label>
+                    <input id="term_ar" name="term_ar" type="text" maxlength="160" dir="rtl" class="is-ar"
+                        value="{{ f.get('term_ar') if f else term.term_ar or '' }}">
+                </div>
+            </div>
+            <div class="editor-field">
+                <label for="def_en">{{ A('gl_f_def_en') }} <span class="req">*</span></label>
+                <textarea id="def_en" name="def_en" rows="3" maxlength="700" required>{{ f.get('def_en') if f else term.def_en or '' }}</textarea>
+            </div>
+            <div class="editor-field">
+                <label for="def_ar">{{ A('gl_f_def_ar') }}</label>
+                <textarea id="def_ar" name="def_ar" rows="3" maxlength="700" dir="rtl" class="is-ar">{{ f.get('def_ar') if f else term.def_ar or '' }}</textarea>
+            </div>
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="example_en">{{ A('gl_f_ex_en') }}</label>
+                    <textarea id="example_en" name="example_en" rows="2" maxlength="300">{{ f.get('example_en') if f else term.example_en or '' }}</textarea>
+                </div>
+                <div class="editor-field">
+                    <label for="example_ar">{{ A('gl_f_ex_ar') }}</label>
+                    <textarea id="example_ar" name="example_ar" rows="2" maxlength="300" dir="rtl" class="is-ar">{{ f.get('example_ar') if f else term.example_ar or '' }}</textarea>
+                </div>
+            </div>
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="category">{{ A('gl_f_cat') }}</label>
+                    {% set current_cat = f.get('category') if f else term.category %}
+                    <select id="category" name="category">
+                        {% for c in categories %}
+                        <option value="{{ c.key }}" {{ 'selected' if current_cat == c.key else '' }}>{{ c.ar if admin_ar else c.en }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="editor-field">
+                    <label for="level">{{ A('gl_f_level') }}</label>
+                    {% set current_level = (f.get('level') if f else term.level|string) %}
+                    <select id="level" name="level">
+                        <option value="1" {{ 'selected' if current_level != '2' else '' }}>{{ A('gl_level_1') }}</option>
+                        <option value="2" {{ 'selected' if current_level == '2' else '' }}>{{ A('gl_level_2') }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="editor-field">
+                {% set shown = ('is_published' in f) if f else term.is_published %}
+                <label class="check-line">
+                    <input type="checkbox" name="is_published" {{ 'checked' if shown else '' }}>
+                    {{ A('gl_f_live') }}
+                </label>
+            </div>
+            <button class="btn btn-primary" type="submit">{{ A('gl_save') }}</button>
+        </section>
+    </form>
+</div>
+{% endblock %}

@@ -36,6 +36,7 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/issue-v3.css') }}?v=glance4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student-v3.css') }}?v=learn3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/disclaimer.css') }}">
     {% block head_extra %}{% endblock %}
 </head>
@@ -83,11 +84,15 @@
                 <a href="{{ url_for('magazine_view') }}"
                     class="{{ 'is-active' if request.endpoint in ['magazine_view', 'magazine_detail', 'newsroom'] else '' }}"
                     {% if request.endpoint in ['magazine_view', 'magazine_detail', 'newsroom'] %}aria-current="page"{% endif %}>{{ 'العدد' if lang_pref == 'ar' else 'The Issue' }}</a>
+                <a href="{{ url_for('learn_page') }}"
+                    class="{{ 'is-active' if request.endpoint in ['learn_page', 'glossary_page'] else '' }}">{{ 'تعلّم' if lang_pref == 'ar' else 'Learn' }}</a>
                 <a href="{{ url_for('campus_weekly') }}"
                     class="{{ 'is-active' if request.endpoint == 'campus_weekly' else '' }}">{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</a>
+                <a href="{{ url_for('student_board') }}"
+                    class="{{ 'is-active' if request.endpoint == 'student_board' else '' }}">{{ 'لوحة الطلبة' if lang_pref == 'ar' else 'Board' }}</a>
                 <a href="{{ url_for('reference_library') }}"
                     class="{{ 'is-active' if request.endpoint == 'reference_library' else '' }}"
-                    {% if request.endpoint == 'reference_library' %}aria-current="page"{% endif %}>{{ 'مكتبة المراجع' if lang_pref == 'ar' else 'Reference library' }}</a>
+                    {% if request.endpoint == 'reference_library' %}aria-current="page"{% endif %}>{{ 'المكتبة' if lang_pref == 'ar' else 'Library' }}</a>
                 {% if reels_count %}
                 <a href="{{ url_for('watch_page') }}"
                     class="{{ 'is-active' if request.endpoint == 'watch_page' else '' }}">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a>
@@ -96,8 +101,6 @@
                 <a href="{{ url_for('tools_directory') }}"
                     class="{{ 'is-active' if request.endpoint in ['tools_directory', 'tool_detail'] else '' }}">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a>
                 {% endif %}
-                <a href="{{ url_for('find_stories') }}"
-                    class="{{ 'is-active' if request.endpoint == 'find_stories' else '' }}">{{ 'كل القصص' if lang_pref == 'ar' else 'All stories' }}</a>
                 <a href="{{ url_for('author_info') }}" class="nav-author {{ 'is-active' if request.endpoint == 'author_info' else '' }}"
                     {% if request.endpoint == 'author_info' %}aria-current="page"{% endif %}>
                     {% if settings and settings.author_image %}
@@ -144,12 +147,13 @@
             </svg>
             <span>{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</span>
         </a>
-        <a href="{{ url_for('magazine_view') }}#the-world">
+        <a href="{{ url_for('learn_page') }}"
+            {% if request.endpoint in ['learn_page', 'glossary_page'] %}aria-current="page"{% endif %}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <circle cx="12" cy="12" r="8"></circle>
-                <path d="M4 12h16M12 4c3 3 3 13 0 16"></path>
+                <path d="M12 3 2 8l10 5 10-5z"></path>
+                <path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"></path>
             </svg>
-            <span>{{ 'العالم' if lang_pref == 'ar' else 'World' }}</span>
+            <span>{{ 'تعلّم' if lang_pref == 'ar' else 'Learn' }}</span>
         </a>
         <a href="{{ url_for('reference_library') }}"
             {% if request.endpoint == 'reference_library' %}aria-current="page"{% endif %}>
@@ -159,11 +163,13 @@
             </svg>
             <span>{{ 'المكتبة' if lang_pref == 'ar' else 'Library' }}</span>
         </a>
-        <a href="{{ url_for('find_stories') }}">
+        <a href="{{ url_for('student_board') }}"
+            {% if request.endpoint == 'student_board' %}aria-current="page"{% endif %}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path d="M4 6h16M4 12h16M4 18h10"></path>
+                <path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z" transform="translate(0 -2)"></path>
+                <path d="M8 10h8M8 14h5"></path>
             </svg>
-            <span>{{ 'كل القصص' if lang_pref == 'ar' else 'Stories' }}</span>
+            <span>{{ 'اللوحة' if lang_pref == 'ar' else 'Board' }}</span>
         </a>
         <a href="{{ url_for('author_info') }}"
             {% if request.endpoint == 'author_info' %}aria-current="page"{% endif %}>
@@ -217,15 +223,23 @@
                     </p>
                 </div>
                 <div>
-                    <h3>{{ 'الأقسام' if lang_pref == 'ar' else 'Sections' }}</h3>
+                    <h3>{{ 'اقرأ' if lang_pref == 'ar' else 'Read' }}</h3>
                     <ul>
                         <li><a href="{{ url_for('magazine_view') }}">{{ 'العدد' if lang_pref == 'ar' else 'The issue' }}</a></li>
+                        <li><a href="{{ url_for('find_stories') }}">{{ 'كل القصص' if lang_pref == 'ar' else 'All stories' }}</a></li>
                         <li><a href="{{ url_for('campus_weekly') }}">{{ 'القسم' if lang_pref == 'ar' else 'Department' }}</a></li>
                         <li><a href="{{ url_for('campus_downloads') }}">{{ 'ملفات القسم' if lang_pref == 'ar' else 'Downloads' }}</a></li>
                         {% if reels_count %}<li><a href="{{ url_for('watch_page') }}">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a></li>{% endif %}
-                        {% if tools_count %}<li><a href="{{ url_for('tools_directory') }}">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a></li>{% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h3>{{ 'تعلّم وشارك' if lang_pref == 'ar' else 'Learn & share' }}</h3>
+                    <ul>
+                        <li><a href="{{ url_for('learn_page') }}">{{ 'تعلّم' if lang_pref == 'ar' else 'Learn' }}</a></li>
+                        <li><a href="{{ url_for('glossary_page') }}">{{ 'المسرد' if lang_pref == 'ar' else 'Glossary' }}</a></li>
                         <li><a href="{{ url_for('reference_library') }}">{{ 'مكتبة المراجع' if lang_pref == 'ar' else 'Reference library' }}</a></li>
-                        <li><a href="{{ url_for('find_stories') }}">{{ 'كل القصص' if lang_pref == 'ar' else 'All stories' }}</a></li>
+                        {% if tools_count %}<li><a href="{{ url_for('tools_directory') }}">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a></li>{% endif %}
+                        <li><a href="{{ url_for('student_board') }}">{{ 'لوحة الطلبة' if lang_pref == 'ar' else 'Student board' }}</a></li>
                     </ul>
                 </div>
                 <div>
