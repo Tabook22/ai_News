@@ -1,0 +1,18 @@
+[Unit]
+Description=Nasser AI News — daily magazine refresh
+Documentation=file:/var/www/ainews/deploy/ainews-daily.service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/ainews
+EnvironmentFile=/var/www/ainews/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/var/www/ainews/venv/bin/python /var/www/ainews/daily_brief.py
+TimeoutStartSec=1800
+Nice=10
+StandardOutput=journal
+StandardError=journal
