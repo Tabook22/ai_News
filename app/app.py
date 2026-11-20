@@ -1126,7 +1126,7 @@ def admin_label(key):
 @app.route('/admin_language')
 def set_admin_language():
     lang = 'ar' if request.args.get('lang') == 'ar' else 'en'
-    next_url = _safe_next(request.args.get('next'), url_for('newsroom'))
+    next_url = _safe_next(request.args.get('next'), url_for('admin_dashboard'))
     resp = redirect(next_url)
     resp.set_cookie(ADMIN_LANG_COOKIE, lang, max_age=60 * 60 * 24 * 365, samesite='Lax')
     return resp
@@ -2289,7 +2289,7 @@ if not ADMIN_PASSWORD and not ADMIN_PASSWORD_HASH:
 def verify_admin_credentials(username, password):
     if not username or not password:
         return False
-    if not secrets.compare_digest(username, ADMIN_USERNAME):
+    if not secrets.compare_digest(username.strip().lower(), ADMIN_USERNAME.strip().lower()):
         return False
     if ADMIN_PASSWORD_HASH:
         return check_password_hash(ADMIN_PASSWORD_HASH, password)
@@ -2405,7 +2405,7 @@ def debug_env():
 
 # --- Routes ---
 
-@app.route('/admin')
+@app.route('/admin', strict_slashes=False)
 @login_required
 def admin_dashboard():
     """The editor's control room: what is published, what needs attention, and shortcuts."""
@@ -2502,10 +2502,15 @@ def healthz():
 
 
 @app.route('/')
+def home():
+    """The public magazine is always the front door, even for a signed-in editor."""
+    return magazine_view()
+
+
+@app.route('/newsroom')
+@login_required
 def newsroom():
-    """The door between the two desks. Nothing from one desk is listed on the other."""
-    if not session.get("logged_in"):
-        return magazine_view()
+    """The editor's newsroom. Kept separately from the public front page."""
     campus_q = NewsItem.query.filter_by(wing='campus')
     world_q = NewsItem.query.filter(NewsItem.wing != 'campus')
     published = (NewsItem.query.filter_by(is_published=True)
