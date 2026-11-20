@@ -48,7 +48,12 @@
     <a class="signal-main" href="{{ url_for('magazine_detail', item_id=signal_main.id) }}">
         <span class="signal-num">01 · {{ 'الإشارة الأولى' if ar else 'Lead signal' }}</span>
         <h3>{{ m.title(signal_main, ar) }}</h3>
-        <p>{{ ((signal_main.summary_ar | reader_line or signal_main.summary) if ar else signal_main.summary) | striptags | truncate(180, true) }}</p>
+        {% set signal_summary = ((signal_main.summary_ar | reader_line or signal_main.summary) if ar else signal_main.summary) | striptags %}
+        {% if signal_summary and 'no summary provided' not in signal_summary | lower %}
+        <p>{{ signal_summary | truncate(180, true) }}</p>
+        {% else %}
+        <p>{{ 'افتح القصة لقراءة التفاصيل من المصدر.' if ar else 'Open the story for the details from the original source.' }}</p>
+        {% endif %}
         <span class="signal-source">{{ signal_main.source or magazine_name }} · {{ signal_main.reading_minutes }} {{ 'دقائق' if ar else 'min' }} <span aria-hidden="true">↗</span></span>
     </a>
     <div class="signal-side">
