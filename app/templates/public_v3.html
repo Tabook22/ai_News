@@ -91,8 +91,8 @@
                 <a href="{{ url_for('student_board') }}"
                     class="{{ 'is-active' if request.endpoint == 'student_board' else '' }}">{{ 'لوحة الطلبة' if lang_pref == 'ar' else 'Board' }}</a>
                 <a href="{{ url_for('reference_library') }}"
-                    class="{{ 'is-active' if request.endpoint == 'reference_library' else '' }}"
-                    {% if request.endpoint == 'reference_library' %}aria-current="page"{% endif %}>{{ 'المكتبة' if lang_pref == 'ar' else 'Library' }}</a>
+                    class="{{ 'is-active' if request.endpoint in ['reference_library', 'ai_atlas'] else '' }}"
+                    {% if request.endpoint in ['reference_library', 'ai_atlas'] %}aria-current="page"{% endif %}>{{ 'المكتبة' if lang_pref == 'ar' else 'Library' }}</a>
                 {% if reels_count %}
                 <a href="{{ url_for('watch_page') }}"
                     class="{{ 'is-active' if request.endpoint == 'watch_page' else '' }}">{{ 'مشاهدة' if lang_pref == 'ar' else 'Watch' }}</a>
@@ -156,7 +156,7 @@
             <span>{{ 'تعلّم' if lang_pref == 'ar' else 'Learn' }}</span>
         </a>
         <a href="{{ url_for('reference_library') }}"
-            {% if request.endpoint == 'reference_library' %}aria-current="page"{% endif %}>
+            {% if request.endpoint in ['reference_library', 'ai_atlas'] %}aria-current="page"{% endif %}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3z"></path>
                 <path d="M5 4v16"></path>
@@ -238,6 +238,7 @@
                         <li><a href="{{ url_for('learn_page') }}">{{ 'تعلّم' if lang_pref == 'ar' else 'Learn' }}</a></li>
                         <li><a href="{{ url_for('glossary_page') }}">{{ 'المسرد' if lang_pref == 'ar' else 'Glossary' }}</a></li>
                         <li><a href="{{ url_for('reference_library') }}">{{ 'مكتبة المراجع' if lang_pref == 'ar' else 'Reference library' }}</a></li>
+                        <li><a href="{{ url_for('ai_atlas') }}">{{ 'أطلس الذكاء الاصطناعي' if lang_pref == 'ar' else 'AI Atlas' }}</a></li>
                         {% if tools_count %}<li><a href="{{ url_for('tools_directory') }}">{{ 'أدوات' if lang_pref == 'ar' else 'Tools' }}</a></li>{% endif %}
                         <li><a href="{{ url_for('student_board') }}">{{ 'لوحة الطلبة' if lang_pref == 'ar' else 'Student board' }}</a></li>
                     </ul>

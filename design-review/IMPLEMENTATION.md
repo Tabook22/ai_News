@@ -481,3 +481,22 @@ Checked: `/campus/downloads` renders and filters, the download endpoint returns 
 the admin list/form work, and the department page shows the section only when files exist.
 
 Screenshots: `design-review/shots/vps/downloads_public.png`, `downloads_admin.png`.
+
+## 16. AI Atlas (added 20 November)
+
+A curated reading map inside the Library, not a new top-level navigation item.
+
+**Public.** `/library/atlas` lists 23 sources across **Dhofar & Oman**, **The Gulf**, and
+**Global**, filterable by region, source type and search. Cards show a monogram, type,
+location, language, cadence, a short description, a "why follow it" note and a direct
+link to the original site. Tabs connect it to the existing Reference library.
+
+**Coverage.** MIT Technology Review, WIRED, The Verge, Ars Technica, IEEE Spectrum, Nature
+Machine Intelligence, The Batch, Import AI, TLDR AI, The Gradient, Stanford HAI, MIT
+CSAIL, DeepMind, OpenAI, Anthropic, Hugging Face, MBZUAI, KAUST, QCRI, SDAIA, Dhofar
+University, Oman Vision 2040 and Sultan Qaboos University.
+
+**Data.** `app/atlas_catalog.py` holds the editorial list; `ai_atlas()` enriches and
+filters it. Added to `sitemap.xml` and the public footer. Tested: page returns 200,
+23 cards, region/type filters work, mobile has no overflow, and icons resolve.
+

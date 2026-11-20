@@ -1,0 +1,116 @@
+{% extends "public_v3.html" %}
+{% set ar = lang_pref == 'ar' %}
+
+{% block page_title %}{{ 'أطلس الذكاء الاصطناعي' if ar else 'AI Atlas' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'خريطة قراءة مختارة لمنشورات ومختبرات ومراكز الذكاء الاصطناعي حول العالم وفي الخليج وعُمان.' if ar else 'A curated reading map of AI publications, labs and hubs around the world, in the Gulf and in Oman.' }}{% endblock %}
+
+{% block content %}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="atlas-i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="atlas-i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 4v16" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+</svg>
+<div class="wrap atlas-page">
+    <nav class="lib-tabs" aria-label="{{ 'أقسام المكتبة' if ar else 'Library sections' }}">
+        <a href="{{ url_for('reference_library') }}">{{ 'مكتبة المراجع' if ar else 'Reference library' }}</a>
+        <a href="{{ url_for('ai_atlas') }}" class="is-active" aria-current="page">{{ 'أطلس الذكاء الاصطناعي' if ar else 'AI Atlas' }}</a>
+    </nav>
+
+    <header class="atlas-mast">
+        <span class="eyebrow">{{ 'خريطة قراءة' if ar else 'A reading map' }}</span>
+        <h1>{{ 'أطلس الذكاء الاصطناعي' if ar else 'AI Atlas' }}</h1>
+        <p>{{ 'أين تتابع أخبار الذكاء الاصطناعي؟ هذه خريطة مختارة للمنشورات والنشرات والمختبرات والمراكز التي تستحق وقتك — عالميًا، وفي الخليج، وفي عُمان.' if ar else 'Where should you follow AI? A curated map of the publications, newsletters, labs and hubs worth your time — globally, across the Gulf, and here in Oman.' }}</p>
+        <div class="tools-meta">
+            <span><b>{{ rows|length }}</b> {{ 'مصدرًا' if ar else ('source' if rows|length == 1 else 'sources') }}</span>
+            <span class="dot" aria-hidden="true"></span>
+            <span>{{ 'روابط مباشرة إلى المواقع الأصلية' if ar else 'Direct links to the original sites' }}</span>
+        </div>
+    </header>
+
+    <form class="atlas-search" action="{{ url_for('ai_atlas') }}" method="GET" role="search">
+        <label class="sr-only" for="atlas-q">{{ 'ابحث في الأطلس' if ar else 'Search the Atlas' }}</label>
+        <svg class="icon" aria-hidden="true"><use href="#atlas-i-search"></use></svg>
+        <input id="atlas-q" type="search" name="q" value="{{ q }}"
+            placeholder="{{ 'ابحث باسم أو مجال أو مدينة…' if ar else 'Search a source, topic or city…' }}">
+        {% if region != 'all' %}<input type="hidden" name="region" value="{{ region }}">{% endif %}
+        {% if kind != 'all' %}<input type="hidden" name="kind" value="{{ kind }}">{% endif %}
+        <button class="btn btn-primary" type="submit">{{ 'بحث' if ar else 'Search' }}</button>
+    </form>
+
+    <div class="atlas-filter-label">{{ 'المنطقة' if ar else 'Region' }}</div>
+    <div class="atlas-filters">
+        <a class="atlas-chip {{ 'is-active' if region == 'all' else '' }}"
+            href="{{ url_for('ai_atlas', region='all', kind=kind if kind != 'all' else None, q=q or None) }}">
+            {{ 'الكل' if ar else 'All' }} <b>{{ counts['all'] }}</b>
+        </a>
+        {% for key, en, ar_label, dek_en, dek_ar in regions %}
+        <a class="atlas-chip {{ 'is-active' if region == key else '' }}"
+            href="{{ url_for('ai_atlas', region=key, kind=kind if kind != 'all' else None, q=q or None) }}">
+            {{ ar_label if ar else en }} <b>{{ counts[key] }}</b>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="atlas-filter-label">{{ 'النوع' if ar else 'Type' }}</div>
+    <div class="atlas-filters">
+        <a class="atlas-chip {{ 'is-active' if kind == 'all' else '' }}"
+            href="{{ url_for('ai_atlas', region=region if region != 'all' else None, q=q or None) }}">
+            {{ 'الكل' if ar else 'All' }}
+        </a>
+        {% for key, en, ar_label in kinds %}
+        <a class="atlas-chip {{ 'is-active' if kind == key else '' }}"
+            href="{{ url_for('ai_atlas', kind=key, region=region if region != 'all' else None, q=q or None) }}">
+            {{ ar_label if ar else en }} <b>{{ kind_counts[key] }}</b>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if sections %}
+    {% for section in sections %}
+    <section class="section atlas-section" id="atlas-{{ section.key }}">
+        <header class="section-head">
+            <span class="num" aria-hidden="true">0{{ loop.index }}</span>
+            <h2>{{ section.ar if ar else section.en }}</h2>
+            <p>{{ section.dek_ar if ar else section.dek_en }}</p>
+            <span class="atlas-count">{{ section.entries|length }} {{ 'مصادر' if ar else 'sources' }}</span>
+        </header>
+        <div class="atlas-grid">
+            {% for item in section.entries %}
+            <article class="atlas-card" style="--atlas-accent: {{ item.accent }};">
+                <div class="atlas-card-top">
+                    <span class="atlas-mark" aria-hidden="true">{{ item.monogram }}</span>
+                    <span class="atlas-kind">{{ item.kind_ar if ar else item.kind_en }}</span>
+                    {% if item.featured %}<span class="atlas-featured">{{ 'بداية مقترحة' if ar else 'Start here' }}</span>{% endif %}
+                </div>
+                <h3>{{ item.name }}</h3>
+                <p class="atlas-copy">{{ item.copy_ar if ar else item.copy_en }}</p>
+                <p class="atlas-why"><b>{{ 'لماذا تتابعه؟' if ar else 'Why follow it' }}</b> {{ item.why_ar if ar else item.why_en }}</p>
+                <div class="atlas-meta">
+                    <span>{{ item.location }}</span>
+                    <span>{{ item.language }}</span>
+                    <span>{{ item.cadence }}</span>
+                </div>
+                <a class="atlas-link" href="{{ item.url }}" target="_blank" rel="noopener">
+                    {{ 'زيارة المصدر' if ar else 'Visit source' }} <span aria-hidden="true">↗</span>
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+    {% else %}
+    <div class="tools-empty">
+        <h2>{{ 'Nothing matches these filters' if not ar else 'لا يوجد ما يطابق هذه الفلاتر' }}</h2>
+        <p>{{ 'Try another region, type or search term.' if not ar else 'جرّب منطقة أو نوعًا أو كلمة بحث أخرى.' }}</p>
+        <a class="btn btn-primary" href="{{ url_for('ai_atlas') }}">{{ 'All sources' if not ar else 'كل المصادر' }}</a>
+    </div>
+    {% endif %}
+
+    <aside class="atlas-note">
+        <svg class="icon" aria-hidden="true"><use href="#atlas-i-book"></use></svg>
+        <div>
+            <b>{{ 'How this atlas is built' if not ar else 'كيف بُني هذا الأطلس' }}</b>
+            <p>{{ 'Every card links to the publisher’s own website. The magazine does not republish their articles. The list favours sources that are useful to students: clear explanations, primary research, regional context and opportunities to learn.' if not ar else 'كل بطاقة تربط بموقع المصدر الأصلي. لا تعيد المجلة نشر مقالاتهم. اختيرت المصادر لما يهم الطلبة: شرح واضح، أبحاث أولية، سياق إقليمي، وفرص للتعلم.' }}</p>
+        </div>
+    </aside>
+</div>
+{% endblock %}
