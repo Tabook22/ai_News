@@ -19,10 +19,21 @@
 
     <nav class="learn-tabs" aria-label="{{ 'أقسام التعلّم' if ar else 'Learn sections' }}">
         <a href="#flashcards">{{ 'بطاقات المراجعة' if ar else 'Flashcards' }}</a>
+        <a href="{{ url_for('question_of_day') }}">{{ 'سؤال اليوم' if ar else 'Question of the day' }}</a>
         <a href="#quiz">{{ 'اختبار' if ar else 'Quiz' }}</a>
         <a href="{{ url_for('glossary_page') }}">{{ 'المسرد الكامل' if ar else 'Full glossary' }}</a>
     </nav>
 
+    {% if daily_question %}
+    <a class="learn-qotd" href="{{ url_for('question_of_day') }}">
+        <div>
+            <span class="qotd-label">{{ 'سؤال اليوم' if ar else 'Question of the day' }}</span>
+            <h2>{{ (daily_question.question_ar or daily_question.question_en) if ar else daily_question.question_en }}</h2>
+            <p>{{ 'اقرأ المصدر، ثم اكتب إجابتك وقارنها بالنموذج.' if ar else 'Read the source, then write your answer and compare it with the model.' }}</p>
+        </div>
+        <span class="btn">{{ 'أجب' if ar else 'Answer' }} →</span>
+    </a>
+    {% endif %}
     <section class="learn-block" id="flashcards" aria-labelledby="fc-title">
         <header class="learn-block-head">
             <h2 id="fc-title">{{ 'بطاقات المراجعة' if ar else 'Flashcards' }}</h2>

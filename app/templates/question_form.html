@@ -1,0 +1,111 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+{% macro val(name, fallback='') %}{{ (form.get(name) if form else (question|attr(name) if question else fallback)) or '' }}{% endmacro %}
+
+{% block page_title %}{{ t('Edit question', 'تعديل السؤال') if question else t('New question', 'سؤال جديد') }}{% endblock %}
+
+{% block content %}
+<div class="dept-page" style="max-width:1000px;">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Learn · question of the day', 'تعلّم · سؤال اليوم') }}</p>
+            <h1>{{ t('Edit question', 'تعديل السؤال') if question else t('New question', 'سؤال جديد') }}</h1>
+            <p class="editor-dek">{{ t('Link one reading, ask one question, and write the answer students see after they submit.', 'اربط قراءة واحدة، واطرح سؤالًا واحدًا، واكتب الإجابة التي يراها الطلبة بعد الإرسال.') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('questions_admin') }}">{{ t('Back to questions', 'العودة إلى الأسئلة') }}</a>
+        </div>
+    </div>
+
+    <form method="POST">
+        <div class="project-form-grid">
+            <div class="editor-main">
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-indigo"><svg class="icon" aria-hidden="true"><use href="#i-help"></use></svg></span>
+                        <div><h2>{{ t('The reading and the question', 'القراءة والسؤال') }}</h2><p>{{ t('Question of the day for one date.', 'سؤال اليوم لتاريخ واحد.') }}</p></div>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="question_date">{{ t('Date', 'التاريخ') }}</label>
+                        <input id="question_date" type="date" name="question_date" required
+                            value="{{ val('question_date', (question.question_date.isoformat() if question else today.isoformat())) }}">
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="reading_title">{{ t('Reading title', 'عنوان القراءة') }}</label>
+                        <input id="reading_title" type="text" name="reading_title" maxlength="300"
+                            value="{{ val('reading_title') }}" placeholder="{{ t('Why AI citations can still mislead', 'لماذا قد تضلل استشهادات الذكاء الاصطناعي') }}">
+                    </div>
+                    <div class="editor-grid-2">
+                        <div class="editor-field">
+                            <label for="reading_url">{{ t('Reading URL', 'رابط القراءة') }}</label>
+                            <input id="reading_url" type="text" name="reading_url"
+                                value="{{ val('reading_url') }}" placeholder="/magazine/article/... or https://...">
+                        </div>
+                        <div class="editor-field">
+                            <label for="reading_source">{{ t('Source label', 'اسم المصدر') }}</label>
+                            <input id="reading_source" type="text" name="reading_source" maxlength="160"
+                                value="{{ val('reading_source') }}" placeholder="MIT Technology Review">
+                        </div>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="question_en">{{ t('Question (English)', 'السؤال (إنجليزي)') }} <span class="req">*</span></label>
+                        <textarea id="question_en" name="question_en" rows="4" required>{{ val('question_en') }}</textarea>
+                    </div>
+                    <div class="editor-field">
+                        <label for="question_ar">{{ t('Question (Arabic)', 'السؤال (عربي)') }}</label>
+                        <textarea id="question_ar" name="question_ar" rows="4" dir="rtl" class="is-ar">{{ val('question_ar') }}</textarea>
+                    </div>
+                    <div class="editor-grid-2">
+                        <div class="editor-field">
+                            <label for="hint_en">{{ t('Hint (English)', 'تلميح (إنجليزي)') }}</label>
+                            <textarea id="hint_en" name="hint_en" rows="2">{{ val('hint_en') }}</textarea>
+                        </div>
+                        <div class="editor-field">
+                            <label for="hint_ar">{{ t('Hint (Arabic)', 'تلميح (عربي)') }}</label>
+                            <textarea id="hint_ar" name="hint_ar" rows="2" dir="rtl" class="is-ar">{{ val('hint_ar') }}</textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+                        <div><h2>{{ t('The model answer', 'الإجابة النموذجية') }}</h2><p>{{ t('Shown only after the student submits.', 'تظهر فقط بعد إرسال الطالب.') }}</p></div>
+                    </div>
+                    <div class="editor-field">
+                        <label for="answer_en">{{ t('Model answer (English)', 'الإجابة النموذجية (إنجليزي)') }}</label>
+                        <textarea id="answer_en" name="answer_en" rows="5">{{ val('answer_en') }}</textarea>
+                    </div>
+                    <div class="editor-field">
+                        <label for="answer_ar">{{ t('Model answer (Arabic)', 'الإجابة النموذجية (عربي)') }}</label>
+                        <textarea id="answer_ar" name="answer_ar" rows="5" dir="rtl" class="is-ar">{{ val('answer_ar') }}</textarea>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="dept-compose-side">
+                <section class="editor-card">
+                    <div class="editor-card-head is-compact">
+                        <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></span>
+                        <div><h2>{{ t('Publishing', 'النشر') }}</h2></div>
+                    </div>
+                    <div class="switch-rows">
+                        <label class="switch-row">
+                            <input type="checkbox" name="is_published" value="1" {% if not question or question.is_published %}checked{% endif %}>
+                            <span class="switch"></span>
+                            <span><b>{{ t('Published', 'منشور') }}</b><small>{{ t('Visible on the public question page.', 'ظاهر في صفحة السؤال العامة.') }}</small></span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary dept-submit">
+                        <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                        {{ t('Save question', 'حفظ السؤال') }}
+                    </button>
+                </section>
+            </aside>
+        </div>
+    </form>
+</div>
+{% endblock %}

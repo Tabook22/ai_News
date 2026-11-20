@@ -4405,3 +4405,41 @@ button.lib-icon.is-danger:hover { background: #fef3f2; border-color: #fda29b; co
 }
 
 .bg-upload-field input[type="file"] { margin-top: 5px; }
+
+/* Question of the day — admin */
+.qotd-admin-date {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 42px;
+    padding: 3px;
+    border-radius: 7px;
+    background: #ecfdf3;
+    color: #067647;
+    font-size: .66rem;
+    font-weight: 800;
+    line-height: 1.05;
+    text-align: center;
+}
+.qotd-admin-date small { font-size: .55rem; font-weight: 600; color: #475467; }
+.qotd-answer-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+.qotd-answer-row .res-main p { margin: 5px 0; font-size: .78rem; line-height: 1.5; color: var(--a-ink-2, #344054); white-space: pre-wrap; }
+.qotd-answer-row .res-main small { margin-top: 3px; }
+@media (max-width: 860px) {
+    .qotd-answer-row { grid-template-columns: 1fr; }
+}
+
+/* Question rows need the date cell in addition to the standard resource cells. */
+.res-row.qotd-question-row { grid-template-columns: 48px minmax(0,1fr) 70px 72px auto; }
+.res-row.qotd-question-row .res-main b,
+.res-row.qotd-question-row .res-main small { white-space: normal; overflow: visible; text-overflow: unset; overflow-wrap: anywhere; }
+.res-row.qotd-question-row .res-main b { font-size: .86rem; line-height: 1.35; }
+.res-row.qotd-question-row .res-main small { font-size: .68rem; line-height: 1.4; }
+@media (max-width: 860px) {
+    .res-row.qotd-question-row { grid-template-columns: 42px minmax(0,1fr) auto; }
+    .res-row.qotd-question-row .qotd-admin-date { grid-row: 1; }
+    .res-row.qotd-question-row .res-main { grid-column: 2 / -1; }
+    .res-row.qotd-question-row .res-downloads,
+    .res-row.qotd-question-row .res-status { display: none; }
+    .res-row.qotd-question-row .res-actions { grid-column: 2 / -1; justify-content: flex-end; }
+}

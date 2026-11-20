@@ -519,3 +519,23 @@ description, date and source. It is linked from every public page's `<head>` and
 
 Tested locally: share card opens, canvas renders, PNG downloads, RSS returns
 `application/rss+xml`, Daily Signal has no mobile overflow.
+
+## 18. Question of the Day (added 21 November)
+
+A read-then-answer feature for AI science.
+
+**Public.** `/question` shows the latest published question with a linked reading,
+a hint, and a short-answer form. After submission it reveals the model answer and the
+reading link. `/question/archive` lists past questions. Approved student answers can be
+shown as selected examples; anonymous names are supported. Answers are stored but never
+shown publicly unless the editor marks them approved.
+
+**Where it appears.** Homepage card after the Top AI news ticker, a Learn page card, a
+Learn tab, the public footer, and the dedicated question page. No new top-level nav item.
+
+**Admin.** `/desk/questions`, `/desk/questions/new`, edit/delete, and
+`/desk/questions/<id>/answers` for response moderation. Sidebar link under Content.
+The first question uses the Gemini tool-retrieval story as its reading.
+
+**Data.** `DailyQuestion` and `QuestionAnswer` tables are created by `db.create_all()`.
+No migration is needed for existing databases.

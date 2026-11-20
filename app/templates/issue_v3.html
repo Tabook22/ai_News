@@ -114,6 +114,19 @@
 </section>
 {% endif %}
 
+{# ---------- Question of the day ---------- #}
+{% if daily_question %}
+<section class="home-question" aria-labelledby="home-question-title">
+    <span class="home-question-mark" aria-hidden="true">?</span>
+    <div>
+        <span class="home-question-label">{{ 'سؤال اليوم' if ar else 'Question of the day' }} · {{ daily_question.question_date.strftime('%d %b') }}</span>
+        <h2 id="home-question-title">{{ (daily_question.question_ar or daily_question.question_en) if ar else daily_question.question_en }}</h2>
+        <p>{{ 'اقرأ المصدر أولًا، ثم أجب في جملتين إلى أربع.' if ar else 'Read the source first, then answer in two to four sentences.' }}</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('question_of_day') }}">{{ 'أجب الآن' if ar else 'Answer now' }} <span aria-hidden="true">→</span></a>
+</section>
+{% endif %}
+
 {# ---------- 1. Cover story, with the term of the day beside it ---------- #}
 {% if lead %}
 <div class="lead-grid">

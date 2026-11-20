@@ -1,0 +1,42 @@
+{% extends "public_v3.html" %}
+{% set is_ar = ar %}
+
+{% block page_title %}{{ 'أسئلة اليوم السابقة' if is_ar else 'Past questions of the day' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'أرشيف أسئلة الذكاء الاصطناعي اليومية، مع القراءة والإجابة النموذجية.' if is_ar else 'The archive of daily AI-science questions, with the reading and model answer.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap qotd-page">
+    <nav class="lib-tabs" aria-label="{{ 'أقسام التعلم' if is_ar else 'Learn sections' }}">
+        <a href="{{ url_for('learn_page') }}">{{ 'تعلّم' if is_ar else 'Learn' }}</a>
+        <a href="{{ url_for('question_of_day') }}">{{ 'سؤال اليوم' if is_ar else 'Question of the day' }}</a>
+        <a href="{{ url_for('question_archive') }}" class="is-active" aria-current="page">{{ 'الأرشيف' if is_ar else 'Archive' }}</a>
+    </nav>
+
+    <header class="qotd-mast qotd-mast-small">
+        <span class="eyebrow">{{ 'سؤال اليوم' if is_ar else 'Question of the day' }}</span>
+        <h1>{{ 'أسئلة الأيام السابقة' if is_ar else 'Past questions' }}</h1>
+        <p>{{ 'اقرأ السؤال، افتح المصدر، ثم اكتب إجابتك وقارنها بالنموذج.' if is_ar else 'Read the question, open the source, then write your answer and compare it with the model.' }}</p>
+    </header>
+
+    {% if questions %}
+    <div class="qotd-archive-list">
+        {% for item in questions %}
+        <article class="qotd-archive-row">
+            <time datetime="{{ item.question_date.isoformat() }}">{{ item.question_date.strftime('%d %b %Y') }}</time>
+            <div>
+                <h2>{{ (item.question_ar or item.question_en) if is_ar else item.question_en }}</h2>
+                {% if item.reading_title %}<span>{{ item.reading_title }}{% if item.reading_source %} · {{ item.reading_source }}{% endif %}</span>{% endif %}
+            </div>
+            <a class="btn btn-secondary" href="{{ url_for('question_of_day', date=item.question_date.isoformat()) }}">{{ 'افتح السؤال' if is_ar else 'Open question' }}</a>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="qotd-empty">
+        <span class="qotd-mark" aria-hidden="true">?</span>
+        <h2>{{ 'لا توجد أسئلة سابقة بعد.' if is_ar else 'No past questions yet.' }}</h2>
+        <a class="btn btn-primary" href="{{ url_for('question_of_day') }}">{{ 'سؤال اليوم' if is_ar else "Today's question" }}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

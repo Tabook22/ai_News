@@ -238,6 +238,7 @@
                     <h3>{{ 'تعلّم وشارك' if lang_pref == 'ar' else 'Learn & share' }}</h3>
                     <ul>
                         <li><a href="{{ url_for('learn_page') }}">{{ 'تعلّم' if lang_pref == 'ar' else 'Learn' }}</a></li>
+                        <li><a href="{{ url_for('question_of_day') }}">{{ 'سؤال اليوم' if lang_pref == 'ar' else 'Question of the day' }}</a></li>
                         <li><a href="{{ url_for('glossary_page') }}">{{ 'المسرد' if lang_pref == 'ar' else 'Glossary' }}</a></li>
                         <li><a href="{{ url_for('reference_library') }}">{{ 'مكتبة المراجع' if lang_pref == 'ar' else 'Reference library' }}</a></li>
                         <li><a href="{{ url_for('ai_atlas') }}">{{ 'أطلس الذكاء الاصطناعي' if lang_pref == 'ar' else 'AI Atlas' }}</a></li>

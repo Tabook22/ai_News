@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block page_title %}{{ t('Question of the day', 'سؤال اليوم') }}{% endblock %}
+
+{% block content %}
+<div class="res-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Learn · question of the day', 'تعلّم · سؤال اليوم') }}</p>
+            <h1>{{ t('Question of the day', 'سؤال اليوم') }}</h1>
+            <p class="editor-dek">{{ t('One reading, one AI-science question, and a model answer. Students answer without an account; you moderate the examples.', 'قراءة واحدة، وسؤال في علم الذكاء الاصطناعي، وإجابة نموذجية. يجيب الطلبة دون حساب، وأنت تراجع الأمثلة.') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('question_of_day') }}" target="_blank" rel="noopener">{{ t('Preview', 'معاينة') }}</a>
+            <a class="btn btn-primary" href="{{ url_for('add_question') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ t('New question', 'سؤال جديد') }}
+            </a>
+        </div>
+    </div>
+
+    {% if questions %}
+    <div class="res-list">
+        {% for item in questions %}
+        <article class="res-row qotd-question-row">
+            <span class="qotd-admin-date">{{ item.question_date.strftime('%d %b') }}<small>{{ item.question_date.year }}</small></span>
+            <div class="res-main">
+                <b>{{ (item.question_ar or item.question_en) if admin_ar else item.question_en }}</b>
+                <small>{{ item.reading_title or t('No reading link', 'لا يوجد رابط قراءة') }}{% if item.reading_source %} · {{ item.reading_source }}{% endif %}</small>
+            </div>
+            <span class="res-downloads">{{ item.answers|length }} {{ t('answers', 'إجابة') }}</span>
+            <span class="res-status {{ 'is-live' if item.is_published else 'is-hidden' }}">{{ t('Published', 'منشور') if item.is_published else t('Hidden', 'مخفي') }}</span>
+            <div class="res-actions">
+                <a href="{{ url_for('question_answers_admin', question_id=item.id) }}">{{ t('Answers', 'الإجابات') }}</a>
+                <a href="{{ url_for('edit_question', question_id=item.id) }}">{{ t('Edit', 'تعديل') }}</a>
+                <form method="POST" action="{{ url_for('delete_question', question_id=item.id) }}" onsubmit="return confirm('{{ t('Remove this question and its answers?', 'إزالة هذا السؤال وإجاباته؟') }}');">
+                    <button type="submit" class="is-danger">{{ t('Delete', 'حذف') }}</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="dept-empty-state">
+        <span class="dept-empty-icon"><svg class="icon" aria-hidden="true"><use href="#i-help"></use></svg></span>
+        <h3>{{ t('No question yet', 'لا يوجد سؤال بعد') }}</h3>
+        <p>{{ t('Create one reading-linked question. It will appear on the homepage, the Learn page and /question.', 'أنشئ سؤالًا مرتبطًا بقراءة. سيظهر في الرئيسية وصفحة تعلّم و/question.') }}</p>
+        <a class="btn btn-primary" href="{{ url_for('add_question') }}">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+            {{ t('Create the first question', 'أنشئ السؤال الأول') }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

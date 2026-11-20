@@ -1,0 +1,133 @@
+{% extends "public_v3.html" %}
+
+{% set is_ar = ar %}
+{% set q_text = (question.question_ar or question.question_en) if is_ar else question.question_en %}
+{% set q_other = question.question_en if is_ar else question.question_ar %}
+{% set q_answer = (question.answer_ar or question.answer_en) if is_ar else question.answer_en %}
+{% set q_hint = (question.hint_ar or question.hint_en) if is_ar else question.hint_en %}
+
+{% block page_title %}{{ 'سؤال اليوم' if is_ar else 'Question of the day' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'اقرأ، فكّر، ثم أجب عن سؤال في علم الذكاء الاصطناعي. تظهر الإجابة النموذجية بعد الإرسال.' if is_ar else 'Read, think, then answer one AI-science question. The model answer is revealed after you submit.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap qotd-page">
+    {% if question %}
+    <header class="qotd-mast">
+        <div class="qotd-kicker"><span class="qotd-mark" aria-hidden="true">?</span>
+            <span>{{ 'سؤال اليوم' if is_ar else 'Question of the day' }}</span>
+            <time datetime="{{ question.question_date.isoformat() }}">{{ question.question_date.strftime('%d %B %Y') }}</time>
+        </div>
+        <h1>{{ 'فكّر قبل أن تجيب.' if is_ar else 'Think before you answer.' }}</h1>
+        <p>{{ 'سؤال واحد في علم الذكاء الاصطناعي، مرتبط بقراءة قصيرة. اقرأ أولًا، اكتب إجابتك، ثم قارنها بالإجابة النموذجية. لا توجد درجات.' if is_ar else 'One AI-science question, tied to a short reading. Read first, write your answer, then compare it with the model answer. There are no grades.' }}</p>
+    </header>
+
+    <div class="qotd-grid">
+        <main class="qotd-main">
+            {% if question.reading_title or question.reading_url %}
+            <div class="qotd-reading">
+                <span class="qotd-label">{{ 'اقرأ أولًا' if is_ar else 'Read first' }}</span>
+                {% if question.reading_url %}
+                <a href="{{ question.reading_url }}" target="_blank" rel="noopener">
+                    {{ question.reading_title or ('افتح القراءة' if is_ar else 'Open the reading') }} <span aria-hidden="true">↗</span>
+                </a>
+                {% else %}
+                <b>{{ question.reading_title }}</b>
+                {% endif %}
+                {% if question.reading_source %}<small>{{ 'المصدر' if is_ar else 'Source' }}: {{ question.reading_source }}</small>{% endif %}
+            </div>
+            {% endif %}
+
+            <h2 class="qotd-question">{{ q_text }}</h2>
+            {% if q_other and q_other != q_text %}
+            <p class="qotd-other" lang="{{ 'en' if is_ar else 'ar' }}" dir="{{ 'ltr' if is_ar else 'rtl' }}">{{ q_other }}</p>
+            {% endif %}
+            {% if q_hint %}<p class="qotd-hint"><b>{{ 'تلميح' if is_ar else 'Hint' }}</b> {{ q_hint }}</p>{% endif %}
+
+            {% if answered %}
+            <div class="qotd-reveal">
+                <span class="qotd-label">{{ 'الإجابة النموذجية' if is_ar else 'Model answer' }}</span>
+                {% if q_answer %}
+                <p>{{ q_answer }}</p>
+                {% else %}
+                <p>{{ 'لم تُضف إجابة نموذجية لهذا السؤال بعد.' if is_ar else 'A model answer has not been added for this question yet.' }}</p>
+                {% endif %}
+                {% if question.reading_url %}
+                <a class="qotd-source" href="{{ question.reading_url }}" target="_blank" rel="noopener">
+                    {{ 'ارجع إلى المصدر' if is_ar else 'Go back to the source' }} <span aria-hidden="true">↗</span>
+                </a>
+                {% endif %}
+            </div>
+            <div class="qotd-thanks">
+                <b>{{ 'شكرًا لمشاركتك.' if is_ar else 'Thanks for answering.' }}</b>
+                {{ 'عد غدًا لسؤال جديد.' if is_ar else 'Come back tomorrow for a new question.' }}
+            </div>
+            {% else %}
+            <form class="qotd-form" method="POST" action="{{ url_for('question_of_day', date=question.question_date.isoformat()) }}">
+                <input type="hidden" name="question_id" value="{{ question.id }}">
+                <div class="qotd-form-head">
+                    <span class="qotd-label">{{ 'إجابتك' if is_ar else 'Your answer' }}</span>
+                    <span>{{ 'جملتان إلى أربع جمل' if is_ar else 'Two to four sentences' }}</span>
+                </div>
+                <label class="sr-only" for="qotd-answer">{{ 'إجابتك' if is_ar else 'Your answer' }}</label>
+                <textarea id="qotd-answer" name="answer_text" rows="6" minlength="20" maxlength="1200" required
+                    placeholder="{{ 'اكتب ما فهمته، ولماذا تعتقد أنه مهم…' if is_ar else 'Write what you understood, and why you think it matters…' }}"></textarea>
+                <div class="qotd-fields">
+                    <div>
+                        <label for="qotd-name">{{ 'اسمك (اختياري)' if is_ar else 'Your name (optional)' }}</label>
+                        <input id="qotd-name" type="text" name="display_name" maxlength="80" autocomplete="name"
+                            placeholder="{{ 'اتركه فارغًا للبقاء مجهولًا' if is_ar else 'Leave empty to stay anonymous' }}">
+                    </div>
+                    <div>
+                        <label for="qotd-year">{{ 'السنة / المقرر (اختياري)' if is_ar else 'Year / course (optional)' }}</label>
+                        <input id="qotd-year" type="text" name="year" maxlength="40"
+                            placeholder="{{ 'مثال: السنة الثانية' if is_ar else 'e.g. Year 2' }}">
+                    </div>
+                </div>
+                <div class="qotd-honeypot" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+                <div class="qotd-submit-row">
+                    <button class="btn btn-primary" type="submit">{{ 'أرسل إجابتي' if is_ar else 'Submit my answer' }} <span aria-hidden="true">→</span></button>
+                    <span>{{ answer_count }} {{ 'إجابة حتى الآن' if is_ar else 'answers so far' }}</span>
+                </div>
+                <p class="qotd-fine">{{ 'تُحفظ إجابتك ليراجعها المحرر. لا تُنشر إلا إذا اخترناها كمثال، ويمكنك الكتابة دون اسم. هذه ليست أداة تقييم دراسي.' if is_ar else 'Your answer is stored for review. It is only shown publicly if we select it as an example, and you can write without a name. This is not a graded assessment.' }}</p>
+            </form>
+            {% endif %}
+
+            {% if answered and approved_answers %}
+            <section class="qotd-answers">
+                <span class="qotd-label">{{ 'إجابات مختارة' if is_ar else 'Selected answers' }}</span>
+                {% for item in approved_answers %}
+                <article>
+                    <p>{{ item.answer_text }}</p>
+                    <span>{{ item.display_name or ('مجهول' if is_ar else 'Anonymous') }}{% if item.year %} · {{ item.year }}{% endif %}</span>
+                </article>
+                {% endfor %}
+            </section>
+            {% endif %}
+        </main>
+
+        <aside class="qotd-side">
+            <div class="qotd-side-card">
+                <span class="qotd-label">{{ 'كيف يعمل' if is_ar else 'How it works' }}</span>
+                <ol>
+                    <li>{{ 'اقرأ المصدر أولًا.' if is_ar else 'Read the source first.' }}</li>
+                    <li>{{ 'أجب في جملتين إلى أربع.' if is_ar else 'Answer in two to four sentences.' }}</li>
+                    <li>{{ 'قارن إجابتك بالنموذج.' if is_ar else 'Compare your answer with the model.' }}</li>
+                </ol>
+            </div>
+            <div class="qotd-side-card qotd-side-stat">
+                <b>{{ answer_count }}</b>
+                <span>{{ 'طالبًا شاركوا' if is_ar else 'students answered' }}</span>
+            </div>
+            <a class="qotd-archive-link" href="{{ archive_url }}">{{ 'كل أسئلة اليوم السابقة' if is_ar else 'Past questions of the day' }} <span aria-hidden="true">→</span></a>
+        </aside>
+    </div>
+    {% else %}
+    <div class="qotd-empty">
+        <span class="qotd-mark" aria-hidden="true">?</span>
+        <h1>{{ 'لا يوجد سؤال اليوم بعد.' if is_ar else 'The question of the day is being prepared.' }}</h1>
+        <p>{{ 'عد قريبًا، أو اقرأ أسئلة الأيام السابقة.' if is_ar else 'Come back soon, or read the previous questions.' }}</p>
+        <a class="btn btn-primary" href="{{ archive_url }}">{{ 'أسئلة سابقة' if is_ar else 'Past questions' }}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

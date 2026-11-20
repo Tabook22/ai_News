@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block page_title %}{{ t('Question answers', 'إجابات السؤال') }}{% endblock %}
+
+{% block content %}
+<div class="res-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Question of the day', 'سؤال اليوم') }} · {{ question.question_date.strftime('%d %b %Y') }}</p>
+            <h1>{{ t('Answers', 'الإجابات') }}</h1>
+            <p class="editor-dek">{{ (question.question_ar or question.question_en) if admin_ar else question.question_en }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('edit_question', question_id=question.id) }}">{{ t('Edit question', 'تعديل السؤال') }}</a>
+            <a class="btn btn-secondary" href="{{ url_for('questions_admin') }}">{{ t('Back', 'رجوع') }}</a>
+        </div>
+    </div>
+
+    {% if answers %}
+    <div class="res-list">
+        {% for item in answers %}
+        <article class="res-row qotd-answer-row">
+            <div class="res-main">
+                <b>{{ item.display_name or t('Anonymous', 'مجهول') }}{% if item.year %} · {{ item.year }}{% endif %}</b>
+                <p>{{ item.answer_text }}</p>
+                <small>{{ item.created_at.strftime('%d %b %Y · %H:%M') if item.created_at else '' }}</small>
+            </div>
+            <span class="res-status {{ 'is-live' if item.is_approved else 'is-hidden' }}">{{ t('Featured', 'مميز') if item.is_approved else t('Pending', 'قيد المراجعة') }}</span>
+            <div class="res-actions">
+                <form method="POST" action="{{ url_for('question_answer_action', answer_id=item.id, action=('unapprove' if item.is_approved else 'approve')) }}">
+                    <button type="submit">{{ t('Unfeature', 'إخفاء') if item.is_approved else t('Feature', 'تمييز') }}</button>
+                </form>
+                <form method="POST" action="{{ url_for('question_answer_action', answer_id=item.id, action='delete') }}" onsubmit="return confirm('{{ t('Delete this answer?', 'حذف هذه الإجابة؟') }}');">
+                    <button type="submit" class="is-danger">{{ t('Delete', 'حذف') }}</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="dept-empty-state">
+        <span class="dept-empty-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg></span>
+        <h3>{{ t('No answers yet', 'لا توجد إجابات بعد') }}</h3>
+        <p>{{ t('Share the question page with students, or check back after the next class.', 'شارك صفحة السؤال مع الطلبة، أو عد بعد الصف القادم.') }}</p>
+        <a class="btn btn-primary" href="{{ url_for('question_of_day') }}" target="_blank" rel="noopener">{{ t('Open the question', 'افتح السؤال') }}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
