@@ -7402,6 +7402,21 @@ def _question_clean(value, limit):
     return text[:limit]
 
 
+@app.template_filter('public_url')
+def public_url(url):
+    """Keep site paths inside /ainews when the app is mounted at a subpath."""
+    raw = (url or '').strip()
+    if not raw:
+        return ''
+    if raw.startswith(('http://', 'https://')):
+        return raw
+    if raw.startswith('/') and not raw.startswith('//'):
+        root = (request.script_root or '').rstrip('/')
+        if root and raw != root and not raw.startswith(root + '/'):
+            return root + raw
+    return raw
+
+
 def _question_for(day=None):
     """The published question for a date, or the latest past question."""
     today = day or _gulf_today()

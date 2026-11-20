@@ -27,7 +27,7 @@
             <div class="qotd-reading">
                 <span class="qotd-label">{{ 'اقرأ أولًا' if is_ar else 'Read first' }}</span>
                 {% if question.reading_url %}
-                <a href="{{ question.reading_url }}" target="_blank" rel="noopener">
+                <a href="{{ question.reading_url | public_url }}" target="_blank" rel="noopener">
                     {{ question.reading_title or ('افتح القراءة' if is_ar else 'Open the reading') }} <span aria-hidden="true">↗</span>
                 </a>
                 {% else %}
@@ -52,7 +52,7 @@
                 <p>{{ 'لم تُضف إجابة نموذجية لهذا السؤال بعد.' if is_ar else 'A model answer has not been added for this question yet.' }}</p>
                 {% endif %}
                 {% if question.reading_url %}
-                <a class="qotd-source" href="{{ question.reading_url }}" target="_blank" rel="noopener">
+                <a class="qotd-source" href="{{ question.reading_url | public_url }}" target="_blank" rel="noopener">
                     {{ 'ارجع إلى المصدر' if is_ar else 'Go back to the source' }} <span aria-hidden="true">↗</span>
                 </a>
                 {% endif %}

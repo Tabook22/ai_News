@@ -39,9 +39,10 @@
                     </div>
                     <div class="editor-grid-2">
                         <div class="editor-field">
-                            <label for="reading_url">{{ t('Reading URL', 'رابط القراءة') }}</label>
+                            <label for="reading_url">{{ t('Original source URL', 'رابط المصدر الأصلي') }}</label>
                             <input id="reading_url" type="text" name="reading_url"
-                                value="{{ val('reading_url') }}" placeholder="/magazine/article/... or https://...">
+                                value="{{ val('reading_url') }}" placeholder="https://publisher.com/article">
+                            <p class="settings-hint">{{ t('Prefer the publisher’s URL so students reach the original article directly. Site paths are kept under /ainews automatically.', 'يفضّل رابط الناشر ليصل الطالب إلى المقال الأصلي مباشرة. تُحفظ مسارات الموقع تحت /ainews تلقائيًا.') }}</p>
                         </div>
                         <div class="editor-field">
                             <label for="reading_source">{{ t('Source label', 'اسم المصدر') }}</label>
