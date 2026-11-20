@@ -34,6 +34,41 @@
     </div>
 </div>
 
+{# ---------- The Daily Signal: three things before class ---------- #}
+{% if brief_items %}
+{% set signal_main = brief_items[0] %}
+{% set signal_side = brief_items[1:3] %}
+<section class="signal-band" id="daily-signal" aria-labelledby="signal-title">
+    <div class="signal-intro">
+        <span class="signal-live"><i aria-hidden="true"></i>{{ 'الإشارة اليومية' if ar else 'The Daily Signal' }}</span>
+        <h2 id="signal-title">{{ 'ثلاثة أشياء قبل الصف.' if ar else 'Three things before class.' }}</h2>
+        <p>{{ 'أهم ما يتحرك في الذكاء الاصطناعي اليوم، في أقل من دقيقة.' if ar else 'What moved in AI today, in under a minute.' }}</p>
+        <a href="#brief-title">{{ 'الملخص الكامل' if ar else 'Full 90-second brief' }} <span aria-hidden="true">↓</span></a>
+    </div>
+    <a class="signal-main" href="{{ url_for('magazine_detail', item_id=signal_main.id) }}">
+        <span class="signal-num">01 · {{ 'الإشارة الأولى' if ar else 'Lead signal' }}</span>
+        <h3>{{ m.title(signal_main, ar) }}</h3>
+        <p>{{ ((signal_main.summary_ar | reader_line or signal_main.summary) if ar else signal_main.summary) | striptags | truncate(180, true) }}</p>
+        <span class="signal-source">{{ signal_main.source or magazine_name }} · {{ signal_main.reading_minutes }} {{ 'دقائق' if ar else 'min' }} <span aria-hidden="true">↗</span></span>
+    </a>
+    <div class="signal-side">
+        {% for item in signal_side %}
+        <a class="signal-mini" href="{{ url_for('magazine_detail', item_id=item.id) }}">
+            <span>{{ item.source or magazine_name }}</span>
+            <b>{{ m.title(item, ar) }}</b>
+        </a>
+        {% endfor %}
+        <div class="signal-stats">
+            <span><b>{{ stats.world }}</b> {{ 'من العالم' if ar else 'world reports' }}</span>
+            <span><b>{{ stats.campus }}</b> {{ 'من القسم' if ar else 'campus notes' }}</span>
+            {% if top_models and top_models[0].downloads_label %}
+            <span><b>{{ top_models[0].downloads_label }}</b> {{ 'تنزيلات أعلى نموذج' if ar else 'top model downloads' }}</span>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
 {# ---------- 0. Moving bar: the newest news from the big AI companies ---------- #}
 {% if ticker %}
 <section class="tk" data-ticker aria-label="{{ 'أبرز أخبار شركات الذكاء الاصطناعي' if ar else 'Top AI company news' }}">

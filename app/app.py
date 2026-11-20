@@ -2642,6 +2642,29 @@ def robots_txt():
     return Response("\n".join(lines) + "\n", mimetype='text/plain')
 
 
+
+
+@app.route('/rss.xml')
+def rss_feed():
+    """Public RSS feed for readers and news-reader apps."""
+    from flask import Response
+    from email.utils import format_datetime
+    rows = (NewsItem.query
+            .filter(NewsItem.is_published.isnot(False))
+            .order_by(NewsItem.timestamp.desc())
+            .limit(40).all())
+
+    def when(value):
+        if not value:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=datetime.timezone.utc)
+        return format_datetime(value)
+
+    body = render_template('rss.xml', rows=rows, when=when,
+                           settings=MagazineSettings.get_settings())
+    return Response(body, mimetype='application/rss+xml')
+
 @app.route('/sitemap.xml')
 def sitemap_xml():
     from flask import Response
@@ -3989,6 +4012,28 @@ def select_template():
     return redirect(url_for('template_picker'))
 
 # --- QR Code (for print / door signage) ---
+
+
+
+@app.route('/share-qr.png')
+def share_qr_png():
+    """Public QR image for the article share card."""
+    from flask import Response
+    target = (request.args.get('target') or '').strip()
+    if not target.startswith(('http://', 'https://')):
+        target = url_for('magazine_view', _external=True)
+    try:
+        import qrcode
+        qr = qrcode.QRCode(border=2, box_size=8, error_correction=qrcode.constants.ERROR_CORRECT_M)
+        qr.add_data(target)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="#0f172a", back_color="#ffffff").convert('RGB')
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        buf.seek(0)
+        return Response(buf.getvalue(), mimetype='image/png')
+    except ImportError:
+        abort(503)
 
 @app.route('/qr')
 @login_required

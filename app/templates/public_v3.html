@@ -37,7 +37,9 @@
         rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/issue-v3.css') }}?v=glance4">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student-v3.css') }}?v=learn3">
+    <link rel="alternate" type="application/rss+xml" title="{{ magazine_name }} RSS" href="{{ url_for('rss_feed') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/disclaimer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/share-card.css') }}">
     {% block head_extra %}{% endblock %}
 </head>
 
@@ -260,6 +262,7 @@
                         {% if settings and settings.social_instagram %}<li><a href="{{ settings.social_instagram }}" rel="noopener">{{ 'إنستغرام' if lang_pref == 'ar' else 'Instagram' }}</a></li>{% endif %}
                         {% if settings and settings.social_linkedin %}<li><a href="{{ settings.social_linkedin }}" rel="noopener">{{ 'لينكدإن' if lang_pref == 'ar' else 'LinkedIn' }}</a></li>{% endif %}
                         {% if settings and settings.social_facebook %}<li><a href="{{ settings.social_facebook }}" rel="noopener">{{ 'فيسبوك' if lang_pref == 'ar' else 'Facebook' }}</a></li>{% endif %}
+                        <li><a href="{{ url_for('rss_feed') }}">RSS</a></li>
                         <li><a href="{{ url_for('subscribe') }}">{{ 'اشترك في البريد' if lang_pref == 'ar' else 'Get the email' }}</a></li>
                     </ul>
                 </div>

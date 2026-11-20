@@ -1,0 +1,84 @@
+/* Branded article share card */
+.share-card-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 350;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(10, 22, 30, .72);
+    backdrop-filter: blur(6px);
+}
+
+.share-card-overlay[hidden] { display: none; }
+body.share-card-open { overflow: hidden; }
+
+.share-card-dialog {
+    width: min(460px, 100%);
+    max-height: 94vh;
+    overflow-y: auto;
+    padding: 16px;
+    background: #fbfaf7;
+    border-radius: 14px;
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .6);
+}
+
+.share-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.share-card-head b {
+    font-size: .8rem;
+    color: #14202e;
+}
+
+.share-card-close {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #5b6b7c;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.share-card-close:hover { background: #f0ece3; color: #14202e; }
+
+.share-card-dialog canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid #d8d2c5;
+    border-radius: 8px;
+    background: #fbfaf7;
+}
+
+.share-card-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.share-card-actions .btn { flex: 1; justify-content: center; }
+
+.share-card-hint {
+    margin: 8px 0 0;
+    font-size: .68rem;
+    line-height: 1.4;
+    color: #5b6b7c;
+}
+
+.share-card-trigger {
+    border: 1px solid rgba(20, 32, 46, .18);
+}
+
+@media print {
+    .share-card-overlay { display: none !important; }
+}

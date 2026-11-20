@@ -500,3 +500,22 @@ University, Oman Vision 2040 and Sultan Qaboos University.
 filters it. Added to `sitemap.xml` and the public footer. Tested: page returns 200,
 23 cards, region/type filters work, mobile has no overflow, and icons resolve.
 
+
+## 17. Daily Signal, share cards and RSS (added 20 November)
+
+**The Daily Signal** is a dark band at the top of the homepage with one lead signal,
+two supporting links and a live three-number strip (world reports, campus notes,
+top-model downloads). It reuses the existing issue data and keeps the cover story
+below it unchanged.
+
+**Share cards.** Every article's share row has a **Card** button. It opens a
+canvas-generated 1080×1350 poster with the headline, source, desk, magazine brand,
+URL and a public QR code (`/share-qr.png`). The PNG downloads as
+`nasser-ai-news-share.png`. Arabic headlines render right-to-left through the browser's
+canvas text engine.
+
+**RSS.** `/rss.xml` exposes the latest 40 published stories with title, link,
+description, date and source. It is linked from every public page's `<head>` and footer.
+
+Tested locally: share card opens, canvas renders, PNG downloads, RSS returns
+`application/rss+xml`, Daily Signal has no mobile overflow.

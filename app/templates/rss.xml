@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>{{ settings.magazine_title if settings else 'Nasser AI News' }}</title>
+        <link>{{ url_for('magazine_view', _external=True) }}</link>
+        <description>{{ 'مجلة الذكاء الاصطناعي لقسم علوم الحاسوب في جامعة ظفار.' if lang_pref == 'ar' else 'The AI magazine of Computer Science at Dhofar University.' }}</description>
+        <language>{{ 'ar' if lang_pref == 'ar' else 'en' }}</language>
+        <atom:link href="{{ url_for('rss_feed', _external=True) }}" rel="self" type="application/rss+xml"/>
+        {% if rows %}<lastBuildDate>{{ when(rows[0].timestamp) }}</lastBuildDate>{% endif %}
+        {% for item in rows %}
+        <item>
+            <title>{{ item.title | e }}</title>
+            <link>{{ url_for('magazine_detail', item_id=item.id, _external=True) }}</link>
+            <guid isPermaLink="true">{{ url_for('magazine_detail', item_id=item.id, _external=True) }}</guid>
+            {% if item.summary %}<description>{{ item.summary | striptags | truncate(300, true) | e }}</description>{% endif %}
+            {% if item.timestamp %}<pubDate>{{ when(item.timestamp) }}</pubDate>{% endif %}
+            {% if item.source %}<source url="{{ item.url | e }}">{{ item.source | e }}</source>{% endif %}
+        </item>
+        {% endfor %}
+    </channel>
+</rss>
