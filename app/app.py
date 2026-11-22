@@ -8004,8 +8004,9 @@ def delete_event(event_id):
 @login_required
 def event_gallery_admin(event_id):
     event = NationalEvent.query.get_or_404(event_id)
+    photos = sorted(event.photos, key=lambda photo: (photo.display_order or 0, photo.id))
     return render_template('event_gallery_admin.html', event=event,
-                           photos=event.photos)
+                           photos=photos)
 
 
 @app.route('/desk/events/<int:event_id>/gallery/upload', methods=['POST'])
@@ -8058,6 +8059,26 @@ def edit_event_photo(photo_id):
         return redirect(url_for('event_gallery_admin', event_id=event.id))
     return render_template('event_photo_form.html', photo=photo, event=event)
 
+
+
+
+@app.route('/desk/events/gallery/<int:photo_id>/move/<direction>', methods=['POST'])
+@login_required
+def move_event_photo(photo_id, direction):
+    photo = EventPhoto.query.get_or_404(photo_id)
+    event = photo.event
+    photos = sorted(event.photos, key=lambda item: (item.display_order or 0, item.id))
+    index = next((i for i, item in enumerate(photos) if item.id == photo.id), None)
+    if index is None or direction not in ('up', 'down'):
+        return redirect(url_for('event_gallery_admin', event_id=event.id))
+    target = index - 1 if direction == 'up' else index + 1
+    if 0 <= target < len(photos):
+        photos[index], photos[target] = photos[target], photos[index]
+        for order, item in enumerate(photos):
+            item.display_order = order
+        db.session.commit()
+        flash('Gallery order updated.', 'success')
+    return redirect(url_for('event_gallery_admin', event_id=event.id))
 
 @app.route('/desk/events/gallery/<int:photo_id>/delete', methods=['POST'])
 @login_required

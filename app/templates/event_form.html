@@ -13,6 +13,7 @@
             <p class="editor-dek">{{ t('The event stays invisible until Approved is ticked.', 'تبقى المناسبة غير ظاهرة حتى يتم تفعيل «معتمد».') }}</p>
         </div>
         <div class="editor-top-actions">
+            {% if event %}<a class="btn btn-secondary" href="{{ url_for('event_gallery_admin', event_id=event.id) }}">{{ t('Manage gallery', 'إدارة المعرض') }}</a>{% endif %}
             <a class="btn btn-secondary" href="{{ url_for('events_admin') }}">{{ t('Back to events', 'العودة إلى المناسبات') }}</a>
         </div>
     </div>

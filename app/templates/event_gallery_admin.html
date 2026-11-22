@@ -48,16 +48,38 @@
     </section>
 
     {% if photos %}
+    <header class="gallery-admin-head">
+        <div>
+            <h2>{{ t('Gallery images', 'صور المعرض') }}</h2>
+            <p>{{ photos|length }} {{ t('images', 'صورة') }} · {{ t('Use the arrows to control their order on the public gallery.', 'استخدم الأسهم لترتيب الصور في المعرض العام.') }}</p>
+        </div>
+    </header>
     <div class="gallery-admin-grid">
         {% for photo in photos %}
         <article class="gallery-admin-card">
-            <img src="{{ photo.image }}" alt="">
+            <div class="gallery-admin-media">
+                <a href="{{ photo.image }}" target="_blank" rel="noopener" title="{{ t('Open full image', 'افتح الصورة كاملة') }}">
+                    <img src="{{ photo.image }}" alt="">
+                </a>
+                <span class="gallery-admin-order">{{ loop.index }}</span>
+            </div>
             <div class="gallery-admin-copy">
-                <b>{{ photo.caption_en or t('No English caption', 'لا يوجد تعليق إنجليزي') }}</b>
-                <p>{{ photo.caption_ar or t('No Arabic caption', 'لا يوجد تعليق عربي') }}</p>
-                <small>{{ t('Order', 'الترتيب') }} {{ photo.display_order }}</small>
+                <div class="gallery-admin-caption">
+                    <span>English</span>
+                    <b>{{ photo.caption_en or t('No English caption', 'لا يوجد تعليق إنجليزي') }}</b>
+                </div>
+                <div class="gallery-admin-caption" lang="ar" dir="rtl">
+                    <span>العربية</span>
+                    <p>{{ photo.caption_ar or t('No Arabic caption', 'لا يوجد تعليق عربي') }}</p>
+                </div>
                 <div class="gallery-admin-actions">
-                    <a href="{{ url_for('edit_event_photo', photo_id=photo.id) }}">{{ t('Edit caption', 'تعديل التعليق') }}</a>
+                    <form method="POST" action="{{ url_for('move_event_photo', photo_id=photo.id, direction='up') }}">
+                        <button type="submit" title="{{ t('Move up', 'نقل لأعلى') }}" {{ 'disabled' if loop.first else '' }}>↑</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('move_event_photo', photo_id=photo.id, direction='down') }}">
+                        <button type="submit" title="{{ t('Move down', 'نقل لأسفل') }}" {{ 'disabled' if loop.last else '' }}>↓</button>
+                    </form>
+                    <a href="{{ url_for('edit_event_photo', photo_id=photo.id) }}">{{ t('Edit', 'تعديل') }}</a>
                     <form method="POST" action="{{ url_for('delete_event_photo', photo_id=photo.id) }}" onsubmit="return confirm('{{ t('Delete this image?', 'حذف هذه الصورة؟') }}');">
                         <button type="submit" class="is-danger">{{ t('Delete', 'حذف') }}</button>
                     </form>
