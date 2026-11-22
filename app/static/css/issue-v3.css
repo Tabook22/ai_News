@@ -8208,3 +8208,7 @@ body.gallery-open { overflow: hidden; }
 }
 
 .gallery-grid.is-double { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.gallery-intro { max-width: 760px; margin: 6px 0 10px; display: grid; gap: 7px; }
+.gallery-intro p { margin: 0; font-family: var(--body); font-size: .8rem; line-height: 1.55; color: var(--muted); }
+.gallery-intro p[lang="ar"] { font-family: var(--ar-ui); font-size: .86rem; line-height: 1.7; }

@@ -1,7 +1,7 @@
 {% extends "public_v3.html" %}
 {% set is_ar = ar %}
 
-{% block page_title %}{{ ((event.title_ar or event.title_en) if is_ar else event.title_en) }} — {{ 'معرض الصور' if is_ar else 'Gallery' }} — {{ magazine_name }}{% endblock %}
+{% block page_title %}{{ ((gallery.title_ar or gallery.title_en or event.title_ar or event.title_en) if is_ar else (gallery.title_en or event.title_en)) }} — {{ 'معرض الصور' if is_ar else 'Gallery' }} — {{ magazine_name }}{% endblock %}
 {% block page_desc %}{{ 'صور من المناسبة، مع تعليقات من المحرر.' if is_ar else 'Photographs from the occasion, with captions from the editor.' }}{% endblock %}
 
 {% block content %}
@@ -14,8 +14,14 @@
 
     <header class="gallery-mast">
         <span class="eyebrow">{{ 'معرض الصور' if is_ar else 'The gallery' }}</span>
-        <h1>{{ (event.title_ar or event.title_en) if is_ar else event.title_en }}</h1>
+        <h1>{{ (gallery.title_ar or gallery.title_en or event.title_ar or event.title_en) if is_ar else (gallery.title_en or event.title_en) }}</h1>
         <p>{{ event.event_date.strftime('%d %B %Y') }}{% if event.end_date %} — {{ event.end_date.strftime('%d %B %Y') }}{% endif %}{% if event.location_en or event.location_ar %} · {{ (event.location_ar or event.location_en) if is_ar else event.location_en }}{% endif %}</p>
+        {% if gallery.description_en or gallery.description_ar %}
+        <div class="gallery-intro">
+            {% if gallery.description_en %}<p lang="en">{{ gallery.description_en }}</p>{% endif %}
+            {% if gallery.description_ar %}<p lang="ar" dir="rtl">{{ gallery.description_ar }}</p>{% endif %}
+        </div>
+        {% endif %}
         <a class="gallery-back" href="{{ url_for('event_detail', event_id=event.id) }}">← {{ 'العودة إلى المناسبة' if is_ar else 'Back to the occasion' }}</a>
     </header>
 

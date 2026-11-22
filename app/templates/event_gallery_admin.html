@@ -19,6 +19,36 @@
 
     <section class="editor-card" style="margin-bottom:16px;">
         <div class="editor-card-head">
+            <span class="editor-icon is-indigo"><svg class="icon" aria-hidden="true"><use href="#i-book"></use></svg></span>
+            <div><h2>{{ t('Gallery title', 'عنوان المعرض') }}</h2><p>{{ t('This title and introduction belong only to this event’s gallery.', 'هذا العنوان والمقدمة يخصان معرض هذه المناسبة فقط.') }}</p></div>
+        </div>
+        <form method="POST" action="{{ url_for('edit_event_gallery', event_id=event.id) }}">
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="gallery_title_en">{{ t('Gallery title (English)', 'عنوان المعرض (إنجليزي)') }}</label>
+                    <input id="gallery_title_en" type="text" name="title_en" maxlength="240" value="{{ gallery.title_en or event.title_en }}">
+                </div>
+                <div class="editor-field">
+                    <label for="gallery_title_ar">{{ t('Gallery title (Arabic)', 'عنوان المعرض (عربي)') }}</label>
+                    <input id="gallery_title_ar" type="text" name="title_ar" maxlength="240" dir="rtl" class="is-ar" value="{{ gallery.title_ar or event.title_ar }}">
+                </div>
+            </div>
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="gallery_description_en">{{ t('Gallery introduction (English)', 'مقدمة المعرض (إنجليزي)') }}</label>
+                    <textarea id="gallery_description_en" name="description_en" rows="2">{{ gallery.description_en }}</textarea>
+                </div>
+                <div class="editor-field">
+                    <label for="gallery_description_ar">{{ t('Gallery introduction (Arabic)', 'مقدمة المعرض (عربي)') }}</label>
+                    <textarea id="gallery_description_ar" name="description_ar" rows="2" dir="rtl" class="is-ar">{{ gallery.description_ar }}</textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-secondary">{{ t('Save gallery title', 'حفظ عنوان المعرض') }}</button>
+        </form>
+    </section>
+
+    <section class="editor-card" style="margin-bottom:16px;">
+        <div class="editor-card-head">
             <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg></span>
             <div><h2>{{ t('Add a photograph', 'أضف صورة') }}</h2><p>{{ t('The caption is the comment readers see under the image. You can add both languages.', 'التعليق هو النص الذي يراه القارئ أسفل الصورة. يمكنك إضافة اللغتين.') }}</p></div>
         </div>

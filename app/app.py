@@ -891,6 +891,8 @@ class NationalEvent(db.Model):
     is_featured = db.Column(db.Boolean, default=False)
     display_order = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    gallery = db.relationship('EventGallery', backref='event', uselist=False,
+                              cascade='all, delete-orphan')
     photos = db.relationship('EventPhoto', backref='event', lazy=True,
                              cascade='all, delete-orphan',
                              order_by='EventPhoto.display_order, EventPhoto.id')
@@ -935,11 +937,39 @@ class NationalEvent(db.Model):
 
 
 
+
+
+class EventGallery(db.Model):
+    """One titled, separate gallery per event."""
+    __tablename__ = 'event_galleries'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('national_events.id'),
+                         nullable=False, unique=True, index=True)
+    title_en = db.Column(db.String(240), default='')
+    title_ar = db.Column(db.String(240), default='')
+    description_en = db.Column(db.Text, default='')
+    description_ar = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    photos = db.relationship('EventPhoto', backref='gallery', lazy=True,
+                             order_by='EventPhoto.display_order, EventPhoto.id')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'event_id': self.event_id,
+            'title_en': self.title_en or '',
+            'title_ar': self.title_ar or '',
+            'description_en': self.description_en or '',
+            'description_ar': self.description_ar or '',
+            'photo_count': len(self.photos or []),
+        }
+
 class EventPhoto(db.Model):
     """One image in an event gallery, with a bilingual caption/comment."""
     __tablename__ = 'event_photos'
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('national_events.id'), nullable=False, index=True)
+    gallery_id = db.Column(db.Integer, db.ForeignKey('event_galleries.id'), index=True)
     image = db.Column(db.String(500), nullable=False)
     caption_en = db.Column(db.Text, default='')
     caption_ar = db.Column(db.Text, default='')
@@ -7643,14 +7673,35 @@ def event_detail(event_id):
 
 
 
+def _gallery_for_event(event):
+    """Return the event's one gallery, creating it for older events."""
+    gallery = event.gallery
+    if gallery is None:
+        gallery = EventGallery(
+            event_id=event.id,
+            title_en=event.title_en or '',
+            title_ar=event.title_ar or '',
+        )
+        db.session.add(gallery)
+        db.session.flush()
+    for photo in event.photos:
+        if not photo.gallery_id:
+            photo.gallery_id = gallery.id
+    db.session.commit()
+    return gallery
+
+
 @app.route('/events/<int:event_id>/gallery')
 def event_gallery(event_id):
     ar = get_lang_pref() == 'ar'
     event = NationalEvent.query.get_or_404(event_id)
     if not event.is_approved:
         abort(404)
-    photos = [photo.to_dict() for photo in event.photos]
-    return render_template('event_gallery.html', event=event.to_dict(), photos=photos,
+    gallery = _gallery_for_event(event)
+    photos = sorted(gallery.photos, key=lambda photo: (photo.display_order or 0, photo.id))
+    return render_template('event_gallery.html', event=event.to_dict(),
+                           gallery=gallery.to_dict(),
+                           photos=[photo.to_dict() for photo in photos],
                            ar=ar, today=_gulf_today())
 
 
@@ -8004,15 +8055,32 @@ def delete_event(event_id):
 @login_required
 def event_gallery_admin(event_id):
     event = NationalEvent.query.get_or_404(event_id)
-    photos = sorted(event.photos, key=lambda photo: (photo.display_order or 0, photo.id))
+    gallery = _gallery_for_event(event)
+    photos = sorted(gallery.photos, key=lambda photo: (photo.display_order or 0, photo.id))
     return render_template('event_gallery_admin.html', event=event,
-                           photos=photos)
+                           gallery=gallery, photos=photos)
 
+
+
+
+@app.route('/desk/events/<int:event_id>/gallery/settings', methods=['POST'])
+@login_required
+def edit_event_gallery(event_id):
+    event = NationalEvent.query.get_or_404(event_id)
+    gallery = _gallery_for_event(event)
+    gallery.title_en = _question_clean(request.form.get('title_en'), 240)
+    gallery.title_ar = _question_clean(request.form.get('title_ar'), 240)
+    gallery.description_en = _question_clean(request.form.get('description_en'), 1000)
+    gallery.description_ar = _question_clean(request.form.get('description_ar'), 1000)
+    db.session.commit()
+    flash('Gallery title updated.', 'success')
+    return redirect(url_for('event_gallery_admin', event_id=event.id))
 
 @app.route('/desk/events/<int:event_id>/gallery/upload', methods=['POST'])
 @login_required
 def upload_event_photo(event_id):
     event = NationalEvent.query.get_or_404(event_id)
+    gallery = _gallery_for_event(event)
     image = _save_event_photo(request.files.get('image'))
     if not image:
         flash('Choose a JPG, PNG or WebP image.', 'error')
@@ -8023,6 +8091,7 @@ def upload_event_photo(event_id):
         order = 0
     db.session.add(EventPhoto(
         event_id=event.id,
+        gallery_id=gallery.id,
         image=image,
         caption_en=_question_clean(request.form.get('caption_en'), 1000),
         caption_ar=_question_clean(request.form.get('caption_ar'), 1000),
@@ -8590,6 +8659,42 @@ def delete_glossary_term(term_id):
     return redirect(url_for('glossary_admin'))
 
 
+
+
+def _ensure_event_galleries():
+    """Create one gallery per event and attach any legacy photos to it."""
+    try:
+        inspector = db.inspect(db.engine)
+        tables = inspector.get_table_names()
+        if 'event_photos' in tables:
+            columns = [c['name'] for c in inspector.get_columns('event_photos')]
+            if 'gallery_id' not in columns:
+                print("⚠️  event_photos.gallery_id missing. Adding...")
+                with db.engine.connect() as conn:
+                    conn.execute(db.text("ALTER TABLE event_photos ADD COLUMN gallery_id INTEGER"))
+                    conn.commit()
+        if 'event_galleries' not in tables:
+            return
+        for event in NationalEvent.query.all():
+            gallery = event.gallery
+            if gallery is None:
+                gallery = EventGallery(
+                    event_id=event.id,
+                    title_en=event.title_en or '',
+                    title_ar=event.title_ar or '',
+                )
+                db.session.add(gallery)
+                db.session.flush()
+            for photo in event.photos:
+                if not photo.gallery_id:
+                    photo.gallery_id = gallery.id
+        db.session.commit()
+        print("✅ Event galleries checked/completed.")
+    except Exception as exc:
+        db.session.rollback()
+        print(f"⚠️ Event gallery migration warning: {exc}")
+
+
 # Initialize DB (Safe)
 with app.app_context():
     try:
@@ -8791,6 +8896,7 @@ with app.app_context():
             print(f"⚠️ Reference library issue flag warning: {e}")
 
         print("✅ Database tables created/verified.")
+        _ensure_event_galleries()
         seed_reference_library()
         seed_glossary()
     except Exception as e:
