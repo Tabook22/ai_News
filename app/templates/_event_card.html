@@ -3,7 +3,7 @@
 {% set type_pair = type_labels.get(event.event_type, ('National', 'وطني')) %}
 <a class="event-card{% if compact %} is-compact{% endif %}" href="{{ url_for('event_detail', event_id=event.id) }}"
     style="--event-accent: {{ event.accent }};">
-    <div class="event-media">
+    <div class="event-media{% if event.image %} has-image{% endif %}">
         {% if event.image %}
         <img src="{{ event.image }}" alt="" loading="lazy">
         {% else %}

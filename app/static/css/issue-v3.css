@@ -7869,3 +7869,72 @@ body.v3.bg-custom .wordmark span {
     .national-band.is-count-1 .event-copy { padding: 18px; }
     [dir="rtl"] .national-band.is-count-1 .event-copy { padding: 18px; }
 }
+
+/* ------------------------------------------------------------
+   Event artwork: never crop the poster
+   ------------------------------------------------------------ */
+.event-media.has-image { aspect-ratio: auto; background: #f3f0e8; }
+.event-media.has-image img {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+    background: #f3f0e8;
+}
+.event-detail-media {
+    max-height: none;
+    overflow: visible;
+    background: #f3f0e8;
+}
+.event-detail-media img {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+    display: block;
+}
+
+/* Single event: image column + readable text column, no overlay crop. */
+.national-band.is-count-1 .event-card {
+    display: grid;
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+    min-height: 0;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+}
+.national-band.is-count-1 .event-media {
+    position: relative;
+    inset: auto;
+    min-height: 260px;
+    aspect-ratio: auto;
+    overflow: hidden;
+}
+.national-band.is-count-1 .event-media::after { display: none; }
+.national-band.is-count-1 .event-media img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    background: #f3f0e8;
+}
+.national-band.is-count-1 .event-copy {
+    width: auto;
+    min-height: 0;
+    padding: 24px 28px;
+    justify-content: center;
+    color: var(--ink);
+}
+.national-band.is-count-1 .event-kicker { color: var(--event-accent); }
+.national-band.is-count-1 .event-copy h3 { color: var(--ink); font-size: 1.55rem; }
+.national-band.is-count-1 .event-copy p { color: var(--muted); font-size: .82rem; -webkit-line-clamp: 4; }
+.national-band.is-count-1 .event-meta { color: var(--muted); }
+.national-band.is-count-1 .event-meta .event-live { color: var(--campus); }
+.national-band.is-count-1 .event-date { z-index: 2; }
+.national-band.is-count-1 .event-type { z-index: 2; }
+
+@media (max-width: 700px) {
+    .national-band.is-count-1 .event-card { display: flex; }
+    .national-band.is-count-1 .event-media { min-height: 0; }
+    .national-band.is-count-1 .event-copy { padding: 18px; }
+    [dir="rtl"] .national-band.is-count-1 .event-copy { padding: 18px; }
+}
