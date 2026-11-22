@@ -20,13 +20,19 @@
     </header>
 
     {% if photos %}
-    <div class="gallery-count">{{ photos|length }} {{ 'صورة' if is_ar else 'photographs' }}</div>
-    <div class="gallery-grid">
+    <div class="gallery-count">{{ photos|length }} {{ 'صورة' if is_ar else 'photographs' }} · {{ 'اضغط على صورة لعرضها بالحجم الكامل' if is_ar else 'Click a photograph to view it full size' }}</div>
+    <div class="gallery-grid{% if photos|length == 1 %} is-single{% elif photos|length == 2 %} is-double{% endif %}">
         {% for photo in photos %}
-        <figure class="gallery-item">
-            <a class="gallery-image" href="{{ photo.image }}" target="_blank" rel="noopener" aria-label="{{ 'افتح الصورة بالحجم الكامل' if is_ar else 'Open full image' }}">
+        <figure class="gallery-card">
+            <button type="button" class="gallery-card-image" data-gallery-open
+                data-image="{{ photo.image }}"
+                data-caption-en="{{ photo.caption_en }}"
+                data-caption-ar="{{ photo.caption_ar }}"
+                data-alt="{{ (photo.caption_ar or photo.caption_en) if is_ar else (photo.caption_en or photo.caption_ar) }}"
+                aria-label="{{ 'عرض الصورة بالحجم الكامل' if is_ar else 'View photograph full size' }}">
                 <img src="{{ photo.image }}" alt="{{ (photo.caption_ar or photo.caption_en) if is_ar else (photo.caption_en or photo.caption_ar) }}" loading="lazy">
-            </a>
+                <span class="gallery-zoom" aria-hidden="true">{{ 'عرض' if is_ar else 'View' }} ↗</span>
+            </button>
             {% if photo.caption_en or photo.caption_ar %}
             <figcaption>
                 {% if photo.caption_en %}
@@ -55,4 +61,22 @@
     </div>
     {% endif %}
 </div>
+
+<div class="gallery-lightbox" id="gallery-lightbox" hidden role="dialog" aria-modal="true" aria-label="{{ 'معرض الصور' if is_ar else 'Gallery viewer' }}">
+    <button type="button" class="gl-close" data-gallery-close aria-label="{{ 'إغلاق' if is_ar else 'Close' }}">&times;</button>
+    <button type="button" class="gl-arrow is-prev" data-gallery-prev aria-label="{{ 'السابق' if is_ar else 'Previous' }}">‹</button>
+    <div class="gl-stage">
+        <img id="gl-image" src="" alt="">
+        <div class="gl-caption" id="gl-caption">
+            <div class="gl-caption-en" id="gl-caption-en" lang="en"></div>
+            <div class="gl-caption-ar" id="gl-caption-ar" lang="ar" dir="rtl"></div>
+        </div>
+    </div>
+    <button type="button" class="gl-arrow is-next" data-gallery-next aria-label="{{ 'التالي' if is_ar else 'Next' }}">›</button>
+    <span class="gl-count" id="gl-count"></span>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gallery-lightbox.js') }}" defer></script>
 {% endblock %}
