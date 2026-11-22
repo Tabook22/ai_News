@@ -539,3 +539,26 @@ The first question uses the Gemini tool-retrieval story as its reading.
 
 **Data.** `DailyQuestion` and `QuestionAnswer` tables are created by `db.create_all()`.
 No migration is needed for existing databases.
+
+## 19. National moments & events (added 22 November)
+
+**Public.** `/events` lists approved national, religious, campus and cultural occasions;
+past occasions are separated into “Past moments”. A single approved event becomes a
+wide image-led feature. `/events/<id>` is the detail page with dates, location and an
+optional related link. Approved events also appear in a dark “Dates worth pausing for”
+band on the homepage, before the news rail.
+
+**Approval rule.** `NationalEvent.is_approved` defaults to **false**. The public queries
+only ever read approved events, so a new or draft event is completely invisible on the
+homepage, `/events`, search and sitemap until an editor ticks **Approved — show on the
+magazine** and saves. Unticking it hides it again.
+
+**Admin.** `/desk/events` lists drafts and approved events with status; new/edit forms
+cover bilingual title, kicker, description, type, start/end date, location, related
+link, image, accent colour, sort order, featuring and the approval tick. Sidebar link:
+Content → National moments.
+
+**Data.** `NationalEvent` is created by `db.create_all()`; images live under
+`app/static/uploads/images/events/`. The temporary test event was removed after
+verification, so no event is public until the editor creates one.
+

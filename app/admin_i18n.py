@@ -379,6 +379,7 @@ ADMIN_UI = {
     "lib_kicker": ("For students and readers", "للطلبة والقرّاء"),
     "lib_title": ("Reference library", "مكتبة المراجع"),
     "qotd_admin": ("Question of the day", "سؤال اليوم"),
+    "events_admin": ("National moments", "لحظات وطنية"),
     "lib_dek": (
         "Books, papers, courses, essays, and podcasts. Add to this shelf whenever a better reference appears.",
         "كتب وأبحاث ومقررات ومقالات وبودكاست. أضف إلى هذا الرف كلما ظهر مرجع أفضل.",

@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block page_title %}{{ t('National moments', 'لحظات وطنية') }}{% endblock %}
+
+{% block content %}
+<div class="res-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Magazine · moments', 'المجلة · المناسبات') }}</p>
+            <h1>{{ t('National moments & events', 'لحظات وطنية ومناسبات') }}</h1>
+            <p class="editor-dek">{{ t('National Day, Ramadan, Eid, campus occasions. An event is visible only after you tick Approved.', 'العيد الوطني، رمضان، العيد، ومناسبات الجامعة. لا تظهر المناسبة إلا بعد تفعيل «معتمد».') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('events_page') }}" target="_blank" rel="noopener">{{ t('Preview page', 'معاينة الصفحة') }}</a>
+            <a class="btn btn-primary" href="{{ url_for('add_event') }}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+                {{ t('New event', 'مناسبة جديدة') }}
+            </a>
+        </div>
+    </div>
+
+    {% if events %}
+    <div class="res-list">
+        {% for item in events %}
+        <article class="res-row event-admin-row">
+            {% if item.image %}
+            <img class="event-admin-thumb" src="{{ item.image }}" alt="">
+            {% else %}
+            <span class="event-admin-art">{{ item.event_date.strftime('%d') }}</span>
+            {% endif %}
+            <div class="res-main">
+                <b>{{ (item.title_ar or item.title_en) if admin_ar else item.title_en }}</b>
+                <small>{{ item.event_date.strftime('%d %b %Y') }}{% if item.end_date %} — {{ item.end_date.strftime('%d %b %Y') }}{% endif %}{% if item.location_en %} · {{ item.location_en }}{% endif %}</small>
+            </div>
+            <span class="res-downloads">{{ item.event_type }}</span>
+            <span class="res-status {{ 'is-live' if item.is_approved else 'is-draft' }}">{{ t('Approved', 'معتمد') if item.is_approved else t('Draft', 'مسودة') }}</span>
+            <div class="res-actions">
+                {% if item.is_approved %}<a href="{{ url_for('event_detail', event_id=item.id) }}" target="_blank" rel="noopener">{{ t('Open', 'فتح') }}</a>{% endif %}
+                <a href="{{ url_for('edit_event', event_id=item.id) }}">{{ t('Edit', 'تعديل') }}</a>
+                <form method="POST" action="{{ url_for('delete_event', event_id=item.id) }}" onsubmit="return confirm('{{ t('Delete this event?', 'حذف هذه المناسبة؟') }}');">
+                    <button type="submit" class="is-danger">{{ t('Delete', 'حذف') }}</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="dept-empty-state">
+        <span class="dept-empty-icon"><svg class="icon" aria-hidden="true"><use href="#i-bell"></use></svg></span>
+        <h3>{{ t('No events yet', 'لا توجد مناسبات بعد') }}</h3>
+        <p>{{ t('Create National Day, Ramadan, Eid or a campus occasion. Leave it as a draft until you are ready, then tick Approved.', 'أنشئ العيد الوطني أو رمضان أو العيد أو مناسبة جامعية. اتركها مسودة حتى تجهز، ثم فعّل «معتمد».') }}</p>
+        <a class="btn btn-primary" href="{{ url_for('add_event') }}">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+            {{ t('Create the first event', 'أنشئ المناسبة الأولى') }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

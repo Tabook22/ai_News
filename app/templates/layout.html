@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ settings.magazine_title if settings else 'Nasser AI News' }} · {{ {'settings_page': A('settings'), 'subscribers_page': A('subscribers'), 'search_page': A('find_news'), 'archive_page': A('archive'), 'newsroom': A('newsroom'), 'dashboard': A('world'), 'department_admin': A('department'), 'reels_list': A('reels'), 'tools_list': A('ai_tools'), 'qr_page': A('qr'), 'template_picker': A('look'), 'add_news': A('new_story'), 'edit_news': A('new_story'), 'add_project_idea': 'New project idea', 'edit_project_idea': 'Edit project idea', 'resources_admin': 'Downloads', 'add_department_resource': 'Upload a file', 'edit_department_resource': 'Edit download', 'digest_preview': 'Weekly digest', 'library_admin': 'Reference library', 'questions_admin': 'Question of the day', 'add_question': 'New question', 'edit_question': 'Edit question', 'question_answers_admin': 'Question answers', 'add_library_reference': 'Add a reference', 'edit_library_reference': 'Edit reference'}.get(request.endpoint, 'Control room' if not admin_ar else 'غرفة التحكم') }}</title>
+    <title>{{ settings.magazine_title if settings else 'Nasser AI News' }} · {{ {'settings_page': A('settings'), 'subscribers_page': A('subscribers'), 'search_page': A('find_news'), 'archive_page': A('archive'), 'newsroom': A('newsroom'), 'dashboard': A('world'), 'department_admin': A('department'), 'reels_list': A('reels'), 'tools_list': A('ai_tools'), 'qr_page': A('qr'), 'template_picker': A('look'), 'add_news': A('new_story'), 'edit_news': A('new_story'), 'add_project_idea': 'New project idea', 'edit_project_idea': 'Edit project idea', 'resources_admin': 'Downloads', 'add_department_resource': 'Upload a file', 'edit_department_resource': 'Edit download', 'digest_preview': 'Weekly digest', 'library_admin': 'Reference library', 'questions_admin': 'Question of the day', 'add_question': 'New question', 'edit_question': 'Edit question', 'question_answers_admin': 'Question answers', 'events_admin': 'National moments', 'add_event': 'New event', 'edit_event': 'Edit event', 'add_library_reference': 'Add a reference', 'edit_library_reference': 'Edit reference'}.get(request.endpoint, 'Control room' if not admin_ar else 'غرفة التحكم') }}</title>
     <link rel="icon" type="image/svg+xml"
         href="{{ settings.logo_path if settings and settings.logo_path else url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -53,6 +53,9 @@
     'template_picker': A('look'),
     'library_admin': A('lib_title'),
     'questions_admin': A('qotd_admin'),
+    'events_admin': A('events_admin'),
+    'add_event': A('events_admin'),
+    'edit_event': A('events_admin'),
     'add_question': A('qotd_admin'),
     'edit_question': A('qotd_admin'),
     'question_answers_admin': A('qotd_admin'),
@@ -180,6 +183,11 @@
                         class="{{ 'is-active' if request.endpoint in ['questions_admin', 'add_question', 'edit_question', 'question_answers_admin'] else '' }}">
                         <svg class="icon" aria-hidden="true"><use href="#i-help"></use></svg>
                         {{ A('qotd_admin') }}
+                    </a>
+                    <a href="{{ url_for('events_admin') }}"
+                        class="{{ 'is-active' if request.endpoint in ['events_admin', 'add_event', 'edit_event'] else '' }}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-bell"></use></svg>
+                        {{ A('events_admin') }}
                     </a>
                     <a href="{{ url_for('reels_list') }}"
                         class="{{ 'is-active' if request.endpoint in ['reels_list', 'reels_archive', 'add_reel', 'edit_reel'] else '' }}">

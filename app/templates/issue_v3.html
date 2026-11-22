@@ -1,5 +1,6 @@
 {% extends "public_v3.html" %}
 {% import "_v3_macros.html" as m %}
+{% from "_event_card.html" import event_card with context %}
 
 {% set ar = lang_pref == 'ar' %}
 
@@ -70,6 +71,22 @@
             <span><b>{{ top_models[0].downloads_label }}</b> {{ 'تنزيلات أعلى نموذج' if ar else 'top model downloads' }}</span>
             {% endif %}
         </div>
+    </div>
+</section>
+{% endif %}
+
+{# ---------- National and seasonal moments ---------- #}
+{% if national_events %}
+<section class="national-band is-count-{{ national_events|length }}" aria-labelledby="national-title">
+    <header class="national-head">
+        <div>
+            <span class="eyebrow">{{ 'لحظات وطنية ومناسبات' if ar else 'National moments & occasions' }}</span>
+            <h2 id="national-title">{{ 'تواريخ تستحق أن تُعاش.' if ar else 'Dates worth pausing for.' }}</h2>
+        </div>
+        <a href="{{ url_for('events_page') }}">{{ 'كل المناسبات' if ar else 'All occasions' }} <span aria-hidden="true">→</span></a>
+    </header>
+    <div class="national-grid">
+        {% for event in national_events %}{{ event_card(event, ar, True) }}{% endfor %}
     </div>
 </section>
 {% endif %}

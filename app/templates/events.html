@@ -1,0 +1,53 @@
+{% extends "public_v3.html" %}
+{% from "_event_card.html" import event_card with context %}
+{% set is_ar = ar %}
+
+{% block page_title %}{{ 'لحظات وطنية ومناسبات' if is_ar else 'National moments & events' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'المناسبات الوطنية والدينية والثقافية التي تهم طلبة قسم علوم الحاسوب، بتواريخها وتفاصيلها.' if is_ar else 'National, religious and cultural moments for Computer Science students, with dates and details.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap events-page">
+    <nav class="lib-tabs" aria-label="{{ 'أقسام المجلة' if is_ar else 'Magazine sections' }}">
+        <a href="{{ url_for('magazine_view') }}">{{ 'العدد' if is_ar else 'The issue' }}</a>
+        <a href="{{ url_for('events_page') }}" class="is-active" aria-current="page">{{ 'لحظات وطنية' if is_ar else 'National moments' }}</a>
+    </nav>
+
+    <header class="events-mast">
+        <span class="eyebrow">{{ 'لحظات ومناسبات' if is_ar else 'Moments & occasions' }}</span>
+        <h1>{{ 'تواريخ تستحق أن تُعاش.' if is_ar else 'Dates worth pausing for.' }}</h1>
+        <p>{{ 'المناسبات الوطنية والدينية والثقافية التي تهم طلبة القسم — العيد الوطني، رمضان، العيد، وأيام الجامعة. تظهر هنا فقط المناسبات التي يعتمدها المحرر.' if is_ar else 'National, religious and cultural moments for our students — National Day, Ramadan, Eid, and campus days. Only events approved by the editor appear here.' }}</p>
+    </header>
+
+    {% if active %}
+    <section class="events-active" aria-labelledby="events-active-title">
+        <header class="events-section-head">
+            <span class="section-num">01</span>
+            <h2 id="events-active-title">{{ 'الآن وقريبًا' if is_ar else 'Now and next' }}</h2>
+            <span>{{ active|length }} {{ 'مناسبة' if is_ar else 'moments' }}</span>
+        </header>
+        <div class="events-grid{% if active|length == 1 %} is-single{% endif %}">
+            {% for event in active %}{{ event_card(event, is_ar) }}{% endfor %}
+        </div>
+    </section>
+    {% else %}
+    <div class="events-empty">
+        <span class="events-empty-mark" aria-hidden="true">✦</span>
+        <h2>{{ 'لا توجد مناسبة معتمدة حاليًا.' if is_ar else 'No approved occasion right now.' }}</h2>
+        <p>{{ 'يعتمد المحرر كل مناسبة قبل ظهورها. عد قريبًا.' if is_ar else 'Every occasion is approved by the editor before it appears. Check back soon.' }}</p>
+    </div>
+    {% endif %}
+
+    {% if past %}
+    <section class="events-past" aria-labelledby="events-past-title">
+        <header class="events-section-head">
+            <span class="section-num">02</span>
+            <h2 id="events-past-title">{{ 'لحظات سابقة' if is_ar else 'Past moments' }}</h2>
+            <span>{{ past|length }} {{ 'مناسبة' if is_ar else 'moments' }}</span>
+        </header>
+        <div class="events-grid is-past">
+            {% for event in past %}{{ event_card(event, is_ar) }}{% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

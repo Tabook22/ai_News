@@ -1,0 +1,167 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+{% macro val(name, fallback='') %}{{ (form.get(name) if form else (event|attr(name) if event else fallback)) or '' }}{% endmacro %}
+
+{% block page_title %}{{ t('Edit event', 'تعديل المناسبة') if event else t('New event', 'مناسبة جديدة') }}{% endblock %}
+
+{% block content %}
+<div class="dept-page" style="max-width:1040px;">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('Magazine · moments', 'المجلة · المناسبات') }}</p>
+            <h1>{{ t('Edit event', 'تعديل المناسبة') if event else t('New event', 'مناسبة جديدة') }}</h1>
+            <p class="editor-dek">{{ t('The event stays invisible until Approved is ticked.', 'تبقى المناسبة غير ظاهرة حتى يتم تفعيل «معتمد».') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('events_admin') }}">{{ t('Back to events', 'العودة إلى المناسبات') }}</a>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        <div class="project-form-grid">
+            <div class="editor-main">
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-indigo"><svg class="icon" aria-hidden="true"><use href="#i-bell"></use></svg></span>
+                        <div><h2>{{ t('The occasion', 'المناسبة') }}</h2><p>{{ t('A national, religious, campus or cultural moment.', 'مناسبة وطنية أو دينية أو جامعية أو ثقافية.') }}</p></div>
+                    </div>
+
+                    <div class="editor-grid-2">
+                        <div class="editor-field">
+                            <label for="event_type">{{ t('Type', 'النوع') }}</label>
+                            <select id="event_type" name="event_type">
+                                {% for key, en, ar in event_types %}
+                                {% set current = (form.get('event_type') if form else (event.event_type if event else 'national')) %}
+                                <option value="{{ key }}" {{ 'selected' if current == key else '' }}>{{ ar if admin_ar else en }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="editor-field">
+                            <label for="display_order">{{ t('Sort order', 'ترتيب العرض') }}</label>
+                            <input id="display_order" type="number" name="display_order" min="0" value="{{ val('display_order', 0) }}">
+                        </div>
+                    </div>
+
+                    <div class="editor-field">
+                        <label for="title_en">{{ t('Title (English)', 'العنوان (إنجليزي)') }} <span class="req">*</span></label>
+                        <input id="title_en" type="text" name="title_en" maxlength="240" required value="{{ val('title_en') }}" placeholder="Oman National Day">
+                    </div>
+                    <div class="editor-field">
+                        <label for="title_ar">{{ t('Title (Arabic)', 'العنوان (عربي)') }}</label>
+                        <input id="title_ar" type="text" name="title_ar" maxlength="240" dir="rtl" class="is-ar" value="{{ val('title_ar') }}" placeholder="اليوم الوطني العُماني">
+                    </div>
+                    <div class="editor-grid-2">
+                        <div class="editor-field">
+                            <label for="kicker_en">{{ t('Kicker (English)', 'سطر تمهيدي (إنجليزي)') }}</label>
+                            <input id="kicker_en" type="text" name="kicker_en" maxlength="120" value="{{ val('kicker_en') }}" placeholder="National Day · 55th">
+                        </div>
+                        <div class="editor-field">
+                            <label for="kicker_ar">{{ t('Kicker (Arabic)', 'سطر تمهيدي (عربي)') }}</label>
+                            <input id="kicker_ar" type="text" name="kicker_ar" maxlength="120" dir="rtl" class="is-ar" value="{{ val('kicker_ar') }}">
+                        </div>
+                    </div>
+                    <div class="editor-field">
+                        <label for="description_en">{{ t('Description (English)', 'الوصف (إنجليزي)') }}</label>
+                        <textarea id="description_en" name="description_en" rows="3">{{ val('description_en') }}</textarea>
+                    </div>
+                    <div class="editor-field">
+                        <label for="description_ar">{{ t('Description (Arabic)', 'الوصف (عربي)') }}</label>
+                        <textarea id="description_ar" name="description_ar" rows="3" dir="rtl" class="is-ar">{{ val('description_ar') }}</textarea>
+                    </div>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg></span>
+                        <div><h2>{{ t('Date and place', 'التاريخ والمكان') }}</h2></div>
+                    </div>
+                    <div class="editor-grid-2">
+                        <div class="editor-field">
+                            <label for="event_date">{{ t('Start date', 'تاريخ البداية') }} <span class="req">*</span></label>
+                            <input id="event_date" type="date" name="event_date" required
+                                value="{{ (form.get('event_date') if form else (event.event_date.isoformat() if event else today.isoformat())) }}">
+                        </div>
+                        <div class="editor-field">
+                            <label for="end_date">{{ t('End date (optional)', 'تاريخ النهاية (اختياري)') }}</label>
+                            <input id="end_date" type="date" name="end_date"
+                                value="{{ (form.get('end_date') if form else (event.end_date.isoformat() if event and event.end_date else '')) }}">
+                        </div>
+                    </div>
+                    <div class="editor-grid-2">
+                        <div class="editor-field">
+                            <label for="location_en">{{ t('Location (English)', 'المكان (إنجليزي)') }}</label>
+                            <input id="location_en" type="text" name="location_en" maxlength="180" value="{{ val('location_en') }}" placeholder="Dhofar University, Salalah">
+                        </div>
+                        <div class="editor-field">
+                            <label for="location_ar">{{ t('Location (Arabic)', 'المكان (عربي)') }}</label>
+                            <input id="location_ar" type="text" name="location_ar" maxlength="180" dir="rtl" class="is-ar" value="{{ val('location_ar') }}">
+                        </div>
+                    </div>
+                    <div class="editor-field">
+                        <label for="link_url">{{ t('Related link (optional)', 'رابط مرتبط (اختياري)') }}</label>
+                        <input id="link_url" type="text" name="link_url" value="{{ val('link_url') }}" placeholder="https://... or /magazine/article/...">
+                    </div>
+                    <div class="editor-grid-2">
+                        <div class="editor-field">
+                            <label for="link_label_en">{{ t('Link label (English)', 'نص الرابط (إنجليزي)') }}</label>
+                            <input id="link_label_en" type="text" name="link_label_en" maxlength="100" value="{{ val('link_label_en') }}" placeholder="Read more">
+                        </div>
+                        <div class="editor-field">
+                            <label for="link_label_ar">{{ t('Link label (Arabic)', 'نص الرابط (عربي)') }}</label>
+                            <input id="link_label_ar" type="text" name="link_label_ar" maxlength="100" dir="rtl" class="is-ar" value="{{ val('link_label_ar') }}">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="editor-card">
+                    <div class="editor-card-head">
+                        <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg></span>
+                        <div><h2>{{ t('Image & colour', 'الصورة واللون') }}</h2><p>{{ t('An image makes the card feel like a real occasion.', 'الصورة تجعل البطاقة أكثر حضورًا.') }}</p></div>
+                    </div>
+                    <div class="editor-field">
+                        <label for="image">{{ t('Event image', 'صورة المناسبة') }}</label>
+                        <input id="image" type="file" name="image" accept=".jpg,.jpeg,.png,.webp">
+                        {% if event and event.image %}
+                        <div class="bg-current-preview">
+                            <img src="{{ event.image }}" alt="">
+                            <label class="check-line"><input type="checkbox" name="remove_image"> {{ t('Remove current image', 'إزالة الصورة الحالية') }}</label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="color-swatch-input">
+                        <label for="accent">{{ t('Accent colour', 'لون المناسبة') }}</label>
+                        <input id="accent" type="color" name="accent" value="{{ val('accent', '#0f766e') }}">
+                    </div>
+                </section>
+            </div>
+
+            <aside class="dept-compose-side">
+                <section class="editor-card">
+                    <div class="editor-card-head is-compact">
+                        <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+                        <div><h2>{{ t('Publishing', 'النشر') }}</h2></div>
+                    </div>
+                    <div class="event-approve-box">
+                        <label class="switch-row">
+                            <input type="checkbox" name="is_approved" value="1" {% if event and event.is_approved %}checked{% endif %}>
+                            <span class="switch"></span>
+                            <span><b>{{ t('Approved — show on the magazine', 'معتمد — أظهرها في المجلة') }}</b><small>{{ t('Leave this unticked and the event stays private.', 'بدون تفعيل يبقى الحدث غير ظاهر للجمهور.') }}</small></span>
+                        </label>
+                    </div>
+                    <div class="switch-rows" style="margin-top:10px;">
+                        <label class="switch-row">
+                            <input type="checkbox" name="is_featured" value="1" {% if event and event.is_featured %}checked{% endif %}>
+                            <span class="switch"></span>
+                            <span><b>{{ t('Feature first', 'أبرزها أولًا') }}</b><small>{{ t('Puts it first in the event rail.', 'يضعها في مقدمة شريط المناسبات.') }}</small></span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary dept-submit">
+                        <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                        {{ t('Save event', 'حفظ المناسبة') }}
+                    </button>
+                </section>
+            </aside>
+        </div>
+    </form>
+</div>
+{% endblock %}

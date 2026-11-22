@@ -454,6 +454,13 @@ TOOL_CATEGORIES = [
 ]
 TOOL_CATEGORY_LABELS = dict(TOOL_CATEGORIES)
 
+EVENT_TYPES = [
+    ('national', 'National', 'وطني'),
+    ('religious', 'Religious', 'ديني'),
+    ('campus', 'Campus', 'جامعي'),
+    ('cultural', 'Cultural', 'ثقافي'),
+]
+
 RESOURCE_CATEGORIES = [
     ('notes', 'Course notes', 'ملاحظات المقرر'),
     ('syllabus', 'Syllabus', 'خطة المقرر'),
@@ -857,6 +864,71 @@ def _link_host(url):
 
 
 
+
+
+
+class NationalEvent(db.Model):
+    """A national, religious or campus moment shown only after editor approval."""
+    __tablename__ = 'national_events'
+    id = db.Column(db.Integer, primary_key=True)
+    title_en = db.Column(db.String(240), nullable=False)
+    title_ar = db.Column(db.String(240), default='')
+    kicker_en = db.Column(db.String(120), default='')
+    kicker_ar = db.Column(db.String(120), default='')
+    description_en = db.Column(db.Text, default='')
+    description_ar = db.Column(db.Text, default='')
+    event_type = db.Column(db.String(20), default='national')
+    event_date = db.Column(db.Date, nullable=False, index=True)
+    end_date = db.Column(db.Date)
+    location_en = db.Column(db.String(180), default='')
+    location_ar = db.Column(db.String(180), default='')
+    image = db.Column(db.String(500), default='')
+    link_url = db.Column(db.Text, default='')
+    link_label_en = db.Column(db.String(100), default='')
+    link_label_ar = db.Column(db.String(100), default='')
+    accent = db.Column(db.String(20), default='#0f766e')
+    is_approved = db.Column(db.Boolean, default=False)
+    is_featured = db.Column(db.Boolean, default=False)
+    display_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        today = datetime.date.today()
+        start = self.event_date
+        end = self.end_date or self.event_date
+        if start and start > today:
+            status = 'upcoming'
+            days = (start - today).days
+        elif end and end < today:
+            status = 'past'
+            days = 0
+        else:
+            status = 'live'
+            days = 0
+        return {
+            'id': self.id,
+            'title_en': self.title_en or '',
+            'title_ar': self.title_ar or '',
+            'kicker_en': self.kicker_en or '',
+            'kicker_ar': self.kicker_ar or '',
+            'description_en': self.description_en or '',
+            'description_ar': self.description_ar or '',
+            'event_type': self.event_type or 'national',
+            'event_date': self.event_date,
+            'end_date': self.end_date,
+            'location_en': self.location_en or '',
+            'location_ar': self.location_ar or '',
+            'image': self.image or '',
+            'link_url': self.link_url or '',
+            'link_label_en': self.link_label_en or '',
+            'link_label_ar': self.link_label_ar or '',
+            'accent': self.accent or '#0f766e',
+            'is_approved': bool(self.is_approved),
+            'is_featured': bool(self.is_featured),
+            'display_order': self.display_order or 0,
+            'status': status,
+            'days_until': days,
+        }
 
 class DailyQuestion(db.Model):
     """One AI-science question tied to a reading, with a model answer."""
@@ -2747,6 +2819,8 @@ def sitemap_xml():
                    % url_for('campus_projects', _external=True))
     entries.append("<url><loc>%s</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>"
                    % url_for('ai_atlas', _external=True))
+    entries.append("<url><loc>%s</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>"
+                   % url_for('events_page', _external=True))
     for endpoint in ('glossary_page', 'learn_page', 'student_board'):
         entries.append("<url><loc>%s</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>"
                        % url_for(endpoint, _external=True))
@@ -5439,6 +5513,7 @@ def _render_v3_issue():
         day_story=day_story,
         day_video=day_video,
         daily_question=_question_for(),
+        national_events=_public_events(limit=3)[0],
         top_models=refresh_top_models(limit=10),
         model_rank_links=MODEL_RANK_LINKS,
         **edition
@@ -7500,6 +7575,104 @@ def question_archive():
             .limit(60).all())
     return render_template('question_archive.html', questions=rows, ar=ar)
 
+
+
+# ---------- National and seasonal events ----------
+
+def _public_events(limit=None):
+    rows = (NationalEvent.query.filter_by(is_approved=True)
+            .order_by(NationalEvent.display_order.asc(),
+                      NationalEvent.event_date.asc(), NationalEvent.id.asc()).all())
+    items = [row.to_dict() for row in rows]
+    active = [item for item in items if item['status'] != 'past']
+    past = [item for item in items if item['status'] == 'past']
+    active.sort(key=lambda item: (0 if item['is_featured'] else 1,
+                                 item['event_date']))
+    if limit:
+        active = active[:limit]
+    return active, past
+
+
+@app.route('/events')
+def events_page():
+    ar = get_lang_pref() == 'ar'
+    active, past = _public_events()
+    return render_template('events.html', active=active, past=past, ar=ar,
+                           today=_gulf_today())
+
+
+@app.route('/events/<int:event_id>')
+def event_detail(event_id):
+    ar = get_lang_pref() == 'ar'
+    event = NationalEvent.query.get_or_404(event_id)
+    if not event.is_approved:
+        abort(404)
+    return render_template('event_detail.html', event=event.to_dict(), ar=ar,
+                           today=_gulf_today())
+
+
+def _save_event_image(file):
+    if not file or not file.filename:
+        return None
+    if not allowed_file(file.filename, {'png', 'jpg', 'jpeg', 'webp'}):
+        return None
+    folder = os.path.join(app.config['UPLOAD_FOLDER'], 'images', 'events')
+    os.makedirs(folder, exist_ok=True)
+    name = secure_filename(f"event_{uuid.uuid4().hex}_{file.filename}")
+    file.save(os.path.join(folder, name))
+    return f"/static/uploads/images/events/{name}"
+
+
+def _apply_event_form(event):
+    title = _question_clean(request.form.get('title_en'), 240)
+    if not title:
+        return 'The English title is required.'
+    raw_date = (request.form.get('event_date') or '').strip()
+    try:
+        event_date = datetime.date.fromisoformat(raw_date)
+    except ValueError:
+        return 'Choose a valid event date.'
+    end = None
+    raw_end = (request.form.get('end_date') or '').strip()
+    if raw_end:
+        try:
+            end = datetime.date.fromisoformat(raw_end)
+        except ValueError:
+            return 'Choose a valid end date.'
+        if end < event_date:
+            return 'The end date cannot be before the start date.'
+    event_type = request.form.get('event_type', 'national')
+    if event_type not in {key for key, _en, _ar in EVENT_TYPES}:
+        event_type = 'national'
+    link = (request.form.get('link_url') or '').strip()
+    if link and not link.startswith(('/', 'http://', 'https://')):
+        return 'The event link must be a site path or an http(s) URL.'
+    accent = (request.form.get('accent') or '').strip()
+    if not re.match(r'^#[0-9a-fA-F]{6}$', accent or ''):
+        accent = '#0f766e'
+    event.title_en = title
+    event.title_ar = _question_clean(request.form.get('title_ar'), 240)
+    event.kicker_en = _question_clean(request.form.get('kicker_en'), 120)
+    event.kicker_ar = _question_clean(request.form.get('kicker_ar'), 120)
+    event.description_en = _question_clean(request.form.get('description_en'), 1200)
+    event.description_ar = _question_clean(request.form.get('description_ar'), 1200)
+    event.event_type = event_type
+    event.event_date = event_date
+    event.end_date = end
+    event.location_en = _question_clean(request.form.get('location_en'), 180)
+    event.location_ar = _question_clean(request.form.get('location_ar'), 180)
+    event.link_url = link
+    event.link_label_en = _question_clean(request.form.get('link_label_en'), 100)
+    event.link_label_ar = _question_clean(request.form.get('link_label_ar'), 100)
+    event.accent = accent
+    event.is_approved = bool(request.form.get('is_approved'))
+    event.is_featured = bool(request.form.get('is_featured'))
+    try:
+        event.display_order = int(request.form.get('display_order') or 0)
+    except ValueError:
+        event.display_order = 0
+    return None
+
 @app.route('/library')
 def reference_library():
     needle = _library_query()
@@ -7685,6 +7858,89 @@ def question_answer_action(answer_id, action):
     db.session.commit()
     flash('Answer updated.', 'success')
     return redirect(url_for('question_answers_admin', question_id=answer.question_id))
+
+
+
+@app.route('/desk/events')
+@login_required
+def events_admin():
+    events = (NationalEvent.query
+              .order_by(NationalEvent.event_date.desc(), NationalEvent.id.desc())
+              .all())
+    return render_template('events_admin.html', events=events)
+
+
+@app.route('/desk/events/new', methods=['GET', 'POST'])
+@login_required
+def add_event():
+    if request.method == 'POST':
+        event = NationalEvent(title_en='', event_date=_gulf_today())
+        error = _apply_event_form(event)
+        image = _save_event_image(request.files.get('image'))
+        if image:
+            event.image = image
+        if error:
+            flash(error, 'error')
+            return render_template('event_form.html', event=None, form=request.form,
+                                   event_types=EVENT_TYPES, today=_gulf_today())
+        db.session.add(event)
+        db.session.commit()
+        flash('Event saved. Tick “Approved” before it can appear on the magazine.', 'success')
+        return redirect(url_for('events_admin'))
+    return render_template('event_form.html', event=None, form=None,
+                           event_types=EVENT_TYPES, today=_gulf_today())
+
+
+@app.route('/desk/events/<int:event_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_event(event_id):
+    event = NationalEvent.query.get_or_404(event_id)
+    if request.method == 'POST':
+        error = _apply_event_form(event)
+        image = _save_event_image(request.files.get('image'))
+        if image:
+            old = event.image
+            event.image = image
+            if old:
+                try:
+                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'],
+                                           old.replace('/static/uploads/', '', 1)))
+                except OSError:
+                    pass
+        if request.form.get('remove_image'):
+            old = event.image
+            event.image = ''
+            if old:
+                try:
+                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'],
+                                           old.replace('/static/uploads/', '', 1)))
+                except OSError:
+                    pass
+        if error:
+            flash(error, 'error')
+        else:
+            db.session.commit()
+            flash('Event updated.', 'success')
+            return redirect(url_for('events_admin'))
+    return render_template('event_form.html', event=event, form=None,
+                           event_types=EVENT_TYPES, today=_gulf_today())
+
+
+@app.route('/desk/events/<int:event_id>/delete', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    event = NationalEvent.query.get_or_404(event_id)
+    image = event.image
+    db.session.delete(event)
+    db.session.commit()
+    if image:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'],
+                                   image.replace('/static/uploads/', '', 1)))
+        except OSError:
+            pass
+    flash('Event deleted.', 'success')
+    return redirect(url_for('events_admin'))
 
 @app.route('/desk/library')
 @login_required

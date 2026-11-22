@@ -1,0 +1,47 @@
+{% extends "public_v3.html" %}
+{% set is_ar = ar %}
+{% set title = (event.title_ar or event.title_en) if is_ar else event.title_en %}
+{% set desc = (event.description_ar or event.description_en) if is_ar else event.description_en %}
+
+{% block page_title %}{{ title }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ desc | striptags | truncate(155) if desc else '' }}{% endblock %}
+
+{% block content %}
+<div class="wrap event-detail-page">
+    <nav class="lib-tabs" aria-label="{{ 'أقسام المجلة' if is_ar else 'Magazine sections' }}">
+        <a href="{{ url_for('events_page') }}">{{ 'لحظات وطنية' if is_ar else 'National moments' }}</a>
+        <a href="{{ url_for('event_detail', event_id=event.id) }}" class="is-active" aria-current="page">{{ 'المناسبة' if is_ar else 'This occasion' }}</a>
+    </nav>
+
+    <article class="event-detail" style="--event-accent: {{ event.accent }};">
+        {% if event.image %}
+        <div class="event-detail-media"><img src="{{ event.image }}" alt=""></div>
+        {% endif %}
+        <div class="event-detail-body">
+            <div class="event-detail-meta">
+                <span class="event-detail-badge">{{ {'national': 'National' if not is_ar else 'وطني', 'religious': 'Religious' if not is_ar else 'ديني', 'campus': 'Campus' if not is_ar else 'جامعي', 'cultural': 'Cultural' if not is_ar else 'ثقافي'}.get(event.event_type, 'Occasion') }}</span>
+                <time datetime="{{ event.event_date.isoformat() }}">{{ event.event_date.strftime('%d %B %Y') }}{% if event.end_date %} — {{ event.end_date.strftime('%d %B %Y') }}{% endif %}</time>
+            </div>
+            <h1>{{ title }}</h1>
+            {% if event.kicker_en or event.kicker_ar %}<p class="event-detail-kicker">{{ (event.kicker_ar or event.kicker_en) if is_ar else event.kicker_en }}</p>{% endif %}
+            {% if desc %}<p class="event-detail-dek">{{ desc }}</p>{% endif %}
+            <div class="event-detail-info">
+                {% if event.location_en or event.location_ar %}
+                <span><b>{{ 'المكان' if is_ar else 'Location' }}</b> {{ (event.location_ar or event.location_en) if is_ar else event.location_en }}</span>
+                {% endif %}
+                <span><b>{{ 'الحالة' if is_ar else 'Status' }}</b>
+                    {% if event.status == 'upcoming' %}{{ ('بعد ' ~ event.days_until ~ ' يومًا') if is_ar else ('In ' ~ event.days_until ~ ' days') }}
+                    {% elif event.status == 'live' %}{{ 'الآن' if is_ar else 'Happening now' }}
+                    {% else %}{{ 'مناسبة سابقة' if is_ar else 'Past occasion' }}{% endif %}
+                </span>
+            </div>
+            {% if event.link_url %}
+            <a class="btn btn-primary" href="{{ event.link_url | public_url }}" target="_blank" rel="noopener">
+                {{ (event.link_label_ar or event.link_label_en) if is_ar else (event.link_label_en or 'Learn more') }} <span aria-hidden="true">↗</span>
+            </a>
+            {% endif %}
+            <a class="event-back" href="{{ url_for('events_page') }}">← {{ 'كل اللحظات' if is_ar else 'All moments' }}</a>
+        </div>
+    </article>
+</div>
+{% endblock %}

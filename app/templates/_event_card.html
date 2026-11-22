@@ -1,0 +1,40 @@
+{% macro event_card(event, ar, compact=False) %}
+{% set type_labels = {'national': ('National', 'وطني'), 'religious': ('Religious', 'ديني'), 'campus': ('Campus', 'جامعي'), 'cultural': ('Cultural', 'ثقافي')} %}
+{% set type_pair = type_labels.get(event.event_type, ('National', 'وطني')) %}
+<a class="event-card{% if compact %} is-compact{% endif %}" href="{{ url_for('event_detail', event_id=event.id) }}"
+    style="--event-accent: {{ event.accent }};">
+    <div class="event-media">
+        {% if event.image %}
+        <img src="{{ event.image }}" alt="" loading="lazy">
+        {% else %}
+        <span class="event-art" aria-hidden="true"><span>{{ event.event_date.strftime('%d') }}</span><small>{{ event.event_date.strftime('%b') }}</small></span>
+        {% endif %}
+        <span class="event-date">
+            <b>{{ event.event_date.strftime('%d') }}</b>
+            <small>{{ event.event_date.strftime('%b') }}</small>
+        </span>
+        <span class="event-type">{{ type_pair[1] if ar else type_pair[0] }}</span>
+    </div>
+    <div class="event-copy">
+        {% if event.kicker_en or event.kicker_ar %}
+        <span class="event-kicker">{{ (event.kicker_ar or event.kicker_en) if ar else event.kicker_en }}</span>
+        {% endif %}
+        <h3>{{ (event.title_ar or event.title_en) if ar else event.title_en }}</h3>
+        {% if event.description_en or event.description_ar %}
+        <p>{{ ((event.description_ar or event.description_en) if ar else event.description_en) | striptags | truncate(150, true) }}</p>
+        {% endif %}
+        <div class="event-meta">
+            {% if event.status == 'upcoming' %}
+            <span>{{ ('بعد ' ~ event.days_until ~ ' يومًا') if ar else ('In ' ~ event.days_until ~ (' day' if event.days_until == 1 else ' days')) }}</span>
+            {% elif event.status == 'live' %}
+            <span class="event-live">{{ 'الآن' if ar else 'Happening now' }}</span>
+            {% else %}
+            <span>{{ 'لحظة سابقة' if ar else 'Past moment' }}</span>
+            {% endif %}
+            {% if event.location_en or event.location_ar %}
+            <span>{{ (event.location_ar or event.location_en) if ar else event.location_en }}</span>
+            {% endif %}
+        </div>
+    </div>
+</a>
+{% endmacro %}
