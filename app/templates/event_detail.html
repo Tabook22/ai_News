@@ -13,7 +13,7 @@
         <a href="{{ url_for('event_detail', event_id=event.id) }}" class="is-active" aria-current="page">{{ 'المناسبة' if is_ar else 'This occasion' }}</a>
     </nav>
 
-    <article class="event-detail" style="--event-accent: {{ event.accent }};">
+    <article class="event-detail{% if event.image %} has-media{% endif %}" style="--event-accent: {{ event.accent }};">
         {% if event.image %}
         <div class="event-detail-media"><img src="{{ event.image }}" alt=""></div>
         {% endif %}
@@ -24,7 +24,22 @@
             </div>
             <h1>{{ title }}</h1>
             {% if event.kicker_en or event.kicker_ar %}<p class="event-detail-kicker">{{ (event.kicker_ar or event.kicker_en) if is_ar else event.kicker_en }}</p>{% endif %}
-            {% if desc %}<p class="event-detail-dek">{{ desc }}</p>{% endif %}
+            {% if event.description_en or event.description_ar %}
+            <div class="event-descriptions">
+                {% if event.description_en %}
+                <section class="event-description" lang="en">
+                    <span class="event-desc-label">English</span>
+                    <p>{{ event.description_en }}</p>
+                </section>
+                {% endif %}
+                {% if event.description_ar %}
+                <section class="event-description" lang="ar" dir="rtl">
+                    <span class="event-desc-label">العربية</span>
+                    <p>{{ event.description_ar }}</p>
+                </section>
+                {% endif %}
+            </div>
+            {% endif %}
             <div class="event-detail-info">
                 {% if event.location_en or event.location_ar %}
                 <span><b>{{ 'المكان' if is_ar else 'Location' }}</b> {{ (event.location_ar or event.location_en) if is_ar else event.location_en }}</span>
