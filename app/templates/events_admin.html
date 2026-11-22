@@ -37,6 +37,7 @@
             <span class="res-status {{ 'is-live' if item.is_approved else 'is-draft' }}">{{ t('Approved', 'معتمد') if item.is_approved else t('Draft', 'مسودة') }}</span>
             <div class="res-actions">
                 {% if item.is_approved %}<a href="{{ url_for('event_detail', event_id=item.id) }}" target="_blank" rel="noopener">{{ t('Open', 'فتح') }}</a>{% endif %}
+                <a href="{{ url_for('event_gallery_admin', event_id=item.id) }}">{{ t('Gallery', 'معرض') }} ({{ item.photos|length }})</a>
                 <a href="{{ url_for('edit_event', event_id=item.id) }}">{{ t('Edit', 'تعديل') }}</a>
                 <form method="POST" action="{{ url_for('delete_event', event_id=item.id) }}" onsubmit="return confirm('{{ t('Delete this event?', 'حذف هذه المناسبة؟') }}');">
                     <button type="submit" class="is-danger">{{ t('Delete', 'حذف') }}</button>

@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block page_title %}{{ t('Edit gallery image', 'تعديل صورة المعرض') }}{% endblock %}
+
+{% block content %}
+<div class="dept-page" style="max-width:900px;">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('National moments · gallery', 'لحظات وطنية · معرض') }}</p>
+            <h1>{{ t('Edit gallery image', 'تعديل صورة المعرض') }}</h1>
+            <p class="editor-dek">{{ event.title_en }}</p>
+        </div>
+        <div class="editor-top-actions">
+            <a class="btn btn-secondary" href="{{ url_for('event_gallery_admin', event_id=event.id) }}">{{ t('Back to gallery', 'العودة إلى المعرض') }}</a>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        <section class="editor-card">
+            <div class="editor-field">
+                <label>{{ t('Current image', 'الصورة الحالية') }}</label>
+                <img src="{{ photo.image }}" alt="" style="max-width:100%; max-height:380px; object-fit:contain; border-radius:6px;">
+            </div>
+            <div class="editor-field">
+                <label for="image">{{ t('Replace image (optional)', 'استبدال الصورة (اختياري)') }}</label>
+                <input id="image" type="file" name="image" accept=".jpg,.jpeg,.png,.webp">
+            </div>
+            <div class="editor-field">
+                <label for="caption_en">{{ t('Caption / comment (English)', 'التعليق (إنجليزي)') }}</label>
+                <textarea id="caption_en" name="caption_en" rows="3">{{ photo.caption_en }}</textarea>
+            </div>
+            <div class="editor-field">
+                <label for="caption_ar">{{ t('Caption / comment (Arabic)', 'التعليق (عربي)') }}</label>
+                <textarea id="caption_ar" name="caption_ar" rows="3" dir="rtl" class="is-ar">{{ photo.caption_ar }}</textarea>
+            </div>
+            <div class="editor-field">
+                <label for="display_order">{{ t('Order', 'الترتيب') }}</label>
+                <input id="display_order" type="number" name="display_order" min="0" value="{{ photo.display_order }}">
+            </div>
+            <button type="submit" class="btn btn-primary">{{ t('Save image', 'حفظ الصورة') }}</button>
+        </section>
+    </form>
+</div>
+{% endblock %}

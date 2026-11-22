@@ -1,0 +1,58 @@
+{% extends "public_v3.html" %}
+{% set is_ar = ar %}
+
+{% block page_title %}{{ ((event.title_ar or event.title_en) if is_ar else event.title_en) }} — {{ 'معرض الصور' if is_ar else 'Gallery' }} — {{ magazine_name }}{% endblock %}
+{% block page_desc %}{{ 'صور من المناسبة، مع تعليقات من المحرر.' if is_ar else 'Photographs from the occasion, with captions from the editor.' }}{% endblock %}
+
+{% block content %}
+<div class="wrap event-gallery-page">
+    <nav class="lib-tabs" aria-label="{{ 'أقسام المناسبة' if is_ar else 'Event sections' }}">
+        <a href="{{ url_for('events_page') }}">{{ 'لحظات وطنية' if is_ar else 'National moments' }}</a>
+        <a href="{{ url_for('event_detail', event_id=event.id) }}">{{ 'المناسبة' if is_ar else 'This occasion' }}</a>
+        <a href="{{ url_for('event_gallery', event_id=event.id) }}" class="is-active" aria-current="page">{{ 'معرض الصور' if is_ar else 'Gallery' }}</a>
+    </nav>
+
+    <header class="gallery-mast">
+        <span class="eyebrow">{{ 'معرض الصور' if is_ar else 'The gallery' }}</span>
+        <h1>{{ (event.title_ar or event.title_en) if is_ar else event.title_en }}</h1>
+        <p>{{ event.event_date.strftime('%d %B %Y') }}{% if event.end_date %} — {{ event.end_date.strftime('%d %B %Y') }}{% endif %}{% if event.location_en or event.location_ar %} · {{ (event.location_ar or event.location_en) if is_ar else event.location_en }}{% endif %}</p>
+        <a class="gallery-back" href="{{ url_for('event_detail', event_id=event.id) }}">← {{ 'العودة إلى المناسبة' if is_ar else 'Back to the occasion' }}</a>
+    </header>
+
+    {% if photos %}
+    <div class="gallery-count">{{ photos|length }} {{ 'صورة' if is_ar else 'photographs' }}</div>
+    <div class="gallery-grid">
+        {% for photo in photos %}
+        <figure class="gallery-item">
+            <a class="gallery-image" href="{{ photo.image }}" target="_blank" rel="noopener" aria-label="{{ 'افتح الصورة بالحجم الكامل' if is_ar else 'Open full image' }}">
+                <img src="{{ photo.image }}" alt="{{ (photo.caption_ar or photo.caption_en) if is_ar else (photo.caption_en or photo.caption_ar) }}" loading="lazy">
+            </a>
+            {% if photo.caption_en or photo.caption_ar %}
+            <figcaption>
+                {% if photo.caption_en %}
+                <div class="gallery-caption" lang="en">
+                    <span>English</span>
+                    <p>{{ photo.caption_en }}</p>
+                </div>
+                {% endif %}
+                {% if photo.caption_ar %}
+                <div class="gallery-caption" lang="ar" dir="rtl">
+                    <span>العربية</span>
+                    <p>{{ photo.caption_ar }}</p>
+                </div>
+                {% endif %}
+            </figcaption>
+            {% endif %}
+        </figure>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="events-empty">
+        <span class="events-empty-mark" aria-hidden="true">▧</span>
+        <h2>{{ 'لا توجد صور في هذا المعرض بعد.' if is_ar else 'No photographs yet.' }}</h2>
+        <p>{{ 'سيضيف المحرر صور المناسبة وتعليقاتها قريبًا.' if is_ar else 'The editor will add photographs and captions soon.' }}</p>
+        <a class="btn btn-primary" href="{{ url_for('event_detail', event_id=event.id) }}">{{ 'العودة إلى المناسبة' if is_ar else 'Back to the occasion' }}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

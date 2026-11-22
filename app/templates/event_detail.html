@@ -50,9 +50,15 @@
                     {% else %}{{ 'مناسبة سابقة' if is_ar else 'Past occasion' }}{% endif %}
                 </span>
             </div>
+            {% if event.has_gallery %}
+            <a class="btn btn-primary" href="{{ url_for('event_gallery', event_id=event.id) }}">
+                {{ 'شاهد معرض الصور' if is_ar else 'View the gallery' }} ({{ event.photo_count }})
+                <span aria-hidden="true">→</span>
+            </a>
+            {% endif %}
             {% if event.link_url %}
-            <a class="btn btn-primary" href="{{ event.link_url | public_url }}" target="_blank" rel="noopener">
-                {{ (event.link_label_ar or event.link_label_en) if is_ar else (event.link_label_en or 'Learn more') }} <span aria-hidden="true">↗</span>
+            <a class="btn btn-secondary" href="{{ event.link_url | public_url }}" target="_blank" rel="noopener">
+                {{ (event.link_label_ar or event.link_label_en) if is_ar else (event.link_label_en or ('الرابط الأصلي' if is_ar else 'Original event page')) }} <span aria-hidden="true">↗</span>
             </a>
             {% endif %}
             <a class="event-back" href="{{ url_for('events_page') }}">← {{ 'كل اللحظات' if is_ar else 'All moments' }}</a>

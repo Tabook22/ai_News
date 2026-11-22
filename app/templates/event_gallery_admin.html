@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% macro t(en, ar) %}{{ ar if admin_ar else en }}{% endmacro %}
+
+{% block page_title %}{{ t('Event gallery', 'معرض المناسبة') }}{% endblock %}
+
+{% block content %}
+<div class="res-page">
+    <div class="editor-top">
+        <div>
+            <p class="editor-eyebrow">{{ t('National moments · gallery', 'لحظات وطنية · معرض') }}</p>
+            <h1>{{ t('Event gallery', 'معرض المناسبة') }}</h1>
+            <p class="editor-dek">{{ (event.title_ar or event.title_en) if admin_ar else event.title_en }} · {{ event.event_date.strftime('%d %b %Y') }}</p>
+        </div>
+        <div class="editor-top-actions">
+            {% if event.is_approved %}<a class="btn btn-secondary" href="{{ url_for('event_gallery', event_id=event.id) }}" target="_blank" rel="noopener">{{ t('Open gallery', 'افتح المعرض') }}</a>{% endif %}
+            <a class="btn btn-secondary" href="{{ url_for('events_admin') }}">{{ t('Back to events', 'العودة إلى المناسبات') }}</a>
+        </div>
+    </div>
+
+    <section class="editor-card" style="margin-bottom:16px;">
+        <div class="editor-card-head">
+            <span class="editor-icon is-teal"><svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg></span>
+            <div><h2>{{ t('Add a photograph', 'أضف صورة') }}</h2><p>{{ t('The caption is the comment readers see under the image. You can add both languages.', 'التعليق هو النص الذي يراه القارئ أسفل الصورة. يمكنك إضافة اللغتين.') }}</p></div>
+        </div>
+        <form method="POST" action="{{ url_for('upload_event_photo', event_id=event.id) }}" enctype="multipart/form-data">
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="image">{{ t('Image', 'الصورة') }} <span class="req">*</span></label>
+                    <input id="image" type="file" name="image" accept=".jpg,.jpeg,.png,.webp" required>
+                </div>
+                <div class="editor-field">
+                    <label for="display_order">{{ t('Order', 'الترتيب') }}</label>
+                    <input id="display_order" type="number" name="display_order" min="0" value="{{ photos|length }}">
+                </div>
+            </div>
+            <div class="editor-grid-2">
+                <div class="editor-field">
+                    <label for="caption_en">{{ t('Caption / comment (English)', 'التعليق (إنجليزي)') }}</label>
+                    <textarea id="caption_en" name="caption_en" rows="2" placeholder="Students gathering at the National Day tent…"></textarea>
+                </div>
+                <div class="editor-field">
+                    <label for="caption_ar">{{ t('Caption / comment (Arabic)', 'التعليق (عربي)') }}</label>
+                    <textarea id="caption_ar" name="caption_ar" rows="2" dir="rtl" class="is-ar" placeholder="تجمع الطلبة عند جناح اليوم الوطني…"></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">{{ t('Add image to gallery', 'أضف الصورة إلى المعرض') }}</button>
+        </form>
+    </section>
+
+    {% if photos %}
+    <div class="gallery-admin-grid">
+        {% for photo in photos %}
+        <article class="gallery-admin-card">
+            <img src="{{ photo.image }}" alt="">
+            <div class="gallery-admin-copy">
+                <b>{{ photo.caption_en or t('No English caption', 'لا يوجد تعليق إنجليزي') }}</b>
+                <p>{{ photo.caption_ar or t('No Arabic caption', 'لا يوجد تعليق عربي') }}</p>
+                <small>{{ t('Order', 'الترتيب') }} {{ photo.display_order }}</small>
+                <div class="gallery-admin-actions">
+                    <a href="{{ url_for('edit_event_photo', photo_id=photo.id) }}">{{ t('Edit caption', 'تعديل التعليق') }}</a>
+                    <form method="POST" action="{{ url_for('delete_event_photo', photo_id=photo.id) }}" onsubmit="return confirm('{{ t('Delete this image?', 'حذف هذه الصورة؟') }}');">
+                        <button type="submit" class="is-danger">{{ t('Delete', 'حذف') }}</button>
+                    </form>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="dept-empty-state">
+        <span class="dept-empty-icon"><svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg></span>
+        <h3>{{ t('No images yet', 'لا توجد صور بعد') }}</h3>
+        <p>{{ t('Upload the first photograph from the occasion.', 'ارفع أول صورة من المناسبة.') }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

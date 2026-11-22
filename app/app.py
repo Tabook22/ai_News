@@ -891,6 +891,9 @@ class NationalEvent(db.Model):
     is_featured = db.Column(db.Boolean, default=False)
     display_order = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    photos = db.relationship('EventPhoto', backref='event', lazy=True,
+                             cascade='all, delete-orphan',
+                             order_by='EventPhoto.display_order, EventPhoto.id')
 
     def to_dict(self):
         today = datetime.date.today()
@@ -928,6 +931,29 @@ class NationalEvent(db.Model):
             'display_order': self.display_order or 0,
             'status': status,
             'days_until': days,
+        }
+
+
+
+class EventPhoto(db.Model):
+    """One image in an event gallery, with a bilingual caption/comment."""
+    __tablename__ = 'event_photos'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('national_events.id'), nullable=False, index=True)
+    image = db.Column(db.String(500), nullable=False)
+    caption_en = db.Column(db.Text, default='')
+    caption_ar = db.Column(db.Text, default='')
+    display_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'event_id': self.event_id,
+            'image': self.image,
+            'caption_en': self.caption_en or '',
+            'caption_ar': self.caption_ar or '',
+            'display_order': self.display_order or 0,
         }
 
 class DailyQuestion(db.Model):
@@ -7607,8 +7633,37 @@ def event_detail(event_id):
     event = NationalEvent.query.get_or_404(event_id)
     if not event.is_approved:
         abort(404)
-    return render_template('event_detail.html', event=event.to_dict(), ar=ar,
+    data = event.to_dict()
+    photos = list(event.photos)
+    data['has_gallery'] = bool(photos)
+    data['photo_count'] = len(photos)
+    return render_template('event_detail.html', event=data, ar=ar,
                            today=_gulf_today())
+
+
+
+
+@app.route('/events/<int:event_id>/gallery')
+def event_gallery(event_id):
+    ar = get_lang_pref() == 'ar'
+    event = NationalEvent.query.get_or_404(event_id)
+    if not event.is_approved:
+        abort(404)
+    photos = [photo.to_dict() for photo in event.photos]
+    return render_template('event_gallery.html', event=event.to_dict(), photos=photos,
+                           ar=ar, today=_gulf_today())
+
+
+def _save_event_photo(file):
+    if not file or not file.filename:
+        return None
+    if not allowed_file(file.filename, {'png', 'jpg', 'jpeg', 'webp'}):
+        return None
+    folder = os.path.join(app.config['UPLOAD_FOLDER'], 'images', 'events')
+    os.makedirs(folder, exist_ok=True)
+    name = secure_filename(f"event_photo_{uuid.uuid4().hex}_{file.filename}")
+    file.save(os.path.join(folder, name))
+    return f"/static/uploads/images/events/{name}"
 
 
 def _save_event_image(file):
@@ -7931,7 +7986,86 @@ def edit_event(event_id):
 def delete_event(event_id):
     event = NationalEvent.query.get_or_404(event_id)
     image = event.image
+    gallery_images = [photo.image for photo in event.photos]
     db.session.delete(event)
+    db.session.commit()
+    for filename in ([image] if image else []) + gallery_images:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'],
+                                   filename.replace('/static/uploads/', '', 1)))
+        except OSError:
+            pass
+    flash('Event deleted.', 'success')
+    return redirect(url_for('events_admin'))
+
+
+
+@app.route('/desk/events/<int:event_id>/gallery')
+@login_required
+def event_gallery_admin(event_id):
+    event = NationalEvent.query.get_or_404(event_id)
+    return render_template('event_gallery_admin.html', event=event,
+                           photos=event.photos)
+
+
+@app.route('/desk/events/<int:event_id>/gallery/upload', methods=['POST'])
+@login_required
+def upload_event_photo(event_id):
+    event = NationalEvent.query.get_or_404(event_id)
+    image = _save_event_photo(request.files.get('image'))
+    if not image:
+        flash('Choose a JPG, PNG or WebP image.', 'error')
+        return redirect(url_for('event_gallery_admin', event_id=event.id))
+    try:
+        order = int(request.form.get('display_order') or 0)
+    except ValueError:
+        order = 0
+    db.session.add(EventPhoto(
+        event_id=event.id,
+        image=image,
+        caption_en=_question_clean(request.form.get('caption_en'), 1000),
+        caption_ar=_question_clean(request.form.get('caption_ar'), 1000),
+        display_order=order,
+    ))
+    db.session.commit()
+    flash('Image added to the gallery.', 'success')
+    return redirect(url_for('event_gallery_admin', event_id=event.id))
+
+
+@app.route('/desk/events/gallery/<int:photo_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_event_photo(photo_id):
+    photo = EventPhoto.query.get_or_404(photo_id)
+    event = photo.event
+    if request.method == 'POST':
+        photo.caption_en = _question_clean(request.form.get('caption_en'), 1000)
+        photo.caption_ar = _question_clean(request.form.get('caption_ar'), 1000)
+        try:
+            photo.display_order = int(request.form.get('display_order') or 0)
+        except ValueError:
+            photo.display_order = 0
+        new_image = _save_event_photo(request.files.get('image'))
+        if new_image:
+            old = photo.image
+            photo.image = new_image
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'],
+                                       old.replace('/static/uploads/', '', 1)))
+            except OSError:
+                pass
+        db.session.commit()
+        flash('Gallery image updated.', 'success')
+        return redirect(url_for('event_gallery_admin', event_id=event.id))
+    return render_template('event_photo_form.html', photo=photo, event=event)
+
+
+@app.route('/desk/events/gallery/<int:photo_id>/delete', methods=['POST'])
+@login_required
+def delete_event_photo(photo_id):
+    photo = EventPhoto.query.get_or_404(photo_id)
+    event_id = photo.event_id
+    image = photo.image
+    db.session.delete(photo)
     db.session.commit()
     if image:
         try:
@@ -7939,8 +8073,8 @@ def delete_event(event_id):
                                    image.replace('/static/uploads/', '', 1)))
         except OSError:
             pass
-    flash('Event deleted.', 'success')
-    return redirect(url_for('events_admin'))
+    flash('Gallery image deleted.', 'success')
+    return redirect(url_for('event_gallery_admin', event_id=event_id))
 
 @app.route('/desk/library')
 @login_required
